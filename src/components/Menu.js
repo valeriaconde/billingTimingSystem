@@ -12,12 +12,12 @@ class Menu extends Component {
                 <Navbar.Brand href="#home"><Image src="/logo.png" height={"35"} /></Navbar.Brand>
                 <Nav className="mr-auto">
                     <Nav.Link href="#home">Clientes</Nav.Link>
-                    <Nav.Link href="#clientes">Usuarios</Nav.Link>
-                    <Nav.Link href="#reportes">Proyectos</Nav.Link>
-                    <Nav.Link href="#reportes">Gastos</Nav.Link>
-                    <Nav.Link href="#reportes">Tiempos</Nav.Link>
+                    <Nav.Link href="#usuarios">Usuarios</Nav.Link>
+                    <Nav.Link href="#proyectos">Proyectos</Nav.Link>
+                    <Nav.Link href="#gastos">Gastos</Nav.Link>
+                    <Nav.Link href="#tiempos">Tiempos</Nav.Link>
                     <Nav.Link href="#reportes">Reportes</Nav.Link>
-                    <Nav.Link href="#reportes">Facturas</Nav.Link>
+                    <Nav.Link href="#facturas">Facturas</Nav.Link>
                 </Nav>
             </Navbar>
         );
