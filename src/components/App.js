@@ -1,6 +1,13 @@
 import React, { Component } from 'react';
 import '../styles/App.css';
 import Menu from './Menu';
+import {
+  BrowserRouter,
+  Switch,
+  Route,
+} from "react-router-dom";
+import Clientes from './Clientes';
+import NotFoundPage from './NotFoundPage';
 
 class App extends Component {
   constructor(props) {
@@ -14,7 +21,16 @@ class App extends Component {
 
   render(){
     return(
-      <Menu></Menu>
+      <BrowserRouter>
+        <Menu />
+          <Switch>
+            <Route path="/" exact component={Clientes} />
+
+            <Route path="/home" exact component={Clientes} />
+
+            <Route component={NotFoundPage} />
+          </Switch>
+      </BrowserRouter>
     );
   }
 }
