@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import Alert from 'react-bootstrap/Alert';
+
 
 class NotFoundPage extends Component {
     // constructor(props) {
@@ -7,7 +9,16 @@ class NotFoundPage extends Component {
     render() {
         return (
             <div>
-                404 Not Found
+                <Alert variant="success">
+                <Alert.Heading>404 Not Found</Alert.Heading>
+                    <p>
+                    Esta página no existe.
+                    </p>
+                    <hr />
+                    <p className="mb-0">
+                    Intenta con otra.
+                    </p>
+                </Alert>
             </div>
         );
     }
