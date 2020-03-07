@@ -19,6 +19,9 @@ class Menu extends Component {
                     <Nav.Link href="/reportes">Reportes</Nav.Link>
                     <Nav.Link href="/facturas">Facturas</Nav.Link>
                 </Nav>
+                <Nav className="justify-content-end">
+                    <Nav.Link href="/login">Iniciar Sesión</Nav.Link>
+                </Nav>
             </Navbar>
         );
     }
