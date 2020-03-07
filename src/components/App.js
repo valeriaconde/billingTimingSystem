@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import Clientes from './Clientes';
 import NotFoundPage from './NotFoundPage';
+import LoginPage from './LoginPage';
 
 class App extends Component {
   constructor(props) {
@@ -28,7 +29,11 @@ class App extends Component {
 
             <Route path="/home" exact component={Clientes} />
 
+            <Route path="/login" exact component={LoginPage} />
+
             <Route component={NotFoundPage} />
+
+
           </Switch>
       </BrowserRouter>
     );

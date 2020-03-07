@@ -1,3 +1,26 @@
+/* legem colors:
+blue: rgb 25, 57, 145
+
+*/  
+
+.loginForm {
+  margin: 30px;
+  margin-right: 65%;
+  margin-top: 50px;
+}
+
+.btn-primary {
+  background-color: rgb(25, 57, 145) !important;
+  color: white !important;
+  border-color: rgb(25, 57, 145) !important;
+}
+
+.bigLetters {
+  font-size: 18pt;
+  color: rgb(25, 57, 145);
+  margin-bottom: 20px;
+}
+
 .App {
   text-align: center;
 }

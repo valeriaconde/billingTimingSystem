@@ -18,6 +18,7 @@ class Menu extends Component {
                     <Nav.Link href="/tiempos">Tiempos</Nav.Link>
                     <Nav.Link href="/reportes">Reportes</Nav.Link>
                     <Nav.Link href="/facturas">Facturas</Nav.Link>
+                    <Nav.Link href="/login">Login</Nav.Link>
                 </Nav>
             </Navbar>
         );
