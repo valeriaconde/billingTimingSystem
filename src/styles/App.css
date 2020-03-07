@@ -1,8 +1,12 @@
-/* legem colors:
+/*
+legem colors:
 blue: rgb 25, 57, 145
 
 */  
 
+
+
+/* LOGIN FORM CSS */
 .loginForm {
   margin: 30px;
   margin-right: 65%;
@@ -15,10 +19,20 @@ blue: rgb 25, 57, 145
   border-color: rgb(25, 57, 145) !important;
 }
 
+.formLabels {
+  font-size: 14px;
+}
+
+.loginNavBar {
+  margin-right: 10%;
+}
+
+/* GENERAL CSS */
 .bigLetters {
   font-size: 18pt;
   color: rgb(25, 57, 145);
   margin-bottom: 20px;
+  font-weight: bold;
 }
 
 .App {
