@@ -9,15 +9,13 @@ class NotFoundPage extends Component {
     render() {
         return (
             <div>
-                <Alert variant="success">
+                <Alert variant="primary">
                 <Alert.Heading>404 Not Found</Alert.Heading>
                     <p>
                     Esta página no existe.
                     </p>
                     <hr />
-                    <p className="mb-0">
-                    Intenta con otra.
-                    </p>
+                    <a href="/home">Volver a inicio</a>
                 </Alert>
             </div>
         );
