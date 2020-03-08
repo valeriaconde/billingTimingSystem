@@ -2,42 +2,41 @@ import React, { Component } from 'react';
 import '../styles/App.css';
 import Menu from './Menu';
 import {
-  BrowserRouter,
-  Switch,
-  Route,
+    BrowserRouter,
+    Switch,
+    Route,
 } from "react-router-dom";
 import Clientes from './Clientes';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
+import PrivateRoute from './PrivateRoute';
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = [];
-  }
+    constructor(props) {
+        super(props);
+        this.state = [];
+    }
 
-  componentDidMount(){
-    document.title = "Legem";
-  }
+    componentDidMount() {
+        document.title = "Legem";
+    }
 
-  render(){
-    return(
-      <BrowserRouter>
-        <Menu />
-          <Switch>
-            <Route path="/" exact component={Clientes} />
+    render() {
+        return (
+            <BrowserRouter>
+                <Menu />
+                <Switch>
+                    <PrivateRoute path="/" exact component={Clientes} />
 
-            <Route path="/home" exact component={Clientes} />
+                    <PrivateRoute path="/home" exact component={Clientes} />
 
-            <Route path="/login" exact component={LoginPage} />
+                    <Route path="/login" exact component={LoginPage} />
 
-            <Route component={NotFoundPage} />
-
-
-          </Switch>
-      </BrowserRouter>
-    );
-  }
+                    <Route component={NotFoundPage} />
+                </Switch>
+            </BrowserRouter>
+        );
+    }
 }
 
 export default App;
