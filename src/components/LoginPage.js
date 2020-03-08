@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import {Form, Button} from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import LoggedUser from '../stores/LoggedUser';
 
 class LoginPage extends Component {
     constructor(props) {
         super(props);
-        this.state = {email: '', password: ''};
+        this.state = { email: '', password: '' };
 
         this.changeEmail = this.changeEmail.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -14,25 +14,25 @@ class LoginPage extends Component {
 
     // If last user was cached, fill the form
     componentDidMount() {
-        this.setState({email: LoggedUser.getEmail() || ''});
+        this.setState({ email: LoggedUser.getEmail() || '' });
     }
 
     changeEmail(event) {
-        if(event && event.target.value != null) {
-            this.setState({email: event.target.value});
+        if (event && event.target.value != null) {
+            this.setState({ email: event.target.value });
         }
     }
 
     changePassword(event) {
-        if(event && event.target.value != null) {
-            this.setState({password: event.target.value});
+        if (event && event.target.value != null) {
+            this.setState({ password: event.target.value });
         }
     }
 
     handleSubmit(event) {
         // aqui se llama funcion para login
         var loginSuccess = true;
-        if(loginSuccess) {
+        if (loginSuccess) {
             LoggedUser.setEmail(this.state.email);
         }
         event.preventDefault();
@@ -49,7 +49,7 @@ class LoginPage extends Component {
                     </Form.Group>
                     <Form.Group controlId="formBasicPassword">
                         <Form.Label className="formLabels">Contraseña</Form.Label>
-                        <Form.Control type="password" size="sm" value={this.state.password} onChange={this.changePassword}/>
+                        <Form.Control type="password" size="sm" value={this.state.password} onChange={this.changePassword} />
                     </Form.Group>
                     <Button variant="primary" type="submit" className="btn-primary" >Ingresar</Button>
                 </Form>

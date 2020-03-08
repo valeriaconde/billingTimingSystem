@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Navbar, Nav, Image} from 'react-bootstrap';
+import { Navbar, Nav, Image } from 'react-bootstrap';
 
 class Menu extends Component {
     // constructor(props) {

@@ -1,13 +1,13 @@
-var LoggedUser = (function() {
-    var getEmail = function() {
+var LoggedUser = (function () {
+    var getEmail = function () {
         return localStorage.getItem('user');
     };
 
-    var setEmail = function(email) {
+    var setEmail = function (email) {
         localStorage.setItem('user', email);
     }
 
-    var logOutUser = function() {
+    var logOutUser = function () {
         localStorage.clear();
     }
 

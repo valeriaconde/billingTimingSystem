@@ -10,9 +10,9 @@ class NotFoundPage extends Component {
         return (
             <div>
                 <Alert variant="primary">
-                <Alert.Heading>404 Not Found</Alert.Heading>
+                    <Alert.Heading>404 Not Found</Alert.Heading>
                     <p>
-                    Esta página no existe.
+                        Esta página no existe.
                     </p>
                     <hr />
                     <a href="/home">Volver a inicio</a>
