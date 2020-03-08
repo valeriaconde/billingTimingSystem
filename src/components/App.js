@@ -9,6 +9,7 @@ import {
 import Clientes from './Clientes';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
+import PrivateRoute from './PrivateRoute';
 
 class App extends Component {
     constructor(props) {
@@ -25,9 +26,9 @@ class App extends Component {
             <BrowserRouter>
                 <Menu />
                 <Switch>
-                    <Route path="/" exact component={Clientes} />
+                    <PrivateRoute path="/" exact component={Clientes} />
 
-                    <Route path="/home" exact component={Clientes} />
+                    <PrivateRoute path="/home" exact component={Clientes} />
 
                     <Route path="/login" exact component={LoginPage} />
 
