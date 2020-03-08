@@ -34,8 +34,8 @@ class LoginPage extends Component {
         var loginSuccess = true;
         if (loginSuccess) {
             LoggedUser.setEmail(this.state.email);
-            this.props.history.push(this.state.from || '/');
-            window.location.reaload();
+            this.props.history.push(this.state.from || '/home');
+            window.location.reload();
         }
         event.preventDefault();
     }
