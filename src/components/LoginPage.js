@@ -5,7 +5,7 @@ import LoggedUser from '../stores/LoggedUser';
 class LoginPage extends Component {
     constructor(props) {
         super(props);
-        this.state = { email: '', password: '' };
+        this.state = { email: '', password: '', validated: false };
 
         this.changeEmail = this.changeEmail.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -30,12 +30,19 @@ class LoginPage extends Component {
     }
 
     handleSubmit(event) {
+        this.setState({validated: true});
+        const form = event.currentTarget;
+        if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
         // TODO: This will be handled by database later
         var loginSuccess = true;
         if (loginSuccess) {
             LoggedUser.setEmail(this.state.email);
-            this.props.history.push(this.state.from || '/');
-            window.location.reaload();
+            this.props.history.push(this.state.from || '/home');
+            window.location.reload();
         }
         event.preventDefault();
     }
@@ -43,15 +50,17 @@ class LoginPage extends Component {
     render() {
         return (
             <div>
-                <Form className="loginForm" onSubmit={this.handleSubmit}>
+                <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.handleSubmit}>
                     <Form.Text className="bigLetters"> Iniciar Sesión </Form.Text>
                     <Form.Group controlId="formBasicEmail">
                         <Form.Label className="formLabels">Correo electrónico</Form.Label>
-                        <Form.Control type="email" size="sm" placeholder="usuario@legem.mx" value={this.state.email} onChange={this.changeEmail} />
+                        <Form.Control type="email" size="sm" placeholder="usuario@legem.mx" value={this.state.email} onChange={this.changeEmail} required />
+                        <Form.Control.Feedback type="invalid">Ingrese un email válido</Form.Control.Feedback>
                     </Form.Group>
                     <Form.Group controlId="formBasicPassword">
                         <Form.Label className="formLabels">Contraseña</Form.Label>
-                        <Form.Control type="password" size="sm" value={this.state.password} onChange={this.changePassword} />
+                        <Form.Control type="password" size="sm" value={this.state.password} onChange={this.changePassword} required />
+                        <Form.Control.Feedback type="invalid">Ingrese su contraseña</Form.Control.Feedback>
                     </Form.Group>
                     <Button variant="primary" type="submit" className="btn-primary" >Ingresar</Button>
                 </Form>
