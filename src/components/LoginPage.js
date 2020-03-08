@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {Form, Button} from 'react-bootstrap';
+import LoggedUser from '../stores/LoggedUser';
 
 class LoginPage extends Component {
     constructor(props) {
@@ -27,7 +28,7 @@ class LoginPage extends Component {
         // aqui se llama funcion para login
         var loginSuccess = true;
         if(loginSuccess) {
-            localStorage.setItem('user', this.state.email);
+            LoggedUser.setEmail(this.state.email);
         }
         event.preventDefault();
     }
