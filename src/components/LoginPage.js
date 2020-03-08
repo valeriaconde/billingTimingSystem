@@ -30,11 +30,12 @@ class LoginPage extends Component {
     }
 
     handleSubmit(event) {
-        // aqui se llama funcion para login
+        // TODO: This will be handled by database later
         var loginSuccess = true;
         if (loginSuccess) {
             LoggedUser.setEmail(this.state.email);
             this.props.history.push(this.state.from || '/');
+            window.location.reaload();
         }
         event.preventDefault();
     }

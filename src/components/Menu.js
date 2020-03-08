@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Navbar, Nav, Image } from 'react-bootstrap';
+import { Navbar, Nav, Image, NavDropdown } from 'react-bootstrap';
+import LoggedUser from '../stores/LoggedUser';
 
 class Menu extends Component {
     // constructor(props) {
@@ -7,6 +8,7 @@ class Menu extends Component {
     // }
 
     render() {
+        const isLoggedIn = LoggedUser.isLoggedIn();
         return (
             <Navbar bg="light" variant="light">
                 <Navbar.Brand href="/home"><Image src="/logo.png" height={"35"} /></Navbar.Brand>
@@ -20,7 +22,18 @@ class Menu extends Component {
                     <Nav.Link href="/facturas">Facturas</Nav.Link>
                 </Nav>
                 <Nav className="justify-content-end">
-                    <Nav.Link href="/login">Iniciar Sesión</Nav.Link>
+                    {
+                        isLoggedIn ?
+                        <NavDropdown title={LoggedUser.getEmail()} drop="left">
+                            <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
+                            <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
+                            <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
+                            <NavDropdown.Divider />
+                            <NavDropdown.Item href="/login" onClick={LoggedUser.logOutUser}>Cerrar Sesión</NavDropdown.Item>
+                        </NavDropdown>
+                        :
+                        <Nav.Link href="/login">Iniciar Sesión</Nav.Link>
+                    }
                 </Nav>
             </Navbar>
         );
