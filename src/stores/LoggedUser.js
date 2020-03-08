@@ -7,9 +7,14 @@ var LoggedUser = (function() {
         localStorage.setItem('user', email);
     }
 
+    var logOutUser = function() {
+        localStorage.clear();
+    }
+
     return {
         getEmail: getEmail,
-        setEmail: setEmail
+        setEmail: setEmail,
+        logOutUser: logOutUser
     }
 })();
 

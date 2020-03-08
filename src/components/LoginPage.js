@@ -12,6 +12,11 @@ class LoginPage extends Component {
         this.changePassword = this.changePassword.bind(this);
     }
 
+    // If last user was cached, fill the form
+    componentDidMount() {
+        this.setState({email: LoggedUser.getEmail() || ''});
+    }
+
     changeEmail(event) {
         if(event && event.target.value != null) {
             this.setState({email: event.target.value});
