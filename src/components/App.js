@@ -31,7 +31,7 @@ class App extends Component {
 
                     <PrivateRoute path="/home" exact component={Clientes} />
 
-                    <PrivateRoute path="/registeruser" exact component={registeruser} />
+                    <PrivateRoute path="/register" exact component={registeruser} />
 
                     <Route path="/login" exact component={LoginPage} />
 
