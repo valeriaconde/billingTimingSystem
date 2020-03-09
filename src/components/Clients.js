@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import { ListGroup, Container, Row, Col, InputGroup, FormControl, Button, ButtonToolbar } from 'react-bootstrap';
 
 class Clientes extends Component {
-    // constructor(props) {
-    //     super(props);
-    // }
+    constructor(props) {
+        super(props);
+    }
     render() {
         return (
             <div>
@@ -51,6 +51,7 @@ class Clientes extends Component {
                                 <InputGroup className="mb-3">
                                     <FormControl size="sm" type="text" />
                                 </InputGroup>
+
 
                                 <label className="formLabels">Página Web</label>
                                 <InputGroup className="mb-3">
