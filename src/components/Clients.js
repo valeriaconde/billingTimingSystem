@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ListGroup, Container, Row, Col, InputGroup, FormControl } from 'react-bootstrap';
+import { ListGroup, Container, Row, Col, InputGroup, FormControl, Button, ButtonToolbar } from 'react-bootstrap';
 
 class Clientes extends Component {
     // constructor(props) {
@@ -18,6 +18,8 @@ class Clientes extends Component {
                                 <ListGroup.Item as="li">Cliente 4</ListGroup.Item>
                             </ListGroup>
                         </Col>
+
+                        {/* toda esta seccion estara oculta mientras no haya un cliente seleccionado */}
                         <Col sm={8}>
                             <div>
                                 <label className="formLabels">Denominación</label>
@@ -60,8 +62,24 @@ class Clientes extends Component {
                                     <FormControl size="sm" type="text" />
                                 </InputGroup>
 
-                            </div>
+                                {/* debe estar azul la opcion seleccionada e inhabilitado el boton a menos que le den edit
+                                CANTIDAD DE IVA */}
+                                
+                                <InputGroup>
+                                    <label className="formLabels">IVA </label>
+                                    <InputGroup.Append>
+                                        <Button variant="outline-secondary" className="legem-primary" size="sm">SI</Button>
+                                        <Button variant="outline-secondary" size="sm" >NO</Button>
+                                    </InputGroup.Append>
+                                </InputGroup>
 
+                                {/* pinche boton no lo puedo mover a la derecha alv */}
+                                <ButtonToolbar>
+                                    <Button variant="secondary" >
+                                        Editar
+                                    </Button>
+                                </ButtonToolbar>
+                            </div>
                         </Col>
                     </Row>
                 </Container>
