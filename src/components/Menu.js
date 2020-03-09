@@ -14,7 +14,6 @@ class Menu extends Component {
                 <Navbar.Brand href="/home"><Image src="/logo.png" height={"35"} /></Navbar.Brand>
                 <Nav className="mr-auto">
                     <Nav.Link href="/home">Clientes</Nav.Link>
-                    <Nav.Link href="/usuarios">Usuarios</Nav.Link>
                     <Nav.Link href="/proyectos">Proyectos</Nav.Link>
                     <Nav.Link href="/gastos">Gastos</Nav.Link>
                     <Nav.Link href="/tiempos">Tiempos</Nav.Link>
@@ -25,9 +24,9 @@ class Menu extends Component {
                     {
                         isLoggedIn ?
                         <NavDropdown title={LoggedUser.getEmail()} drop="left">
+                            <NavDropdown.Item href="/perfil">Perfil</NavDropdown.Item>
+                            <NavDropdown.Item href="/usuarios">Usuarios</NavDropdown.Item>
                             <NavDropdown.Item href="/register">Registrar usuarios</NavDropdown.Item>
-                            <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
-                            <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
                             <NavDropdown.Divider />
                             <NavDropdown.Item href="/login" onClick={LoggedUser.logOutUser}>Cerrar Sesión</NavDropdown.Item>
                         </NavDropdown>
