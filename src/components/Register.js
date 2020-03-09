@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 
 class registeruser extends Component {
-    constructor(props) {
-        super(props);
-    }
+    // constructor(props) {
+    //     super(props);
+    // }
     render() {
         return (
             <div>
@@ -19,12 +19,13 @@ class registeruser extends Component {
                         <Form.Label className="formLabels">Contraseña</Form.Label>
                         <Form.Control type="password" size="sm" />
                         <Form.Text className="text-muted">Esta contraseña es temporal y deberá cambiarse dentro de 24 horas.</Form.Text>
-                        /* es mame lo de las 24 hrs no sabia que ponerle, no pasa nada si no la cambian en ese tiempo xd */
+                        <br></br>
+                        {/* es mame lo de las 24 hrs no sabia que ponerle, no pasa nada si no la cambian en ese tiempo xd  */}
                     <Form.Group controlId="formBasicCheckbox">
-                        <Form.Check type="checkbox" label="Este usuario es administrador"/>
+                        <Form.Check type="checkbox" className="formLabels" label="Este usuario es administrador"/>
                         
-                        /*  creas una alert que confirme si deadevis quiere que el usuario sea administrador antes de continuar pls */
-                        /* alert: ¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios. */
+                          {/* creas una alert que confirme si deadevis quiere que el usuario sea administrador antes de continuar pls 
+                          alert: ¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios. */}
                     </Form.Group>
                        </Form.Group>
                     <Button variant="primary" type="submit" className="btn-primary">Registrar</Button>
