@@ -6,7 +6,7 @@ import {
     Switch,
     Route,
 } from "react-router-dom";
-import Clientes from './Clientes';
+import Clientes from './Clients';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
 import PrivateRoute from './PrivateRoute';

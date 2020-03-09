@@ -62,7 +62,7 @@ class LoginPage extends Component {
                         <Form.Control type="password" size="sm" value={this.state.password} onChange={this.changePassword} required />
                         <Form.Control.Feedback type="invalid">Ingrese su contraseña</Form.Control.Feedback>
                     </Form.Group>
-                    <Button variant="primary" type="submit" className="btn-primary" >Ingresar</Button>
+                    <Button variant="primary" type="submit" className="legem-primary" >Ingresar</Button>
                 </Form>
             </div>
         );

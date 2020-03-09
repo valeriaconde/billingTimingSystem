@@ -27,7 +27,7 @@ class registeruser extends Component {
                           {/* creas una alert que confirme si deadevis quiere que el usuario sea administrador antes de continuar pls 
                           alert: ¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios. */}
                     </Form.Group>
-                    <Button variant="primary" type="submit" className="btn-primary">Registrar</Button>
+                    <Button variant="primary" type="submit" className="legem-primary">Registrar</Button>
                 </Form>
             </div>
         );
