@@ -18,7 +18,7 @@ blue: rgb 25, 57, 145
 }
 
 .rightMargin {
-  margin-right: 10px;
+  margin-right: 10px !important;
 }
 
 /* GENERAL CSS */

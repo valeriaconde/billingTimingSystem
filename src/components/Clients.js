@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ListGroup, Container, Row, Col, Form } from 'react-bootstrap';
+import { ListGroup, Container, Row, Col, Form, Button } from 'react-bootstrap';
 
 class Clientes extends Component {
     constructor(props) {
@@ -21,14 +21,13 @@ class Clientes extends Component {
                         </Col>
 
                         {/* toda esta seccion estara oculta mientras no haya un cliente seleccionado */}
-                        {/* el placeholder de toda la seecion debe ser vacio o el texto que ya exista en el label */}
                         <Col sm={8}>
                             <Form>
                                 {/* DENOMINACION */}
                                 {/* excepto aqui, el placeholder debe ser DENOMINACION */}
                                 {
                                     this.state.edit ?
-                                        <Form.Control type="text" placeholder="Denominación" /> 
+                                        <Form.Control type="text" placeholder="Denominación" />
                                         :
                                         <h3> DENOMINACION </h3>
                                 }
@@ -39,9 +38,9 @@ class Clientes extends Component {
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
-                                                <Form.Control type="text" placeholder="Domicilio" />
+                                                <Form.Control plaintext defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                                <Form.Control plaintext readOnly defaultValue="Domicilio" />
                                         }
                                     </Col>
                                 </Form.Group>
@@ -52,9 +51,9 @@ class Clientes extends Component {
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
-                                                <Form.Control type="text" placeholder="Password" />
+                                                <Form.Control plaintext defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                                <Form.Control plaintext readOnly defaultValue="RFC" />
                                         }
                                     </Col>
                                 </Form.Group>
@@ -65,9 +64,9 @@ class Clientes extends Component {
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
-                                                <Form.Control type="text" placeholder="Password" />
+                                                <Form.Control plaintext defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                                <Form.Control plaintext readOnly defaultValue="Contacto" />
                                         }
                                     </Col>
                                 </Form.Group>
@@ -78,9 +77,9 @@ class Clientes extends Component {
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
-                                                <Form.Control type="text" placeholder="Password" />
+                                                <Form.Control plaintext defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                                <Form.Control plaintext readOnly defaultValue="Correo" />
                                         }
                                     </Col>
                                 </Form.Group>
@@ -91,9 +90,9 @@ class Clientes extends Component {
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
-                                                <Form.Control type="text" placeholder="Password" />
+                                                <Form.Control plaintext defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                                <Form.Control plaintext readOnly defaultValue="Telefono" />
                                         }
                                     </Col>
                                 </Form.Group>
@@ -104,9 +103,9 @@ class Clientes extends Component {
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
-                                                <Form.Control type="text" placeholder="Password" />
+                                                <Form.Control plaintext defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                                <Form.Control plaintext readOnly defaultValue="Website" />
                                         }
                                     </Col>
                                 </Form.Group>
@@ -117,7 +116,7 @@ class Clientes extends Component {
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
-                                                <Form.Control type="text" placeholder="Password" />
+                                                <Form.Control plaintext defaultValue=" " />
                                                 :
                                                 <Form.Control plaintext readOnly defaultValue="2003" />
                                         }
@@ -151,9 +150,16 @@ class Clientes extends Component {
                                         }
                                     </Col>
                                 </Form.Group>
+
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="5"></Form.Label>
+                                    <Col sm="5">
+                                        <>
+                                            <Button variant="outline-dark">Editar</Button>
+                                        </>
+                                    </Col>
+                                </Form.Group>
                             </Form>
-
-
                         </Col>
                     </Row>
                 </Container>
