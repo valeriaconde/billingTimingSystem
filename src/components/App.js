@@ -11,6 +11,7 @@ import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
 import PrivateRoute from './PrivateRoute';
 import registeruser from './Register';
+import ProyectosPage from './ProyectosPage'
 
 class App extends Component {
     constructor(props) {
@@ -34,6 +35,8 @@ class App extends Component {
                     <PrivateRoute path="/register" exact component={registeruser} />
 
                     <Route path="/login" exact component={LoginPage} />
+
+                    <Route path="/proyectos" exact component={ProyectosPage} />
 
                     <Route component={NotFoundPage} />
                 </Switch>
