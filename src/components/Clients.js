@@ -9,12 +9,12 @@ class Clientes extends Component {
     render() {
         return (
             <div>
-                <Container>
+                <Container className="topMargin">
                     <Row>
                         <Col sm={4}>
                             <ListGroup as="ul" className="">
-                                <ListGroup.Item as="li" active className="legem-primary"> Cliente 1 </ListGroup.Item>
-                                <ListGroup.Item as="li" >Cliente 2</ListGroup.Item>
+                                <ListGroup.Item as="li"> Nuevo Cliente </ListGroup.Item>
+                                <ListGroup.Item as="li" active className="legem-primary" >Cliente 2</ListGroup.Item>
                                 <ListGroup.Item as="li"> Cliente 3</ListGroup.Item>
                                 <ListGroup.Item as="li">Cliente 4</ListGroup.Item>
                             </ListGroup>
@@ -27,7 +27,7 @@ class Clientes extends Component {
                                 {/* excepto aqui, el placeholder debe ser DENOMINACION */}
                                 {
                                     this.state.edit ?
-                                        <Form.Control type="text" placeholder="Denominación" />
+                                        <Form.Control size="lg" type="text" placeholder="Denominación" />
                                         :
                                         <h3> DENOMINACION </h3>
                                 }

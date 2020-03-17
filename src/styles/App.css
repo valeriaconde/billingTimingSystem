@@ -35,8 +35,24 @@ blue: rgb 25, 57, 145
   border-color: rgb(25, 57, 145) !important;
 }
 
+.topMargin {
+  margin-top: 30px !important;
+}
+
+.leftMargin {
+  margin-left: 30px !important;
+}
+
 .App {
   text-align: center;
+}
+
+.greenLetters {
+  color: green;
+}
+
+.redLetters {
+  color: red;
 }
 
 .App-logo {
