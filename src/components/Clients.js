@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { ListGroup, Container, Row, Col, InputGroup, FormControl, Button, ButtonToolbar } from 'react-bootstrap';
+import { ListGroup, Container, Row, Col, Form } from 'react-bootstrap';
 
 class Clientes extends Component {
     constructor(props) {
         super(props);
+        this.state = { 'edit': false };
     }
     render() {
         return (
@@ -20,67 +21,139 @@ class Clientes extends Component {
                         </Col>
 
                         {/* toda esta seccion estara oculta mientras no haya un cliente seleccionado */}
+                        {/* el placeholder de toda la seecion debe ser vacio o el texto que ya exista en el label */}
                         <Col sm={8}>
-                            <div>
-                                <label className="formLabels">Denominación</label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
+                            <Form>
+                                {/* DENOMINACION */}
+                                {/* excepto aqui, el placeholder debe ser DENOMINACION */}
+                                {
+                                    this.state.edit ?
+                                        <Form.Control type="text" placeholder="Denominación" /> 
+                                        :
+                                        <h3> DENOMINACION </h3>
+                                }
 
-                                <label className="formLabels">Domicilio</label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
+                                {/* DOMICILIO */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> Domicilio </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control type="text" placeholder="Domicilio" />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                        }
+                                    </Col>
+                                </Form.Group>
 
-                                <label className="formLabels">RFC</label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
+                                {/* RFC */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> RFC </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control type="text" placeholder="Password" />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                        }
+                                    </Col>
+                                </Form.Group>
 
-                                <label className="formLabels">Contacto principal</label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
+                                {/* CONTACTO */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> Contacto </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control type="text" placeholder="Password" />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                        }
+                                    </Col>
+                                </Form.Group>
 
-                                <label className="formLabels">Correo electrónico</label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
+                                {/* CORREO */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> Correo </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control type="text" placeholder="Password" />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                        }
+                                    </Col>
+                                </Form.Group>
 
-                                <label className="formLabels">Teléfono</label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
+                                {/* TELEFONO */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> Teléfono </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control type="text" placeholder="Password" />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                        }
+                                    </Col>
+                                </Form.Group>
+
+                                {/* PAGINA WEB */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> Website </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control type="text" placeholder="Password" />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue=" " />
+                                        }
+                                    </Col>
+                                </Form.Group>
+
+                                {/* CLIENTE DESDE */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> Cliente desde </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control type="text" placeholder="Password" />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue="2003" />
+                                        }
+                                    </Col>
+                                </Form.Group>
+
+                                {/* IVA */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> IVA </Form.Label>
+                                    <Col sm="5">
+                                        {/* creo que este codigo puede reducirse, nada mas que togglee los botones y togglee el estado a disabled... */}
+                                        {
+                                            this.state.edit ?
+                                                <Form>
+                                                    {['radio'].map(type => (
+                                                        <div key={`inline-${type}`} className="mb-3">
+                                                            <Form.Check inline label="SI" type={type} id={`inline-${type}-1`} />
+                                                            <Form.Check inline label="NO" type={type} id={`inline-${type}-1`} />
+                                                        </div>
+                                                    ))}
+                                                </Form>
+                                                :
+                                                <Form>
+                                                    {['radio'].map(type => (
+                                                        <div key={`inline-${type}`} className="mb-3">
+                                                            <Form.Check inline disabled label="SI" type={type} id={`inline-${type}-3`} />
+                                                            <Form.Check inline disabled label="NO" type={type} id={`inline-${type}-3`} />
+                                                        </div>
+                                                    ))}
+                                                </Form>
+                                        }
+                                    </Col>
+                                </Form.Group>
+                            </Form>
 
 
-                                <label className="formLabels">Página Web</label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
-
-                                <label className="formLabels">Cliente desde </label>
-                                <InputGroup className="mb-3">
-                                    <FormControl size="sm" type="text" />
-                                </InputGroup>
-
-                                {/* debe estar azul la opcion seleccionada e inhabilitado el boton a menos que le den edit
-                                CANTIDAD DE IVA */}
-                                
-                                <InputGroup>
-                                    <label className="formLabels">IVA </label>
-                                    <InputGroup.Append>
-                                        <Button variant="outline-secondary" className="legem-primary" size="sm">SI</Button>
-                                        <Button variant="outline-secondary" size="sm" >NO</Button>
-                                    </InputGroup.Append>
-                                </InputGroup>
-
-                                {/* pinche boton no lo puedo mover a la derecha alv */}
-                                <ButtonToolbar>
-                                    <Button variant="secondary" >
-                                        Editar
-                                    </Button>
-                                </ButtonToolbar>
-                            </div>
                         </Col>
                     </Row>
                 </Container>
