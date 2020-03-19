@@ -11,7 +11,10 @@ import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
 import PrivateRoute from './PrivateRoute';
 import registeruser from './Register';
-import ProyectosPage from './ProyectosPage'
+import ProyectosPage from './ProyectosPage';
+import gastos from './GastosPage';
+
+// REACT VERSION: 16.13.0
 
 class App extends Component {
     constructor(props) {
@@ -28,6 +31,7 @@ class App extends Component {
             <BrowserRouter>
                 <Menu />
                 <Switch>
+
                     <PrivateRoute path="/" exact component={Clientes} />
 
                     <PrivateRoute path="/home" exact component={Clientes} />
@@ -36,7 +40,9 @@ class App extends Component {
 
                     <Route path="/login" exact component={LoginPage} />
 
-                    <Route path="/proyectos" exact component={ProyectosPage} />
+                    <PrivateRoute path="/proyectos" exact component={ProyectosPage} />
+
+                    <PrivateRoute path="/gastos" exact component={gastos} />
 
                     <Route component={NotFoundPage} />
                 </Switch>

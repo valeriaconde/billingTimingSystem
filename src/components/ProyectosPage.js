@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Accordion, Card, Button, Modal, Form, Col, Row } from 'react-bootstrap';
+import { Accordion, Card, Button, Modal, Form, Col, Row, Container } from 'react-bootstrap';
 
 class Proyectos extends Component {
     constructor(props) {
@@ -110,11 +110,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -127,11 +138,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -148,11 +170,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -165,11 +198,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -189,11 +233,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -206,11 +261,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -227,11 +293,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -244,11 +321,22 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
-                                <>
-                                    <Button variant="outline-dark">Editar</Button>
-                                    <Button variant="outline-success">Marcar como completado</Button>
-                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                </>
+                                <Container>
+                                    <Row>
+                                        <Col></Col>
+                                        <Col md="auto">
+                                            <>
+                                                <Button variant="outline-success">Marcar como completado</Button>
+                                                {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
+                                            </>
+                                        </Col>
+                                        <Col lg="2">
+                                            <>
+                                                <Button variant="outline-dark">Editar</Button>
+                                            </>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>

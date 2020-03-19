@@ -4,6 +4,13 @@ blue: rgb 25, 57, 145
 
 */  
 
+/* GASTOS PAGE CSS */
+
+.filterbtn {
+  margin-top: 10px;
+}
+
+
 
 
 /* LOGIN FORM CSS */
@@ -17,9 +24,6 @@ blue: rgb 25, 57, 145
   font-size: 14px;
 }
 
-.rightMargin {
-  margin-right: 10px !important;
-}
 
 /* GENERAL CSS */
 .bigLetters {
@@ -41,6 +45,10 @@ blue: rgb 25, 57, 145
 
 .leftMargin {
   margin-left: 30px !important;
+}
+
+.rightMargin {
+  margin-right: 10px !important;
 }
 
 .App {
