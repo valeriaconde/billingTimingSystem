@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Alert from 'react-bootstrap/Alert';
 
-
 class NotFoundPage extends Component {
     // constructor(props) {
     //     super(props);

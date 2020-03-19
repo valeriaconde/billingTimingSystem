@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { Button, Modal, Form, Row, Col, Accordion, Card, Container, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Row, Col, Accordion, Card, Container, Button, Form, Modal, } from 'react-bootstrap';
 
-
-class gastos extends Component {
+class tiemposPage extends Component {
     constructor(props) {
         super(props);
         this.state = { showModal: false };
@@ -19,18 +18,19 @@ class gastos extends Component {
         this.setState({ showModal: false });
     }
 
+
     render() {
         return (
             <div>
 
-                {/* MODAL */}
                 <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
-                    Registrar gasto
+                    Registrar tiempos
                 </Button>
 
+                {/* MODAL */}
                 <Modal show={this.state.showModal} onHide={this.handleClose}>
                     <Modal.Header closeButton>
-                        <Modal.Title>Nuevo gasto</Modal.Title>
+                        <Modal.Title>Registrar tiempos</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
@@ -46,32 +46,15 @@ class gastos extends Component {
                                 </Col>
                             </Form.Group>
 
+                            {/* ESTOS SON SOLO PROYECTOS DEL CLIENTE ELEGIDO EN LA OPCION ANTERIOR */}
                             <Form.Group as={Row}>
                                 <Form.Label column sm="3">
-                                    Concepto
-                                </Form.Label>
-                                <Col sm="5">
-                                    <Form.Control as="textarea" rows="2" />
-                                </Col>
-                            </Form.Group>
-
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="3">
-                                    Monto
-                                </Form.Label>
-                                <Col sm="5">
-                                    <Form.Control as="textarea" rows="1" />
-                                </Col>
-                            </Form.Group>
-
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="3">
-                                    Moneda
+                                    Proyecto
                                 </Form.Label>
                                 <Col sm="5">
                                     <Form.Control as="select">
-                                        <option> MXN </option>
-                                        <option> USD </option>
+                                        <option> Proyecto 1 </option>
+                                        <option> Proyecto 2 </option>
                                     </Form.Control>
                                 </Col>
                             </Form.Group>
@@ -87,15 +70,25 @@ class gastos extends Component {
 
                             <Form.Group as={Row}>
                                 <Form.Label column sm="3">
-                                    Tipo de gasto
+                                    Tiempo
+                                </Form.Label>
+                                <Col sm="5">
+                                    <Form.Control as="textarea" rows="1" column="3" />
+                                    <Form.Label> horas</Form.Label>
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row}>
+                                <Form.Label column sm="3">
                                 </Form.Label>
                                 <Col sm="5">
                                     <Form.Control as="select">
-                                        <option> Honorarios de terceros </option>
-                                        <option> Gastos de traslado </option>
-                                        <option> Pagos (Derechos, multas, etc.) </option>
-                                        <option> Otro </option>
+                                        <option> 0 </option>
+                                        <option> 15 </option>
+                                        <option> 30 </option>
+                                        <option> 45 </option>
                                     </Form.Control>
+                                    <Form.Label> minutos</Form.Label>
                                 </Col>
                             </Form.Group>
                         </Form>
@@ -105,21 +98,12 @@ class gastos extends Component {
                             Cancelar
                         </Button>
                         <Button className="legem-primary" onClick={this.handleClose}>
-                            Guardar proyecto
+                            Registrar tiempo
                         </Button>
                     </Modal.Footer>
                 </Modal>
 
-                {/* FILTRO */}
-                <DropdownButton id="dropdown-basic-button" className="leftMargin filterbtn" variant="secondary" title="Filtrar">
-                    <Dropdown.Item href="#/action-1"> Todos </Dropdown.Item>
-                    <Dropdown.Item href="#/action-2"> Por cliente </Dropdown.Item>
-                    <Dropdown.Item href="#/action-3"> Por tipo de gasto </Dropdown.Item>
-                </DropdownButton>
-                {/* PENDIENTE PONER COLORES A LOS TIPOS DE GASTO */}
-
-                <h5 className="leftMargin"> TODOS (cronologico) / CLIENTE / TIPO DE GASTO </h5>
-
+                {/* EN ORDEN ALFABETICO DE CLIENTES */}
                 {/* ASUNTOS ACTIVOS */}
                 <h4 className="topMargin leftMargin greenLetters"> Activos </h4>
 
@@ -129,22 +113,20 @@ class gastos extends Component {
                             <Container>
                                 <Row>
                                     <Col sm={8}>
-                                        Vuelo MTY - CDMX (concepto)
+                                        CLIENTE - PROYECTO
                                     </Col>
                                     <Col sm={4}>
-                                        $8,000.00 MXN (monto)
+                                        1h 15m
                                     </Col>
                                 </Row>
                             </Container>
                         </b></Accordion.Toggle>
                         <Accordion.Collapse eventKey="0">
                             <Card.Body>
-                                <Card.Text>
-                                    $8,000.00 MXN (monto)
-                                </Card.Text>
+                                <Card.Text> Descripcion, blablabla </Card.Text>
+                                <Card.Text> Oscar Conde (usuario) </Card.Text>
                                 <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                <Card.Text> Usuario: Oscar Conde </Card.Text>
+                                <Card.Text> 1h 15min </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -170,22 +152,20 @@ class gastos extends Component {
                             <Container>
                                 <Row>
                                     <Col sm={8}>
-                                        Vuelo CDMX - MTY (concepto)
+                                        CLIENTE - PROYECTO
                                     </Col>
                                     <Col sm={4}>
-                                        $600.00 USD
+                                        15m 
                                     </Col>
                                 </Row>
                             </Container>
                         </b></Accordion.Toggle>
                         <Accordion.Collapse eventKey="1">
                             <Card.Body>
-                                <Card.Text>
-                                    $8,000.00 MXN (monto)
-                                </Card.Text>
+                                <Card.Text> Descripcion, blablabla </Card.Text>
+                                <Card.Text> Oscar Conde (usuario) </Card.Text>
                                 <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                <Card.Text> Usuario: Oscar Conde </Card.Text>
+                                <Card.Text> 1h 15min </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -208,8 +188,6 @@ class gastos extends Component {
                         </Accordion.Collapse>
                     </Card>
                 </Accordion>
-
-
 
                 {/* ASUNTOS CERRADOS */}
 
@@ -220,22 +198,20 @@ class gastos extends Component {
                             <Container>
                                 <Row>
                                     <Col sm={8}>
-                                        Vuelo MTY - CDMX (concepto)
+                                        CLIENTE - PROYECTO
                                     </Col>
                                     <Col sm={4}>
-                                        $8,000.00 MXN (monto)
+                                        45m
                                     </Col>
                                 </Row>
                             </Container>
                         </b></Accordion.Toggle>
                         <Accordion.Collapse eventKey="0">
                             <Card.Body>
-                                <Card.Text>
-                                    $8,000.00 MXN (monto)
-                                </Card.Text>
+                                <Card.Text> Descripcion, blablabla </Card.Text>
+                                <Card.Text> Oscar Conde (usuario) </Card.Text>
                                 <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                <Card.Text> Usuario: Oscar Conde </Card.Text>
+                                <Card.Text> 1h 15min </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -252,7 +228,6 @@ class gastos extends Component {
                                         </Col>
                                     </Row>
                                 </Container>
-
                             </Card.Body>
                         </Accordion.Collapse>
                     </Card>
@@ -261,22 +236,20 @@ class gastos extends Component {
                             <Container>
                                 <Row>
                                     <Col sm={8}>
-                                        Vuelo CDMX - MTY (concepto)
+                                        CLIENTE - PROYECTO
                                     </Col>
                                     <Col sm={4}>
-                                        $600.00 USD
+                                        2h 30m
                                     </Col>
                                 </Row>
                             </Container>
                         </b></Accordion.Toggle>
                         <Accordion.Collapse eventKey="1">
                             <Card.Body>
-                                <Card.Text>
-                                    $8,000.00 MXN (monto)
-                                </Card.Text>
+                                <Card.Text> Descripcion, blablabla </Card.Text>
+                                <Card.Text> Oscar Conde (usuario) </Card.Text>
                                 <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                <Card.Text> Usuario: Oscar Conde </Card.Text>
+                                <Card.Text> 1h 15min </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -298,10 +271,8 @@ class gastos extends Component {
                     </Card>
                 </Accordion>
 
-
-
             </div>
         );
     }
 }
-export default gastos;
+export default tiemposPage;
