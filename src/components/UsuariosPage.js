@@ -58,7 +58,7 @@ class UsuariosPage extends Component {
                                             this.state.edit ?
                                                 <Form.Control plaintext placeholder="USD" defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue="100" />
+                                                <Form.Control plaintext readOnly defaultValue="00" />
                                         }
                                     </Col>
                                 </Form.Group>

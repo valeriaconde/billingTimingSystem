@@ -48,7 +48,7 @@ class App extends Component {
 
                     <PrivateRoute path="/tiempos" exact component={tiemposPage}/>
 
-                    <PrivateRoute path="/perfil" exact component={UsuariosPage} />
+                    <PrivateRoute path="/usuarios" exact component={UsuariosPage} />
 
                     <Route component={NotFoundPage} />
                 </Switch>

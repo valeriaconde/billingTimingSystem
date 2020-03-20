@@ -24,7 +24,6 @@ class Menu extends Component {
                     {
                         isLoggedIn ?
                         <NavDropdown title={LoggedUser.getEmail()} drop="left">
-                            <NavDropdown.Item href="/perfil">Perfil</NavDropdown.Item>
                             <NavDropdown.Item href="/usuarios">Usuarios</NavDropdown.Item>
                             <NavDropdown.Item href="/register">Registrar usuarios</NavDropdown.Item>
                             <NavDropdown.Divider />
