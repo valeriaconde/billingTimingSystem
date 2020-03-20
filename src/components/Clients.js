@@ -134,7 +134,7 @@ class Clientes extends Component {
 
 
                             <ListGroup as="ul" className="">
-                                <ListGroup.Item as="li" onClick={this.handleShowCliente}> Cliente 1  </ListGroup.Item>
+                                <ListGroup.Item as="li" > Cliente 1  </ListGroup.Item>
                                 <ListGroup.Item as="li" active className="legem-primary" >Cliente 2</ListGroup.Item>
                                 <ListGroup.Item as="li"> Cliente 3</ListGroup.Item>
                                 <ListGroup.Item as="li">Cliente 4</ListGroup.Item>

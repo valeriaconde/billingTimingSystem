@@ -66,6 +66,20 @@ class Proyectos extends Component {
 
                             <Form.Group as={Row}>
                                 <Form.Label column sm="3">
+                                    Responsables
+                                </Form.Label>
+                                <Col sm="5">
+                                    <Form.Group controlId="formBasicCheckbox">
+                                        <Form.Check type="checkbox" label="Abogado 1" />
+                                        <Form.Check type="checkbox" label="Abogado 2" />
+                                        <Form.Check type="checkbox" label="Abogado 3" />
+                                        <Form.Check type="checkbox" label="Abogado 4" />
+                                    </Form.Group>
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row}>
+                                <Form.Label column sm="3">
                                     Facturación
                                 </Form.Label>
                                 <Col sm="5">
@@ -81,7 +95,7 @@ class Proyectos extends Component {
                                     Anticipo
                                 </Form.Label>
                                 <Col sm="5">
-                                    <Form.Control as="textarea" rows="1" placeholder="$"/>
+                                    <Form.Control as="textarea" rows="1" placeholder="$" />
                                 </Col>
                             </Form.Group>
                         </Form>
@@ -110,6 +124,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -138,6 +153,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -170,6 +186,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -198,6 +215,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -233,6 +251,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -261,6 +280,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -293,6 +313,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>
@@ -321,6 +342,7 @@ class Proyectos extends Component {
                                 </Card.Text>
                                 <Card.Text> Facturado por hora. </Card.Text>
                                 <Card.Text> Anticipo: $20,000.00 MXN </Card.Text>
+                                <Card.Text> Responsables: Oscar, Lesly, Fabiola </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col></Col>

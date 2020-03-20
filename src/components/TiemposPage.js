@@ -73,22 +73,31 @@ class tiemposPage extends Component {
                                     Tiempo
                                 </Form.Label>
                                 <Col sm="5">
-                                    <Form.Control as="textarea" rows="1" column="3" />
-                                    <Form.Label> horas</Form.Label>
-                                </Col>
-                            </Form.Group>
-
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="3">
-                                </Form.Label>
-                                <Col sm="5">
-                                    <Form.Control as="select">
-                                        <option> 0 </option>
-                                        <option> 15 </option>
-                                        <option> 30 </option>
-                                        <option> 45 </option>
-                                    </Form.Control>
-                                    <Form.Label> minutos</Form.Label>
+                                    <Container>
+                                        <Row>
+                                            <Col>
+                                                <Form.Control as="textarea" rows="1" column="3" />
+                                            </Col>
+                                            <Col>
+                                                <Form.Control as="select">
+                                                    <option> 0 </option>
+                                                    <option> 15 </option>
+                                                    <option> 30 </option>
+                                                    <option> 45 </option>
+                                                </Form.Control>
+                                            </Col>
+                                        </Row>
+                                    </Container> 
+                                    <Container>
+                                        <Row>
+                                            <Col>
+                                                <Form.Label> horas </Form.Label> 
+                                            </Col>
+                                            <Col>
+                                                <Form.Label> minutos </Form.Label>
+                                            </Col>
+                                        </Row>
+                                    </Container>
                                 </Col>
                             </Form.Group>
                         </Form>
@@ -155,7 +164,7 @@ class tiemposPage extends Component {
                                         CLIENTE - PROYECTO
                                     </Col>
                                     <Col sm={4}>
-                                        15m 
+                                        15m
                                     </Col>
                                 </Row>
                             </Container>
