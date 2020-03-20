@@ -14,6 +14,7 @@ import registeruser from './Register';
 import ProyectosPage from './ProyectosPage';
 import gastos from './GastosPage';
 import tiemposPage from './TiemposPage';
+import UsuariosPage from './UsuariosPage';
 
 // REACT VERSION: 16.13.0
 
@@ -46,6 +47,8 @@ class App extends Component {
                     <PrivateRoute path="/gastos" exact component={gastos} />
 
                     <PrivateRoute path="/tiempos" exact component={tiemposPage}/>
+
+                    <PrivateRoute path="/usuarios" exact component={UsuariosPage} />
 
                     <Route component={NotFoundPage} />
                 </Switch>
