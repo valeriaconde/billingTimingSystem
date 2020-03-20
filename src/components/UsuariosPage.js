@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { Jumbotron, Container, Row, Col, Form, Button, Modal, ListGroup } from 'react-bootstrap';
+import { Jumbotron, Container, Row, Col, Form, Button, ListGroup } from 'react-bootstrap';
 
-class Perfil extends Component {
+class UsuariosPage extends Component {
     constructor(props) {
         super(props);
         this.state = { edit: false };
@@ -92,4 +92,4 @@ class Perfil extends Component {
         );
     }
 }
-export default Perfil;
+export default UsuariosPage;
