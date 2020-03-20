@@ -11,7 +11,6 @@ blue: rgb 25, 57, 145
 }
 
 
-
 /* LOGIN FORM CSS */
 .loginForm {
   margin: 30px;
@@ -36,6 +35,10 @@ blue: rgb 25, 57, 145
   background-color: rgb(25, 57, 145) !important;
   color: white !important;
   border-color: rgb(25, 57, 145) !important;
+}
+
+.blueLetters {
+  color: rgb(25, 57, 145);
 }
 
 .topMargin {
