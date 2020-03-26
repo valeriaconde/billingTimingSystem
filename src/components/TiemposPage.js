@@ -61,6 +61,15 @@ class tiemposPage extends Component {
 
                             <Form.Group as={Row}>
                                 <Form.Label column sm="3">
+                                    Concepto
+                                </Form.Label>
+                                <Col sm="5">
+                                    <Form.Control as="textarea" rows="2" />
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row}>
+                                <Form.Label column sm="3">
                                     Fecha
                                 </Form.Label>
                                 <Col sm="5">

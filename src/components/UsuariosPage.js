@@ -65,7 +65,7 @@ class UsuariosPage extends Component {
 
                                 {/* FECHA DE INGRESO */}
                                 <Form.Group as={Row} controlId="formPlaintextEmail">
-                                    <Form.Label column sm="4"> Fecha de ingreso </Form.Label>
+                                    <Form.Label column sm="4"> Año de ingreso </Form.Label>
                                     <Col sm="5">
                                         {
                                             this.state.edit ?
