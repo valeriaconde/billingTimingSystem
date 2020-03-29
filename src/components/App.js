@@ -9,52 +9,42 @@ import {
 import Clientes from './Clients';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
-import PrivateRoute from './PrivateRoute';
 import registeruser from './Register';
 import ProyectosPage from './ProyectosPage';
 import gastos from './GastosPage';
 import tiemposPage from './TiemposPage';
 import UsuariosPage from './UsuariosPage';
+import { withAuthentication } from './Auth';
 
 // REACT VERSION: 16.13.0
 
 class App extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {};
-    }
-
-    componentDidMount() {
-        document.title = "Legem";
-    }
-
     render() {
         return (
-            <BrowserRouter>
-                <Menu />
-                <Switch>
+                <BrowserRouter>
+                    <Menu />
+                    <Switch>
+                        <Route path="/" exact component={Clientes} />
 
-                    <PrivateRoute path="/" exact component={Clientes} />
+                        <Route path="/home" exact component={Clientes} />
 
-                    <PrivateRoute path="/home" exact component={Clientes} />
+                        <Route path="/register" exact component={registeruser} />
 
-                    <PrivateRoute path="/register" exact component={registeruser} />
+                        <Route path="/login" exact component={LoginPage} />
 
-                    <Route path="/login" exact component={LoginPage} />
+                        <Route path="/proyectos" exact component={ProyectosPage} />
 
-                    <PrivateRoute path="/proyectos" exact component={ProyectosPage} />
+                        <Route path="/gastos" exact component={gastos} />
 
-                    <PrivateRoute path="/gastos" exact component={gastos} />
+                        <Route path="/tiempos" exact component={tiemposPage}/>
 
-                    <PrivateRoute path="/tiempos" exact component={tiemposPage}/>
+                        <Route path="/usuarios" exact component={UsuariosPage} />
 
-                    <PrivateRoute path="/usuarios" exact component={UsuariosPage} />
-
-                    <Route component={NotFoundPage} />
-                </Switch>
-            </BrowserRouter>
+                        <Route component={NotFoundPage} />
+                    </Switch>
+                </BrowserRouter>
         );
     }
 }
 
-export default App;
+export default withAuthentication(App);
