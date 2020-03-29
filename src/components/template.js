@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {  } from 'react-bootstrap';
+import { AuthUserContext, withAuthorization } from './Auth';
 
 class template extends Component {
     constructor(props) {
@@ -7,10 +8,16 @@ class template extends Component {
     }
     render() {
         return (
-            <div>
+            <AuthUserContext.Consumer>
+            {authUser =>
+                <div>
 
-            </div>
+                </div>
+            }
+            </AuthUserContext.Consumer>
         );
     }
 }
-export default template;
+
+const condition = authUser => !!authUser;
+export default withAuthorization(condition)(template);
