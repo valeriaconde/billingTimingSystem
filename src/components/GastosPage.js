@@ -46,15 +46,26 @@ class gastos extends Component {
                                         </Form.Control>
                                     </Col>
                                 </Form.Group>
+                            <Form.Group as={Row}>
+                                <Form.Label column sm="3">
+                                    Proyecto
+                                </Form.Label>
+                                <Col sm="5">
+                                    <Form.Control as="select">
+                                        <option> Proyecto 1 </option>
+                                        <option> Proyecto 2 </option>
+                                    </Form.Control>
+                                </Col>
+                            </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Concepto
-                                    </Form.Label>
-                                    <Col sm="5">
-                                        <Form.Control as="textarea" rows="2" />
-                                    </Col>
-                                </Form.Group>
+                            <Form.Group as={Row}>
+                                <Form.Label column sm="3">
+                                    Concepto
+                                </Form.Label>
+                                <Col sm="5">
+                                    <Form.Control as="textarea" rows="2" />
+                                </Col>
+                            </Form.Group>
 
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">
@@ -111,22 +122,33 @@ class gastos extends Component {
                         </Modal.Footer>
                     </Modal>
 
-                    {/* FILTRO */}
-                    <DropdownButton id="dropdown-basic-button" className="leftMargin filterbtn" variant="secondary" title="Filtrar">
-                        <Dropdown.Item href="#/action-1"> Todos </Dropdown.Item>
-                        <Dropdown.Item href="#/action-2"> Por cliente </Dropdown.Item>
-                        <Dropdown.Item href="#/action-3"> Por tipo de gasto </Dropdown.Item>
-                    </DropdownButton>
-                    {/* PENDIENTE PONER COLORES A LOS TIPOS DE GASTO */}
+                {/* PENDIENTE PONER COLORES A LOS TIPOS DE GASTO */}
 
-                    <h5 className="leftMargin"> TODOS (cronologico) / CLIENTE / TIPO DE GASTO </h5>
+                {/* ASUNTOS ACTIVOS */}
+                <h4 className="topMargin leftMargin greenLetters"> Activos </h4>
 
-                    {/* ASUNTOS ACTIVOS */}
-                    <h4 className="topMargin leftMargin greenLetters"> Activos </h4>
-
-                    <Accordion className="topMargin leftMargin rightMargin" defaultActiveKey="0">
-                        <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey="0" ><b>
+                <Accordion className="topMargin leftMargin rightMargin" defaultActiveKey="0">
+                    <Card>
+                        <Accordion.Toggle as={Card.Header} eventKey="0" ><b>
+                            <Container>
+                                <Row>
+                                    <Col sm={8}>
+                                        CLIENTE - Vuelo MTY - CDMX (concepto)
+                                    </Col>
+                                    <Col sm={4}>
+                                        $8,000.00 MXN (monto)
+                                    </Col>
+                                </Row>
+                            </Container>
+                        </b></Accordion.Toggle>
+                        <Accordion.Collapse eventKey="0">
+                            <Card.Body>
+                                <Card.Text>
+                                    $8,000.00 MXN (monto)
+                                </Card.Text>
+                                <Card.Text> 07 de marzo de 2019 </Card.Text>
+                                <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
+                                <Card.Text> Usuario: Oscar Conde </Card.Text>
                                 <Container>
                                     <Row>
                                         <Col sm={8}>

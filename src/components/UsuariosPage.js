@@ -67,18 +67,18 @@ class UsuariosPage extends Component {
                                         </Col>
                                     </Form.Group>
 
-                                    {/* FECHA DE INGRESO */}
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4"> Fecha de ingreso </Form.Label>
-                                        <Col sm="5">
-                                            {
-                                                this.state.edit ?
-                                                    <Form.Control plaintext defaultValue=" " />
-                                                    :
-                                                    <Form.Control plaintext readOnly defaultValue="2003" />
-                                            }
-                                        </Col>
-                                    </Form.Group>
+                                {/* FECHA DE INGRESO */}
+                                <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Label column sm="4"> Año de ingreso </Form.Label>
+                                    <Col sm="5">
+                                        {
+                                            this.state.edit ?
+                                                <Form.Control plaintext defaultValue=" " />
+                                                :
+                                                <Form.Control plaintext readOnly defaultValue="2003" />
+                                        }
+                                    </Col>
+                                </Form.Group>
 
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
                                         <Form.Label column sm="5"></Form.Label>
