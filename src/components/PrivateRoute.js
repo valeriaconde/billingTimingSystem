@@ -3,23 +3,45 @@
 
 // If they are: they proceed to the page
 // If not: they are redirected to the login page.
-import React from 'react'
-import { Redirect, Route } from 'react-router-dom'
-import LoggedUser from '../stores/LoggedUser'
+import React from 'react';
+import { Redirect, Route } from 'react-router-dom';
+import { AuthUserContext } from './Auth';
 
-const PrivateRoute = ({ component: Component, ...rest }) => {
-    const isLoggedIn = LoggedUser.isLoggedIn();
+// class PrivateRoute extends Component {
+//     render(){
+//         return(
+//             <AuthUserContext.Consumer>
+//             { authUser =>
+//                 <Route path={this.props.path} comp={this.props.component} 
+//                     render = {() =>
+//                         authUser ? <Component {...this.props} />
+//                         : <Redirect to={{ pathname: '/login', state: { from: this.props.path } }} />
+//                     }
+//                 />
+//             }
+//             </AuthUserContext.Consumer>
+//         );
+//     }
+// }
+
+const PrivateRoute = ({ component: Component, authUser: any, ...rest }) => {
     return (
-        <Route
-            {...rest}
-            render={props =>
-                isLoggedIn ? (
-                    <Component {...props} />
-                ) : (
-                        <Redirect to={{ pathname: '/login', state: { from: props.location } }} />
-                    )
+        <AuthUserContext.Consumer>
+            {
+                authUser =>
+                <Route
+                    {...rest}
+                    render = {props =>
+                        authUser ? (
+                            <Component {...props} />
+                        ) : (
+                                <Redirect to={{ pathname: '/login', state: { from: props.location } }} />
+                            )
+                    }
+                />
             }
-        />
+        </AuthUserContext.Consumer>
+        
     )
 }
 
