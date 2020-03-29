@@ -69,23 +69,49 @@ class tiemposPage extends Component {
                                     </Col>
                                 </Form.Group>
 
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="3">
-                                    Concepto
-                                </Form.Label>
-                                <Col sm="5">
-                                    <Form.Control as="textarea" rows="2" />
-                                </Col>
-                            </Form.Group>
-
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="3">
-                                    Fecha
-                                </Form.Label>
-                                <Col sm="5">
-                                    {/* DAY PICKER */}
-                                </Col>
-                            </Form.Group>
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">
+                                        Tiempo
+                                    </Form.Label>
+                                    <Col sm="5">
+                                        <Container>
+                                            <Row>
+                                                <Col>
+                                                    <Form.Control as="textarea" rows="1" column="3" />
+                                                </Col>
+                                                <Col>
+                                                    <Form.Control as="select">
+                                                        <option> 0 </option>
+                                                        <option> 15 </option>
+                                                        <option> 30 </option>
+                                                        <option> 45 </option>
+                                                    </Form.Control>
+                                                </Col>
+                                            </Row>
+                                        </Container> 
+                                        <Container>
+                                            <Row>
+                                                <Col>
+                                                    <Form.Label> horas </Form.Label> 
+                                                </Col>
+                                                <Col>
+                                                    <Form.Label> minutos </Form.Label>
+                                                </Col>
+                                            </Row>
+                                        </Container>
+                                    </Col>
+                                </Form.Group>
+                            </Form>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={this.handleClose}>
+                                Cancelar
+                            </Button>
+                            <Button className="legem-primary" onClick={this.handleClose}>
+                                Registrar tiempo
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
 
                     {/* EN ORDEN ALFABETICO DE CLIENTES */}
                     {/* ASUNTOS ACTIVOS */}
