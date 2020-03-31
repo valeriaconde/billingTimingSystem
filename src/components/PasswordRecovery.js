@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
-import { AuthUserContext, withAuthorization } from './Auth';
+import { AuthUserContext } from './Auth';
 
 class passRec extends Component {
     constructor(props) {

@@ -15,6 +15,7 @@ import gastos from './GastosPage';
 import tiemposPage from './TiemposPage';
 import UsuariosPage from './UsuariosPage';
 import passRec from './PasswordRecovery';
+import passChange from './PasswordChange';
 import { withAuthentication } from './Auth';
 
 // REACT VERSION: 16.13.0
@@ -42,6 +43,8 @@ class App extends Component {
                         <Route path="/usuarios" exact component={UsuariosPage} />
 
                         <Route path="/password-recovery" exact component={passRec} />
+
+                        <Route path="/password-change" exact component={passChange} />
 
                         <Route component={NotFoundPage} />
                     </Switch>
