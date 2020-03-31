@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Modal, Form, Row, Col, Accordion, Card, Container, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Button, Modal, Form, Row, Col, Accordion, Card, Container } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 
 class gastos extends Component {
@@ -43,6 +43,18 @@ class gastos extends Component {
                                         <Form.Control as="select">
                                             <option> Cliente 1 </option>
                                             <option> Cliente 2 </option>
+                                        </Form.Control>
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">
+                                        Proyecto
+                                    </Form.Label>
+                                    <Col sm="5">
+                                        <Form.Control as="select">
+                                            <option> Proyecto 1 </option>
+                                            <option> Proyecto 2 </option>
                                         </Form.Control>
                                     </Col>
                                 </Form.Group>
@@ -111,15 +123,7 @@ class gastos extends Component {
                         </Modal.Footer>
                     </Modal>
 
-                    {/* FILTRO */}
-                    <DropdownButton id="dropdown-basic-button" className="leftMargin filterbtn" variant="secondary" title="Filtrar">
-                        <Dropdown.Item href="#/action-1"> Todos </Dropdown.Item>
-                        <Dropdown.Item href="#/action-2"> Por cliente </Dropdown.Item>
-                        <Dropdown.Item href="#/action-3"> Por tipo de gasto </Dropdown.Item>
-                    </DropdownButton>
                     {/* PENDIENTE PONER COLORES A LOS TIPOS DE GASTO */}
-
-                    <h5 className="leftMargin"> TODOS (cronologico) / CLIENTE / TIPO DE GASTO </h5>
 
                     {/* ASUNTOS ACTIVOS */}
                     <h4 className="topMargin leftMargin greenLetters"> Activos </h4>
@@ -130,7 +134,7 @@ class gastos extends Component {
                                 <Container>
                                     <Row>
                                         <Col sm={8}>
-                                            Vuelo MTY - CDMX (concepto)
+                                            CLIENTE - Vuelo MTY - CDMX (concepto)
                                         </Col>
                                         <Col sm={4}>
                                             $8,000.00 MXN (monto)
@@ -171,7 +175,7 @@ class gastos extends Component {
                                 <Container>
                                     <Row>
                                         <Col sm={8}>
-                                            Vuelo CDMX - MTY (concepto)
+                                            CLIENTE - Vuelo CDMX - MTY (concepto)
                                         </Col>
                                         <Col sm={4}>
                                             $600.00 USD
@@ -219,7 +223,7 @@ class gastos extends Component {
                                 <Container>
                                     <Row>
                                         <Col sm={8}>
-                                            Vuelo MTY - CDMX (concepto)
+                                            CLIENTE - Vuelo MTY - CDMX (concepto)
                                         </Col>
                                         <Col sm={4}>
                                             $8,000.00 MXN (monto)
@@ -260,7 +264,7 @@ class gastos extends Component {
                                 <Container>
                                     <Row>
                                         <Col sm={8}>
-                                            Vuelo CDMX - MTY (concepto)
+                                            CLIENTE - CONCEPTO
                                         </Col>
                                         <Col sm={4}>
                                             $600.00 USD
