@@ -60,8 +60,8 @@ class LoginPage extends Component {
                     <Form.Group controlId="formBasicPassword">
                         <Form.Label className="formLabels">Contraseña</Form.Label>
                         <Form.Control name="password" type="password" size="sm" value={password} onChange={this.onChange} required />
-                         <Form.Text > <a href="/password-recover" className="text-muted" > Olvidé mi contraseña</a></Form.Text>
                         <Form.Control.Feedback type="invalid" >Ingrese su contraseña</Form.Control.Feedback>
+                        <Form.Text><a href="/password-recovery" className="text-muted" > Olvidé mi contraseña</a></Form.Text>
                     </Form.Group>
                     <Button variant="primary" type="submit" className="legem-primary" >Ingresar</Button>
                 </Form>
