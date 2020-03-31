@@ -210,8 +210,6 @@ class gastos extends Component {
                         </Card>
                     </Accordion>
 
-
-
                     {/* ASUNTOS CERRADOS */}
 
                     <h4 className="topMargin leftMargin redLetters"> Cerrados </h4>
