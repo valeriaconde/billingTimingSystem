@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { withFirebase } from './Firebase';
+import AlertStore, { AlertType } from '../stores/AlertStore';
 
 const INITIAL_STATE = {
     email: '',
@@ -40,6 +41,8 @@ class LoginPage extends Component {
                 window.location.reload();
             })
             .catch(error => {
+                AlertStore.add(AlertType.Error, error.message);
+                console.log(error);
                 this.setState({ error, password: '', email: '' });
             });
 

@@ -1,18 +1,41 @@
 import React, { Component } from 'react';
-import { Navbar, Nav, Image, NavDropdown } from 'react-bootstrap';
+import { observer } from "mobx-react"
+import { Navbar, Nav, Image, NavDropdown, Alert } from 'react-bootstrap';
 import SignOutButton from './SignOutButton';
 import { AuthUserContext } from './Auth';
+import AlertStore, { AlertType } from '../stores/AlertStore';
 
+@observer
 class Menu extends Component {
     // constructor(props) {
     //     super(props);
     // }
+
+    getAlertColor(type) {
+        switch (type) {
+            case AlertType.Error: return "danger";
+            case AlertType.Info: return "info";
+            case AlertType.Success: return "success";
+            case AlertType.Warning: return "warning";
+
+            default: return "primary";
+        }
+    }
+
+    renderAlerts() {
+        return (
+            <>
+            {AlertStore.alerts.map((alert, i) => <Alert key={`alert-${i}`} style={{ width: "100%" }} toggle={() => AlertStore.clear(alert)} color={this.getAlertColor(alert.type)}>{AlertType[alert.type].toUpperCase()}: {alert.message}</Alert>)}
+            </>
+        );
+    }
 
     render() {
         return (
             <AuthUserContext.Consumer>
                 {
                     authUser =>
+                    <div>
                     <Navbar bg="light" variant="light">
                         <Navbar.Brand href="/home"><Image src="/logo.png" height={"35"} /></Navbar.Brand>
                         <Nav className="mr-auto">
@@ -37,9 +60,16 @@ class Menu extends Component {
                             }
                         </Nav>
                     </Navbar>
+                    { AlertStore.hasAlert &&
+                        <div style={{ marginBottom: "20px", width: "100%" }}>
+                            {this.renderAlerts()}
+                        </div>
+                    }
+                    </div>
                 }
             </AuthUserContext.Consumer>
         );
     }
 }
+
 export default Menu;
