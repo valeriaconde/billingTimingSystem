@@ -14,7 +14,7 @@ import ProyectosPage from './ProyectosPage';
 import gastos from './GastosPage';
 import tiemposPage from './TiemposPage';
 import UsuariosPage from './UsuariosPage';
-import passRec from './PasswordRecovery';
+import Passrec from './PasswordRecovery';
 import passChange from './PasswordChange';
 import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
@@ -62,7 +62,7 @@ class App extends Component {
     renderAlerts() {
         return (
             <div>
-            {this.state.alerts.map((alert, i) => <Alert key={`alert-${i}`} style={{ width: "100%" }} onClose={() => this.clear(alert)} variant={this.getAlertColor(alert.type)} dismissible>{AlertType[alert.type].toUpperCase()}: {alert.message}</Alert>)}
+            {this.state.alerts.map((alert, i) => <Alert key={`alert-${i}`} style={{ width: "100%" }} onClose={() => this.clear(alert)} variant={this.getAlertColor(alert.type)} dismissible>{alert.message}</Alert>)}
             </div>
         );
     }
@@ -93,7 +93,7 @@ class App extends Component {
 
                         <Route path="/usuarios" exact component={UsuariosPage} />
 
-                        <Route path="/password-recovery" exact component={passRec} />
+                        <Route path="/password-recovery" exact render={(props) => <Passrec {...props} addAlert={this.addAlert} />} />
 
                         <Route path="/password-change" exact component={passChange} />
 

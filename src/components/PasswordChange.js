@@ -2,10 +2,17 @@ import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 
+const INITIAL_STATE = {
+    email: ''
+};
+
 class passChange extends Component {
     constructor(props) {
         super(props);
+
+        this.state = { ...INITIAL_STATE };
     }
+
     render() {
         return (
             <AuthUserContext.Consumer>
