@@ -15,7 +15,7 @@ import gastos from './GastosPage';
 import tiemposPage from './TiemposPage';
 import UsuariosPage from './UsuariosPage';
 import Passrec from './PasswordRecovery';
-import passChange from './PasswordChange';
+import PassChange from './PasswordChange';
 import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
@@ -95,7 +95,7 @@ class App extends Component {
 
                         <Route path="/password-recovery" exact render={(props) => <Passrec {...props} addAlert={this.addAlert} />} />
 
-                        <Route path="/password-change" exact component={passChange} />
+                        <Route path="/password-change" exact render={(props) => <PassChange {...props} addAlert={this.addAlert} />} />
 
                         <Route component={NotFoundPage} />
                     </Switch>
