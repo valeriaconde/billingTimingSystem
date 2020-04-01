@@ -25,14 +25,14 @@ class LoginPage extends Component {
     handleSubmit(event) {
         event.preventDefault();
         const { email, password } = this.state;
-        this.setState({validated: true});
+        this.setState({ validated: true });
         const form = event.currentTarget;
         if (!form.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
             return;
         }
-        
+
         this.props.firebase
             .doSignInWithEmailAndPassword(email, password)
             .then(() => { // log in success
@@ -60,11 +60,12 @@ class LoginPage extends Component {
                     <Form.Group controlId="formBasicPassword">
                         <Form.Label className="formLabels">Contraseña</Form.Label>
                         <Form.Control name="password" type="password" size="sm" value={password} onChange={this.onChange} required />
-                        <Form.Control.Feedback type="invalid">Ingrese su contraseña</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid" >Ingrese su contraseña</Form.Control.Feedback>
+                        <Form.Text><a href="/password-recovery" className="text-muted" > Olvidé mi contraseña</a></Form.Text>
                     </Form.Group>
                     <Button variant="primary" type="submit" className="legem-primary" >Ingresar</Button>
                 </Form>
-                { error && <p>{error.message}</p> }
+                {error && <p>{error.message}</p>}
             </div>
         );
     }
