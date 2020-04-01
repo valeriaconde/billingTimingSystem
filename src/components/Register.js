@@ -39,8 +39,9 @@ class registeruser extends Component {
             else return;
         }
 
-        this.props.firebase
+        const x = this.props.firebase
             .doCreateUserWithEmailAndPassword(email, email, roles);
+        console.log(x);
 
         this.setState(INITIAL_STATE);
     }

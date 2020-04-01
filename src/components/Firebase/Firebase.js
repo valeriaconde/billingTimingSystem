@@ -24,7 +24,6 @@ class Firebase {
     {
         var secondaryApp = app.initializeApp(config, "Secondary");
         secondaryApp.auth().createUserWithEmailAndPassword(email, password).then(function(firebaseUser) {
-            console.log("User " + firebaseUser.user.email + " " + firebaseUser.user.uid + " created successfully!");
             return app.database().ref(`users/${firebaseUser.user.uid}`)
                 .set({
                     email,
