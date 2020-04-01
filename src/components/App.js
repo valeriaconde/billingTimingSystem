@@ -9,7 +9,7 @@ import {
 import Clientes from './Clients';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
-import registeruser from './Register';
+import Registeruser from './Register';
 import ProyectosPage from './ProyectosPage';
 import gastos from './GastosPage';
 import tiemposPage from './TiemposPage';
@@ -79,7 +79,7 @@ class App extends Component {
 
                         <Route path="/home" exact component={Clientes} />
 
-                        <Route path="/register" exact component={registeruser} />
+                        <Route path="/register" exact render={(props) => <Registeruser {...props} addAlert={this.addAlert} />} />
 
                         <Route path="/login" exact render={(props) => <LoginPage {...props} addAlert={this.addAlert} />} />
 

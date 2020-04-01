@@ -3,6 +3,7 @@ import { Form, Button } from 'react-bootstrap';
 import { withFirebase } from './Firebase';
 import { AuthUserContext, withAuthorization } from './Auth';
 import * as ROLES from '../constants/roles';
+import { AlertType } from '../stores/AlertStore';
 
 const INITIAL_STATE = {
     email: '',
@@ -12,7 +13,7 @@ const INITIAL_STATE = {
     error: null
 };
 
-class registeruser extends Component {
+class Registeruser extends Component {
     constructor(props) {
         super(props);
 
@@ -39,10 +40,11 @@ class registeruser extends Component {
             else return;
         }
 
-        const x = this.props.firebase
+        this.props.firebase
             .doCreateUserWithEmailAndPassword(email, email, roles);
-        console.log(x);
 
+
+        this.props.addAlert(AlertType.Success, `${email} successfully registered`);
         this.setState(INITIAL_STATE);
     }
 
@@ -94,4 +96,4 @@ class registeruser extends Component {
 
 // TODO: role base rule
 const condition = authUser => !!authUser;
-export default withAuthorization(condition)(withFirebase(registeruser));
+export default withAuthorization(condition)(withFirebase(Registeruser));
