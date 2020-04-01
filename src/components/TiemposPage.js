@@ -62,6 +62,15 @@ class tiemposPage extends Component {
 
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">
+                                        Descripción
+                                    </Form.Label>
+                                    <Col sm="5">
+                                        <Form.Control as="textarea" rows="2" />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">
                                         Fecha
                                     </Form.Label>
                                     <Col sm="5">
@@ -134,9 +143,9 @@ class tiemposPage extends Component {
                             <Accordion.Collapse eventKey="0">
                                 <Card.Body>
                                     <Card.Text> Descripcion, blablabla </Card.Text>
-                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Card.Text> 07 de marzo de 2019 </Card.Text>
                                     <Card.Text> 1h 15min </Card.Text>
+                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Container>
                                         <Row>
                                             <Col></Col>
@@ -173,9 +182,9 @@ class tiemposPage extends Component {
                             <Accordion.Collapse eventKey="1">
                                 <Card.Body>
                                     <Card.Text> Descripcion, blablabla </Card.Text>
-                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Card.Text> 07 de marzo de 2019 </Card.Text>
                                     <Card.Text> 1h 15min </Card.Text>
+                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Container>
                                         <Row>
                                             <Col></Col>
@@ -219,9 +228,9 @@ class tiemposPage extends Component {
                             <Accordion.Collapse eventKey="0">
                                 <Card.Body>
                                     <Card.Text> Descripcion, blablabla </Card.Text>
-                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Card.Text> 07 de marzo de 2019 </Card.Text>
                                     <Card.Text> 1h 15min </Card.Text>
+                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Container>
                                         <Row>
                                             <Col></Col>
@@ -257,9 +266,9 @@ class tiemposPage extends Component {
                             <Accordion.Collapse eventKey="1">
                                 <Card.Body>
                                     <Card.Text> Descripcion, blablabla </Card.Text>
-                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Card.Text> 07 de marzo de 2019 </Card.Text>
                                     <Card.Text> 1h 15min </Card.Text>
+                                    <Card.Text> Oscar Conde (usuario) </Card.Text>
                                     <Container>
                                         <Row>
                                             <Col></Col>

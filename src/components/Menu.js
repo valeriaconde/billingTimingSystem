@@ -29,6 +29,7 @@ class Menu extends Component {
                                 <NavDropdown title={authUser.email} drop="left">
                                     <NavDropdown.Item href="/usuarios">Usuarios</NavDropdown.Item>
                                     <NavDropdown.Item href="/register">Registrar usuarios</NavDropdown.Item>
+                                    <NavDropdown.Item href="/password-change"> Cambiar contraseña </NavDropdown.Item>
                                     <NavDropdown.Divider />
                                     <SignOutButton />
                                 </NavDropdown>
