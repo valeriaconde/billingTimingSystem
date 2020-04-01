@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { withFirebase } from './Firebase';
+import { AlertType } from '../stores/AlertStore';
 
 const INITIAL_STATE = {
     email: '',
@@ -36,10 +37,11 @@ class LoginPage extends Component {
         this.props.firebase
             .doSignInWithEmailAndPassword(email, password)
             .then(() => { // log in success
-                this.props.history.push(this.state.from || '/home');
+                this.props.history.push('/home');
                 window.location.reload();
             })
             .catch(error => {
+                this.props.addAlert(AlertType.Error, error.message);
                 this.setState({ error, password: '', email: '' });
             });
 

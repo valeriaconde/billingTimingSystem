@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { withFirebase } from './Firebase';
 import { AuthUserContext, withAuthorization } from './Auth';
+import * as ROLES from '../constants/roles';
+import { AlertType } from '../stores/AlertStore';
 
 const INITIAL_STATE = {
     email: '',
@@ -11,7 +13,7 @@ const INITIAL_STATE = {
     error: null
 };
 
-class registeruser extends Component {
+class Registeruser extends Component {
     constructor(props) {
         super(props);
 
@@ -22,6 +24,7 @@ class registeruser extends Component {
     }
 
     handleSubmit(event) {
+        event.preventDefault();
         this.setState({validated: true});
         const form = event.currentTarget;
         if (!form.checkValidity() || this.state.email !== this.state.email2) {
@@ -30,16 +33,19 @@ class registeruser extends Component {
             return;
         }
 
-        this.props.firebase
-            .doCreateUserWithEmailAndPassword(this.state.email, this.state.email)
-            .then(authUser => {
-                    this.setState({ ...INITIAL_STATE });
-                })
-            .catch(error => {
-                this.setState({ error });
-            });
+        const { email, isAdmin } = this.state;
+        const roles = {};
+        if(isAdmin) {
+            if(window.confirm('¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios.')) roles[ROLES.ADMIN] = ROLES.ADMIN;
+            else return;
+        }
 
-        event.preventDefault();
+        this.props.firebase
+            .doCreateUserWithEmailAndPassword(email, email, roles);
+
+
+        this.props.addAlert(AlertType.Success, `${email} successfully registered`);
+        this.setState(INITIAL_STATE);
     }
 
     onChange(event) {
@@ -90,4 +96,4 @@ class registeruser extends Component {
 
 // TODO: role base rule
 const condition = authUser => !!authUser;
-export default withAuthorization(condition)(withFirebase(registeruser));
+export default withAuthorization(condition)(withFirebase(Registeruser));
