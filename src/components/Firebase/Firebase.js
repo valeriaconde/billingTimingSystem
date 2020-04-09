@@ -28,7 +28,7 @@ class Firebase {
     }
 
     // *** Password API ***
-    doCreateUserWithEmailAndPassword = (    email, password, roles) => 
+    doCreateUserWithEmailAndPassword = (email, password, roles) => 
     {
         var secondaryApp = app.initializeApp(config, this.createUUID());
         return secondaryApp.auth().createUserWithEmailAndPassword(email, password).then(function(firebaseUser) {
