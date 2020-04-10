@@ -4,11 +4,16 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import { compose } from 'recompose';
 import * as ROLES from '../constants/roles';
 import { withFirebase } from './Firebase';
+import UserStore from '../stores/UserStore';
 
 class UsuariosPage extends Component {
     constructor(props) {
         super(props);
         this.state = { edit: false };
+    }
+
+    componentDidMount() {
+        if(UserStore.isEmpty) UserStore.fetch();
     }
 
     render() {
