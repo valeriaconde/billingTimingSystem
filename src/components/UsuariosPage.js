@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import { Jumbotron, Container, Row, Col, Form, Button, ListGroup } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
+import { compose } from 'recompose';
+import * as ROLES from '../constants/roles';
+import { withFirebase } from './Firebase';
 
 class UsuariosPage extends Component {
     constructor(props) {
@@ -99,6 +102,10 @@ class UsuariosPage extends Component {
     }
 }
 
-// TODO: role base rule
-const condition = authUser => !!authUser;
-export default withAuthorization(condition)(UsuariosPage);
+const condition = authUser => 
+    authUser && !!authUser.roles[ROLES.ADMIN];
+
+export default compose(
+    withAuthorization(condition),
+    withFirebase,
+)(UsuariosPage);

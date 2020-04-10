@@ -4,6 +4,7 @@ import { withFirebase } from './Firebase';
 import { AuthUserContext, withAuthorization } from './Auth';
 import * as ROLES from '../constants/roles';
 import { AlertType } from '../stores/AlertStore';
+import { compose } from 'recompose';
 
 const INITIAL_STATE = {
     email: '',
@@ -26,14 +27,20 @@ class Registeruser extends Component {
     handleSubmit(event) {
         event.preventDefault();
         this.setState({validated: true});
+        const { email, email2, isAdmin } = this.state;
         const form = event.currentTarget;
-        if (!form.checkValidity() || this.state.email !== this.state.email2) {
+
+        if(email !== email2) {
+            this.props.addAlert(AlertType.Error, 'Emails does not match');
+            return;
+        }
+
+        if (!form.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
             return;
         }
 
-        const { email, isAdmin } = this.state;
         const roles = {};
         if(isAdmin) {
             if(window.confirm('¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios.')) roles[ROLES.ADMIN] = ROLES.ADMIN;
@@ -94,6 +101,10 @@ class Registeruser extends Component {
     }
 }
 
-// TODO: role base rule
-const condition = authUser => !!authUser;
-export default withAuthorization(condition)(withFirebase(Registeruser));
+const condition = authUser => 
+    authUser && !!authUser.roles[ROLES.ADMIN];
+
+export default compose(
+    withAuthorization(condition),
+    withFirebase,
+)(Registeruser);

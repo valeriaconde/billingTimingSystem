@@ -7,12 +7,13 @@ import { withFirebase } from '../Firebase';
 const withAuthorization = condition => Component => {
     class WithAuthorization extends React.Component {
         componentDidMount() {
-            this.listener = this.props.firebase.auth.onAuthStateChanged(
+            this.listener = this.props.firebase.onAuthUserListener(
                 authUser => {
-                    if (!condition(authUser)) {
+                    if(!condition(authUser)) {
                         this.props.history.push('/login');
                     }
                 },
+                () => this.props.history.push('/login')
             );
         }
 
@@ -35,4 +36,5 @@ const withAuthorization = condition => Component => {
         withFirebase,
     )(WithAuthorization);
 };
+
 export default withAuthorization;

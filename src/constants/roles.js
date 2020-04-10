@@ -1,2 +1,2 @@
-export const ADMIN = 'ADMIN';
-export const USER = 'USER';
+export const ADMIN = 'A';
+export const USER = 'U';
