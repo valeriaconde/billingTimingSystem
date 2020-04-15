@@ -6,9 +6,13 @@ import * as ROLES from '../constants/roles';
 import { withFirebase } from './Firebase';
 import { connect } from "react-redux";
 import { addAlert, getUsers } from "../redux/actions/index";
+import BarLoader from "react-spinners/BarLoader";
 
 const mapStateToProps = state => {
-    return { users: state.users };
+    return { 
+        users: state.users,
+        loadingUsers: state.loadingUsers
+    };
 };
 
 class UsuariosPage extends Component {
@@ -19,15 +23,23 @@ class UsuariosPage extends Component {
 
     componentDidMount() {
         if(this.props.users.length === 0){
-            console.log("bamo arrancarno con altura");
             this.props.getUsers();
         }
+    }
+
+    renderUsers() {
+        return (
+            <ListGroup as="ul" className="">
+                {this.props.users.map((user, i) => <ListGroup.Item key={`user-${i}`} as="li" >{user.name || user.email}</ListGroup.Item>)}
+            </ListGroup>
+        );
     }
 
     render() {
         return (
             <AuthUserContext.Consumer>
             { authUser =>
+                this.props.loadingUsers ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                 <div>
                     <Jumbotron>
                         <h1 >Oscar Conde</h1>
@@ -38,10 +50,7 @@ class UsuariosPage extends Component {
                         <Row>
                             <Col sm={4}>
                                 <ListGroup as="ul" className="">
-                                    <ListGroup.Item as="li" > Abogado  </ListGroup.Item>
-                                    <ListGroup.Item as="li" active className="legem-primary" > Abogado 2</ListGroup.Item>
-                                    <ListGroup.Item as="li"> Abogado 3</ListGroup.Item>
-                                    <ListGroup.Item as="li">Abogado 4</ListGroup.Item>
+                                    {this.renderUsers()}
                                 </ListGroup>
                             </Col>
 

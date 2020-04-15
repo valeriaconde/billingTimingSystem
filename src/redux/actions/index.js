@@ -19,7 +19,11 @@ export function getUsers() {
         dispatch({ type: LOADING_USERS, payload: {} });
         return axios.get(url)
             .then(response => {
-                dispatch({ type: DATA_LOADED, payload: response.data });
+                const usersList = Object.keys(response.data).map(key => ({
+                    ...response.data[key],
+                    uid: key,
+                }));
+                dispatch({ type: DATA_LOADED, payload: usersList.sort((a, b) => a.email.localeCompare(b.email)) });
             });
     };
 }

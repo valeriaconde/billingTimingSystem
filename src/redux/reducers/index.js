@@ -28,7 +28,6 @@ function rootReducer(state = initialState, action) {
         });
     }
     else if(action.type === DATA_LOADED) {
-        console.log(action.payload);
         return Object.assign({}, state, {
             users: state.users.concat(action.payload),
             loadingUsers: false
