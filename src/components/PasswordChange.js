@@ -2,6 +2,19 @@ import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { AlertType } from '../stores/AlertStore';
+import { connect } from "react-redux";
+import { addAlert, clearAlert } from "../redux/actions/index";
+
+const mapStateToProps = state => {
+    return { alerts: state.alerts };
+};
+
+function mapDispatchToProps(dispatch) {
+    return {
+        clearAlert: alert => dispatch(clearAlert(alert)),
+        addAlert: alert => dispatch(addAlert(alert))
+    };
+}
 
 const INITIAL_STATE = {
     password: '',
@@ -26,7 +39,10 @@ class PassChange extends Component {
         const { password, password2 } = this.state;
 
         if(password !== password2) {
-            this.props.addAlert(AlertType.Error, "Passwords don't match");
+            let alert = { type: AlertType.Error, message: "Passwords don't match" };
+            this.props.addAlert(alert);
+            setTimeout(() => this.props.clearAlert(alert), 7000);
+
             event.stopPropagation();
             return;
         }
@@ -41,11 +57,18 @@ class PassChange extends Component {
             .doPasswordUpdate(password)
             .then(() => {
                 this.setState({ ...INITIAL_STATE });
-                this.props.addAlert(AlertType.Success, "Password changed successfully");
+
+                let alert = { type: AlertType.Success, message: "Password changed successfully" };
+                this.props.addAlert(alert);
+                setTimeout(() => this.props.clearAlert(alert), 7000);
+
                 this.props.history.push('/home');
             })
             .catch(error => {
-                this.props.addAlert(AlertType.Error, error.message);
+                let alert = { type: AlertType.Error, message: error.message };
+                this.props.addAlert(alert);
+                setTimeout(() => this.props.clearAlert(alert), 7000);
+
                 this.setState({ error });
             });
     }
@@ -79,4 +102,4 @@ class PassChange extends Component {
 }
 
 const condition = authUser => !!authUser;
-export default withAuthorization(condition)(PassChange);
+export default connect(mapStateToProps, mapDispatchToProps)(withAuthorization(condition)(PassChange));

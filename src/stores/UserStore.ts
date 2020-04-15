@@ -1,16 +1,11 @@
-import { observable, computed, autorun } from "mobx";
+import { observable, computed } from "mobx";
 import axios from 'axios';
 
 class UserStore {
     @observable users : any = [];
 
-    constructor() {
-        autorun(() => console.log(this.users));
-    }
-
     fetch() {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users.json`;
-        console.log(url);
         axios.get(url)
             .then(response => {
                 if(response?.data) {
