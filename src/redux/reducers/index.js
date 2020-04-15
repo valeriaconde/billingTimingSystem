@@ -1,4 +1,4 @@
-import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, DATA_LOADED } from "../../constants/action-types";
+import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, DATA_LOADED, UPDATED_USER } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -30,6 +30,11 @@ function rootReducer(state = initialState, action) {
     else if(action.type === DATA_LOADED) {
         return Object.assign({}, state, {
             users: state.users.concat(action.payload),
+            loadingUsers: false
+        });
+    }
+    else if(action.type === UPDATED_USER) {
+        return Object.assign({}, state, {
             loadingUsers: false
         });
     }

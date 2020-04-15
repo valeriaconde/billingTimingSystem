@@ -5,7 +5,7 @@ import { compose } from 'recompose';
 import * as ROLES from '../constants/roles';
 import { withFirebase } from './Firebase';
 import { connect } from "react-redux";
-import { addAlert, getUsers, clearAlert } from "../redux/actions/index";
+import { addAlert, getUsers, clearAlert, updateUser } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
 
@@ -51,7 +51,7 @@ class UsuariosPage extends Component {
     }
 
     onSave(event) {
-        const { startYear, job, salary, name } = this.state;
+        const { startYear, job, salary, name, uid, activeIdx } = this.state;
         if(isNaN(startYear) || startYear.length === 0) {
             let alert = { type: AlertType.Error, message: "Start year must be a number" };
             this.props.addAlert(alert);
@@ -72,13 +72,24 @@ class UsuariosPage extends Component {
             setTimeout(() => this.props.clearAlert(alert), 7000);
             return;
         }
-        
+
+        const payload = {
+            name: name,
+            job: job,
+            salary: salary,
+            startYear: startYear,
+            email: this.props.users[activeIdx].email,
+            roles: this.props.users[activeIdx].roles
+        };
+        this.props.updateUser(uid, payload);
+
         this.setState({ edit: false });
     }
 
     onClickUser(event) {
         const activeIdx = event.target.value;
         this.setState({ activeIdx: activeIdx, edit: false, 
+            uid: this.props.users[activeIdx].uid,
             job: this.props.users[activeIdx].job,
             startYear: this.props.users[activeIdx].startYear, 
             salary: this.props.users[activeIdx].salary,
@@ -174,7 +185,7 @@ class UsuariosPage extends Component {
 const condition = authUser => 
     authUser && !!authUser.roles[ROLES.ADMIN];
 
-export default connect(mapStateToProps, { getUsers, addAlert, clearAlert })(compose(
+export default connect(mapStateToProps, { getUsers, addAlert, clearAlert, updateUser })(compose(
     withAuthorization(condition),
     withFirebase,
 )(UsuariosPage));
