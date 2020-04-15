@@ -5,8 +5,9 @@ import { compose } from 'recompose';
 import * as ROLES from '../constants/roles';
 import { withFirebase } from './Firebase';
 import { connect } from "react-redux";
-import { addAlert, getUsers } from "../redux/actions/index";
+import { addAlert, getUsers, clearAlert } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
+import { AlertType } from '../stores/AlertStore';
 
 const mapStateToProps = state => {
     return { 
@@ -49,13 +50,35 @@ class UsuariosPage extends Component {
         this.setState({ edit: true });
     }
 
-    onSave() {
+    onSave(event) {
+        const { startYear, job, salary, name } = this.state;
+        if(isNaN(startYear) || startYear.length === 0) {
+            let alert = { type: AlertType.Error, message: "Start year must be a number" };
+            this.props.addAlert(alert);
+            setTimeout(() => this.props.clearAlert(alert), 7000);
+            return;
+        }
+
+        if(isNaN(salary) || salary.length === 0) {
+            let alert = { type: AlertType.Error, message: "Salary must be a number" };
+            this.props.addAlert(alert);
+            setTimeout(() => this.props.clearAlert(alert), 7000);
+            return;
+        }
+
+        if(job.length === 0) {
+            let alert = { type: AlertType.Error, message: "Role cannot be empty" };
+            this.props.addAlert(alert);
+            setTimeout(() => this.props.clearAlert(alert), 7000);
+            return;
+        }
+        
         this.setState({ edit: false });
     }
 
     onClickUser(event) {
         const activeIdx = event.target.value;
-        this.setState({ activeIdx: activeIdx, 
+        this.setState({ activeIdx: activeIdx, edit: false, 
             job: this.props.users[activeIdx].job,
             startYear: this.props.users[activeIdx].startYear, 
             salary: this.props.users[activeIdx].salary,
@@ -92,7 +115,7 @@ class UsuariosPage extends Component {
 
                             { this.state.activeIdx === -1 ? <div/> :
                             <Col sm={8}>
-                                <Form>
+                                <Form onSubmit={this.onSave}>
                                     {/* DENOMINACION */}
                                     {
                                         this.state.edit ?
@@ -151,7 +174,7 @@ class UsuariosPage extends Component {
 const condition = authUser => 
     authUser && !!authUser.roles[ROLES.ADMIN];
 
-export default connect(mapStateToProps, { getUsers, addAlert })(compose(
+export default connect(mapStateToProps, { getUsers, addAlert, clearAlert })(compose(
     withAuthorization(condition),
     withFirebase,
 )(UsuariosPage));
