@@ -15,12 +15,24 @@ const mapStateToProps = state => {
     };
 };
 
+const INITIAL_STATE = {
+    edit: false,
+    activeIdx: -1,
+    job: '',
+    salary: '',
+    startYear: '',
+    name: ''
+};
+
 class UsuariosPage extends Component {
     constructor(props) {
         super(props);
-        this.state = { edit: false, activeIdx: -1, selectedUser: null };
+        this.state = { ...INITIAL_STATE };
 
         this.onClickUser = this.onClickUser.bind(this);
+        this.onSave = this.onSave.bind(this);
+        this.onEdit = this.onEdit.bind(this);
+        this.onChange = this.onChange.bind(this);
     }
 
     componentDidMount() {
@@ -29,8 +41,25 @@ class UsuariosPage extends Component {
         }
     }
 
+    onChange(event) {
+        this.setState({ [event.target.name]: event.target.value });
+    }
+
+    onEdit() {
+        this.setState({ edit: true });
+    }
+
+    onSave() {
+        this.setState({ edit: false });
+    }
+
     onClickUser(event) {
-        this.setState({ activeIdx: event.target.value, selectedUser: this.props.users[event.target.value] });
+        const activeIdx = event.target.value;
+        this.setState({ activeIdx: activeIdx, 
+            job: this.props.users[activeIdx].job,
+            startYear: this.props.users[activeIdx].startYear, 
+            salary: this.props.users[activeIdx].salary,
+            name: this.props.users[activeIdx].name || this.props.users[activeIdx].email });
     }
 
     renderUsers() {
@@ -42,6 +71,7 @@ class UsuariosPage extends Component {
     }
 
     render() {
+        const { startYear, job, salary, name } = this.state;
         return (
             <AuthUserContext.Consumer>
             { authUser =>
@@ -60,28 +90,22 @@ class UsuariosPage extends Component {
                                 </ListGroup>
                             </Col>
 
-                            { this.state.selectedUser === null ? <div/> :
+                            { this.state.activeIdx === -1 ? <div/> :
                             <Col sm={8}>
                                 <Form>
                                     {/* DENOMINACION */}
-                                    {/* Oscar Conde y las otras cuentas administradoras deben ir siempre hasta arriba */}
                                     {
                                         this.state.edit ?
-                                            <Form.Control size="lg" type="text" placeholder="Denominación" />
+                                            <Form.Control onChange={this.onChange} name="name" size="lg" type="text" value={name || "NOMBRE DE ABOGADO"} />
                                             :
-                                            <h3>{this.state.selectedUser?.name || "NOMBRE DE ABOGADO"}</h3>
+                                            <h3>{name || "NOMBRE DE ABOGADO"}</h3>
                                     }
 
                                     {/* PUESTOA */}
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
                                         <Form.Label column sm="4"> Puesto </Form.Label>
                                         <Col sm="5">
-                                            {
-                                                this.state.edit ?
-                                                    <Form.Control plaintext defaultValue=" " />
-                                                    :
-                                                    <Form.Control plaintext readOnly value={this.state.selectedUser?.job} />
-                                            }
+                                            <Form.Control onChange={this.onChange} name="job" plaintext readOnly={!this.state.edit} value={job} />
                                         </Col>
                                     </Form.Group>
 
@@ -89,33 +113,26 @@ class UsuariosPage extends Component {
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
                                         <Form.Label column sm="4"> Honorarios (por hora) </Form.Label>
                                         <Col sm="5">
-                                            {
-                                                this.state.edit ?
-                                                    <Form.Control plaintext placeholder="USD" defaultValue=" " />
-                                                    :
-                                                    <Form.Control plaintext readOnly value={this.state.selectedUser?.salary} />
-                                            }
+                                            <Form.Control onChange={this.onChange} name="salary" plaintext readOnly={!this.state.edit} value={salary} />
                                         </Col>
                                     </Form.Group>
 
-                                {/* FECHA DE INGRESO */}
-                                <Form.Group as={Row} controlId="formPlaintextEmail">
-                                    <Form.Label column sm="4"> Año de ingreso </Form.Label>
-                                    <Col sm="5">
-                                        {
-                                            this.state.edit ?
-                                                <Form.Control plaintext defaultValue=" " />
-                                                :
-                                                <Form.Control plaintext readOnly value={this.state.selectedUser?.startYear} />
-                                        }
-                                    </Col>
-                                </Form.Group>
+                                    {/* FECHA DE INGRESO */}
+                                    <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Label column sm="4"> Año de ingreso </Form.Label>
+                                        <Col sm="5">
+                                            <Form.Control onChange={this.onChange} name="startYear" plaintext readOnly={!this.state.edit} value={startYear} />
+                                        </Col>
+                                    </Form.Group>
 
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
                                         <Form.Label column sm="5"></Form.Label>
                                         <Col sm="5">
                                             <>
-                                                <Button variant="outline-dark">Editar</Button>
+                                            {
+                                                this.state.edit ? <Button onClick={this.onSave}>Guardar</Button>
+                                                : <Button onClick={this.onEdit} variant="outline-dark">Editar</Button>
+                                            }
                                             </>
                                         </Col>
                                     </Form.Group>
