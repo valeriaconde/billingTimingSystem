@@ -18,7 +18,9 @@ const mapStateToProps = state => {
 class UsuariosPage extends Component {
     constructor(props) {
         super(props);
-        this.state = { edit: false };
+        this.state = { edit: false, activeIdx: -1, selectedUser: null };
+
+        this.onClickUser = this.onClickUser.bind(this);
     }
 
     componentDidMount() {
@@ -27,10 +29,14 @@ class UsuariosPage extends Component {
         }
     }
 
+    onClickUser(event) {
+        this.setState({ activeIdx: event.target.value, selectedUser: this.props.users[event.target.value] });
+    }
+
     renderUsers() {
         return (
             <ListGroup as="ul" className="">
-                {this.props.users.map((user, i) => <ListGroup.Item key={`user-${i}`} as="li" >{user.name || user.email}</ListGroup.Item>)}
+                {this.props.users.map((user, i) => <ListGroup.Item onClick={this.onClickUser} value={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{user.name || user.email}</ListGroup.Item>)}
             </ListGroup>
         );
     }
@@ -42,8 +48,8 @@ class UsuariosPage extends Component {
                 this.props.loadingUsers ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                 <div>
                     <Jumbotron>
-                        <h1 >Oscar Conde</h1>
-                        <h5 className="blueLetters"><b> Managing Partner </b></h5>
+                        <h1 >{authUser.name || authUser.email}</h1>
+                        <h5 className="blueLetters"><b>{authUser.job || "Puesto desconocido"}</b></h5>
                     </Jumbotron>
 
                     <Container className="topMargin">
@@ -54,7 +60,7 @@ class UsuariosPage extends Component {
                                 </ListGroup>
                             </Col>
 
-                            {/* toda esta seccion estara oculta mientras no haya un cliente seleccionado */}
+                            { this.state.selectedUser === null ? <div/> :
                             <Col sm={8}>
                                 <Form>
                                     {/* DENOMINACION */}
@@ -63,7 +69,7 @@ class UsuariosPage extends Component {
                                         this.state.edit ?
                                             <Form.Control size="lg" type="text" placeholder="Denominación" />
                                             :
-                                            <h3> NOMBRE DE ABOGADO </h3>
+                                            <h3>{this.state.selectedUser?.name || "NOMBRE DE ABOGADO"}</h3>
                                     }
 
                                     {/* PUESTOA */}
@@ -74,20 +80,20 @@ class UsuariosPage extends Component {
                                                 this.state.edit ?
                                                     <Form.Control plaintext defaultValue=" " />
                                                     :
-                                                    <Form.Control plaintext readOnly defaultValue="Associate" />
+                                                    <Form.Control plaintext readOnly value={this.state.selectedUser?.job} />
                                             }
                                         </Col>
                                     </Form.Group>
 
                                     {/* HORA */}
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4"> Hora </Form.Label>
+                                        <Form.Label column sm="4"> Honorarios (por hora) </Form.Label>
                                         <Col sm="5">
                                             {
                                                 this.state.edit ?
                                                     <Form.Control plaintext placeholder="USD" defaultValue=" " />
                                                     :
-                                                    <Form.Control plaintext readOnly defaultValue="00" />
+                                                    <Form.Control plaintext readOnly value={this.state.selectedUser?.salary} />
                                             }
                                         </Col>
                                     </Form.Group>
@@ -100,7 +106,7 @@ class UsuariosPage extends Component {
                                             this.state.edit ?
                                                 <Form.Control plaintext defaultValue=" " />
                                                 :
-                                                <Form.Control plaintext readOnly defaultValue="2003" />
+                                                <Form.Control plaintext readOnly value={this.state.selectedUser?.startYear} />
                                         }
                                     </Col>
                                 </Form.Group>
@@ -115,6 +121,7 @@ class UsuariosPage extends Component {
                                     </Form.Group>
                                 </Form>
                             </Col>
+                            }
                         </Row>
                     </Container>
                 </div>

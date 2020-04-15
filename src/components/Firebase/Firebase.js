@@ -70,6 +70,9 @@ class Firebase {
                         authUser = {
                             uid: authUser.uid,
                             email: authUser.email,
+                            job: "Associate",
+                            startYear: 2003,
+                            salary: 0,
                             ...dbUser,
                         };
 
