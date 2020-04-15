@@ -5,6 +5,19 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import * as ROLES from '../constants/roles';
 import { AlertType } from '../stores/AlertStore';
 import { compose } from 'recompose';
+import { connect } from "react-redux";
+import { addAlert, clearAlert } from "../redux/actions/index";
+
+const mapStateToProps = state => {
+    return { alerts: state.alerts };
+};
+
+function mapDispatchToProps(dispatch) {
+    return {
+        clearAlert: alert => dispatch(clearAlert(alert)),
+        addAlert: alert => dispatch(addAlert(alert))
+    };
+}
 
 const INITIAL_STATE = {
     email: '',
@@ -31,7 +44,9 @@ class Registeruser extends Component {
         const form = event.currentTarget;
 
         if(email !== email2) {
-            this.props.addAlert(AlertType.Error, 'Emails does not match');
+            let alert = { type: AlertType.Error, message: 'Emails do not match' };
+            this.props.addAlert(alert);
+            setTimeout(() => this.props.clearAlert(alert), 7000);
             return;
         }
 
@@ -51,7 +66,10 @@ class Registeruser extends Component {
             .doCreateUserWithEmailAndPassword(email, email, roles);
 
 
-        this.props.addAlert(AlertType.Success, `${email} successfully registered`);
+        let alert = { type: AlertType.Success, message: `${email} successfully registered` };
+        this.props.addAlert(alert);
+        setTimeout(() => this.props.clearAlert(alert), 7000);
+
         this.setState(INITIAL_STATE);
     }
 
@@ -104,7 +122,7 @@ class Registeruser extends Component {
 const condition = authUser => 
     authUser && !!authUser.roles[ROLES.ADMIN];
 
-export default compose(
+export default connect(mapStateToProps, mapDispatchToProps)(compose(
     withAuthorization(condition),
     withFirebase,
-)(Registeruser);
+)(Registeruser));

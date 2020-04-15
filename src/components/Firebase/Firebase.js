@@ -36,6 +36,10 @@ class Firebase {
                 .set({
                     email,
                     roles,
+                    salary: 0,
+                    startYear: 2003,
+                    job: "Associate",
+                    name: email
                 });
         })
         .catch(error => {

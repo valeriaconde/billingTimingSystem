@@ -19,34 +19,25 @@ import PassChange from './PasswordChange';
 import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
+import { connect } from "react-redux";
+import { clearAlert } from "../redux/actions/index";
+
 // REACT VERSION: 16.13.0
 
+const mapStateToProps = state => {
+    return { alerts: state.alerts };
+};
+
+function mapDispatchToProps(dispatch) {
+    return {
+        clearAlert: alert => dispatch(clearAlert(alert))
+    };
+}
+
 class App extends Component {
-    constructor(props) {
-        super(props);
-        this.state = { alerts: [] };
-    }
-
-    addAlert = (type, message) => {
-        const { alerts } = this.state;
-
-        const alert = {type: type, message: message};
-        alerts.push(alert);
-        setTimeout(() => this.clear(alert), 15000);
-
-        this.setState({ alerts: alerts });
-    }
-
-    clear = (alert) => {
-        const { alerts } = this.state;
-
-        const index = alerts.indexOf(alert);
-        if (index > -1) {
-            alerts.splice(index, 1);
-        }
-        
-        this.setState({ alerts: alerts });
-    }
+    // constructor(props) {
+    //     super(props);
+    // }
 
     getAlertColor(type) {
         switch (type) {
@@ -62,7 +53,7 @@ class App extends Component {
     renderAlerts() {
         return (
             <div>
-            {this.state.alerts.map((alert, i) => <Alert key={`alert-${i}`} style={{ width: "100%" }} onClose={() => this.clear(alert)} variant={this.getAlertColor(alert.type)} dismissible>{alert.message}</Alert>)}
+            {this.props.alerts.map((alert, i) => <Alert key={`alert-${i}`} style={{ width: "100%" }} onClose={() => this.props.clearAlert(alert)} variant={this.getAlertColor(alert.type)} dismissible>{alert.message}</Alert>)}
             </div>
         );
     }
@@ -71,7 +62,7 @@ class App extends Component {
         return (
                 <BrowserRouter>
                     <Menu />
-                    { this.state.alerts.length > 0 &&
+                    {
                         <div style={{ marginBottom: "20px", width: "100%" }}>
                             {this.renderAlerts()}
                         </div>
@@ -81,9 +72,9 @@ class App extends Component {
 
                         <Route path="/home" exact component={Clientes} />
 
-                        <Route path="/register" exact render={(props) => <Registeruser {...props} addAlert={this.addAlert} />} />
+                        <Route path="/register" exact component={Registeruser} />
 
-                        <Route path="/login" exact render={(props) => <LoginPage {...props} addAlert={this.addAlert} />} />
+                        <Route path="/login" exact component={LoginPage} />
 
                         <Route path="/proyectos" exact component={ProyectosPage} />
 
@@ -93,9 +84,9 @@ class App extends Component {
 
                         <Route path="/usuarios" exact component={UsuariosPage} />
 
-                        <Route path="/password-recovery" exact render={(props) => <Passrec {...props} addAlert={this.addAlert} />} />
+                        <Route path="/password-recovery" exact component={Passrec} />
 
-                        <Route path="/password-change" exact render={(props) => <PassChange {...props} addAlert={this.addAlert} />} />
+                        <Route path="/password-change" exact component={PassChange} />
 
                         <Route component={NotFoundPage} />
                     </Switch>
@@ -104,4 +95,4 @@ class App extends Component {
     }
 }
 
-export default withAuthentication(App);
+export default connect(mapStateToProps, mapDispatchToProps)(withAuthentication(App));

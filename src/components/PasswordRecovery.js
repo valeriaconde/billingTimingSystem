@@ -2,6 +2,19 @@ import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { AlertType } from '../stores/AlertStore';
 import { withFirebase } from './Firebase';
+import { connect } from "react-redux";
+import { addAlert, clearAlert } from "../redux/actions/index";
+
+const mapStateToProps = state => {
+    return { alerts: state.alerts };
+};
+
+function mapDispatchToProps(dispatch) {
+    return {
+        clearAlert: alert => dispatch(clearAlert(alert)),
+        addAlert: alert => dispatch(addAlert(alert))
+    };
+}
 
 const INITIAL_STATE = {
     email: '',
@@ -32,12 +45,19 @@ class Passrec extends Component {
             .doPasswordReset(email)
             .then(() => {
                 this.setState({ ...INITIAL_STATE });
-                this.props.addAlert(AlertType.Success, "Check your email, we've sent you a recovery link.");
+
+                let alert = { type: AlertType.Success, message: "Check your email, we've sent you a recovery link." };
+                this.props.addAlert(alert);
+                setTimeout(() => this.props.clearAlert(alert), 7000);
+
                 this.props.history.push('/login');
             })
             .catch(error => {
                 this.setState({ error });
-                this.props.addAlert(AlertType.Error, error.message);
+                
+                let alert = { type: AlertType.Error, message: error.message };
+                this.props.addAlert(alert);
+                setTimeout(() => this.props.clearAlert(alert), 7000);
             });
         
     }
@@ -60,4 +80,4 @@ class Passrec extends Component {
     }
 }
 
-export default withFirebase(Passrec);
+export default connect(mapStateToProps, mapDispatchToProps)(withFirebase(Passrec));

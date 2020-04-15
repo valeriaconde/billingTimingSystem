@@ -2,6 +2,19 @@ import React, { Component } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { withFirebase } from './Firebase';
 import { AlertType } from '../stores/AlertStore';
+import { connect } from "react-redux";
+import { addAlert, clearAlert } from "../redux/actions/index";
+
+const mapStateToProps = state => {
+    return { alerts: state.alerts };
+};
+
+function mapDispatchToProps(dispatch) {
+    return {
+        clearAlert: alert => dispatch(clearAlert(alert)),
+        addAlert: alert => dispatch(addAlert(alert))
+    };
+}
 
 const INITIAL_STATE = {
     email: '',
@@ -41,7 +54,9 @@ class LoginPage extends Component {
                 window.location.reload();
             })
             .catch(error => {
-                this.props.addAlert(AlertType.Error, error.message);
+                let alert = { type: AlertType.Error, message: error.message };
+                this.props.addAlert(alert);
+                setTimeout(() => this.props.clearAlert(alert), 7000);
                 this.setState({ error, password: '', email: '' });
             });
 
@@ -49,7 +64,7 @@ class LoginPage extends Component {
     }
 
     render() {
-        const { email, password, error } = this.state;
+        const { email, password } = this.state;
         return (
             <div>
                 <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.handleSubmit}>
@@ -67,9 +82,8 @@ class LoginPage extends Component {
                     </Form.Group>
                     <Button variant="primary" type="submit" className="legem-primary" >Ingresar</Button>
                 </Form>
-                {error && <p>{error.message}</p>}
             </div>
         );
     }
 }
-export default withFirebase(LoginPage);
+export default connect(mapStateToProps, mapDispatchToProps)(withFirebase(LoginPage));
