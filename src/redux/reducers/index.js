@@ -1,8 +1,9 @@
-import { ADD_USER, ADD_ALERT, CLEAR_ALERT } from "../../constants/action-types";
+import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, DATA_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
-    alerts: []
+    alerts: [],
+    loadingUsers: false
 };
   
 function rootReducer(state = initialState, action) {
@@ -19,7 +20,19 @@ function rootReducer(state = initialState, action) {
     else if(action.type === CLEAR_ALERT) {
         return Object.assign({}, state, {
             alerts: state.alerts.filter(a => { return JSON.stringify(a) !== JSON.stringify(action.payload) })
-        });;
+        });
+    }
+    else if(action.type === LOADING_USERS) {
+        return Object.assign({}, state, {
+            loadingUsers: true
+        });
+    }
+    else if(action.type === DATA_LOADED) {
+        console.log(action.payload);
+        return Object.assign({}, state, {
+            users: state.users.concat(action.payload),
+            loadingUsers: false
+        });
     }
 
     return state;

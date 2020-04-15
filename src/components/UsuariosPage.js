@@ -4,7 +4,12 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import { compose } from 'recompose';
 import * as ROLES from '../constants/roles';
 import { withFirebase } from './Firebase';
-import UserStore from '../stores/UserStore';
+import { connect } from "react-redux";
+import { addAlert, getUsers } from "../redux/actions/index";
+
+const mapStateToProps = state => {
+    return { users: state.users };
+};
 
 class UsuariosPage extends Component {
     constructor(props) {
@@ -13,7 +18,10 @@ class UsuariosPage extends Component {
     }
 
     componentDidMount() {
-        if(UserStore.isEmpty) UserStore.fetch();
+        if(this.props.users.length === 0){
+            console.log("bamo arrancarno con altura");
+            this.props.getUsers();
+        }
     }
 
     render() {
@@ -110,7 +118,7 @@ class UsuariosPage extends Component {
 const condition = authUser => 
     authUser && !!authUser.roles[ROLES.ADMIN];
 
-export default compose(
+export default connect(mapStateToProps, { getUsers, addAlert })(compose(
     withAuthorization(condition),
     withFirebase,
-)(UsuariosPage);
+)(UsuariosPage));
