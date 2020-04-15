@@ -36,6 +36,10 @@ class Firebase {
                 .set({
                     email,
                     roles,
+                    salary: 0,
+                    startYear: 2003,
+                    job: "Associate",
+                    name: email
                 });
         })
         .catch(error => {
@@ -70,9 +74,6 @@ class Firebase {
                         authUser = {
                             uid: authUser.uid,
                             email: authUser.email,
-                            job: "Associate",
-                            startYear: 2003,
-                            salary: 0,
                             ...dbUser,
                         };
 
