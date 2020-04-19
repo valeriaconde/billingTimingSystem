@@ -55,8 +55,8 @@ class UsuariosPage extends Component {
 
     onDelete(event) {
         if(window.confirm('¿Seguro que desea borrar al usuario?')) {
-            this.setState({ activeIdx: -1, edit: false });
             this.props.deleteUser(this.props.users[this.state.activeIdx].uid);
+            this.setState({ activeIdx: -1, edit: false });
         }
     }
 

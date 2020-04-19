@@ -37,6 +37,12 @@ function rootReducer(state = initialState, action) {
             loadingUsers: false,
             users: tmp.sort((a, b) => a.name.localeCompare(b.name))
         });
+    } else if(action.type === REMOVED_CLIENT) {
+        let tmp = state.clients.filter(c => { return c.uid !== action.payload });
+        return Object.assign({}, state, {
+            loadingClients: false,
+            clients: tmp.sort((a, b) => a.denomination.localeCompare(b.denomination))
+        });
     } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
             users: state.users.concat(action.payload).sort((a, b) => a.name.localeCompare(b.name)),
@@ -65,7 +71,6 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {
-            clients: state.users.concat(action.payload),
             loadingClients: false
         });
     }

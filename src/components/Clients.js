@@ -4,7 +4,9 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
-import { addAlert, clearAlert, addClient, getClients, updateClient } from "../redux/actions/index";
+import { addAlert, clearAlert, addClient, getClients, updateClient, deleteClient } from "../redux/actions/index";
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 const mapStateToProps = state => {
     return { 
@@ -46,11 +48,19 @@ class Clientes extends Component {
         this.onChangeRadio = this.onChangeRadio.bind(this);
         this.onChange = this.onChange.bind(this);
         this.onSave = this.onSave.bind(this);
+        this.onDelete = this.onDelete.bind(this);
     }
 
     componentDidMount() {
         if(this.props.clients.length === 0){
             this.props.getClients();
+        }
+    }
+
+    onDelete(event) {
+        if(window.confirm('¿Seguro que desea borrar al cliente?')) {
+            this.props.deleteClient(this.props.clients[this.state.activeIdx].uid);
+            this.setState({ activeIdx: -1, edit: false });
         }
     }
 
@@ -379,7 +389,13 @@ class Clientes extends Component {
                                             <Col sm="5">
                                                 <>
                                                 {
-                                                    this.state.edit ? <Button onClick={this.onSave}>Guardar</Button>
+                                                    this.state.edit ?
+                                                    <div>
+                                                        <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                        <Button onClick={this.onSave}>Guardar</Button>
+                                                    </div>
                                                     : <Button onClick={this.onEdit} variant="outline-dark">Editar</Button>
                                                 }
                                                 </>
@@ -403,5 +419,6 @@ export default connect(mapStateToProps, {
     addAlert,
     addClient,
     getClients,
-    updateClient
+    updateClient,
+    deleteClient
 })(withAuthorization(condition)(Clientes));

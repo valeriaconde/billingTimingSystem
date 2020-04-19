@@ -26,7 +26,7 @@ export function addClient(payload) {
         return axios.post(url, payload)
             .then(response => {
                 dispatch({ type: ADD_CLIENT, payload: response.data });
-
+                window.location.reload();
                 const alert = { type: AlertType.Success, message: "Client successfully registered."};
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
@@ -82,7 +82,7 @@ export function getClients() {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
         return axios.get(url)
             .then(response => {
-                const clientsList = Object.keys(response.data).map(key => ({
+                const clientsList = Object.keys(response.data || []).map(key => ({
                     ...response.data[key],
                     uid: key
                 }));
@@ -114,10 +114,29 @@ export function getUsers() {
     };
 }
 
+export function deleteClient(uid) {
+    return function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/clients/${uid}.json`;
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        return axios.delete(url)
+            .then(response => {
+                dispatch({ type: REMOVED_CLIENT, payload: uid });
+
+                const alert = { type: AlertType.Success, message: "Client successfully deleted."};
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
 export function deleteUser(uid) {
     return function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
-        dispatch({ type: LOADING_USERS, payload: {} })
+        dispatch({ type: LOADING_USERS, payload: {} });
         return axios.delete(url)
             .then(response => {
                 dispatch({ type: REMOVED_USER, payload: uid });
