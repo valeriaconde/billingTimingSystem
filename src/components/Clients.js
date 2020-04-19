@@ -160,7 +160,7 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 Denominación
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
@@ -169,7 +169,7 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 Domicilio
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="address" onChange={this.handleOnChange} value={address} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
@@ -178,7 +178,7 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 RFC
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
@@ -187,7 +187,7 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 Contacto
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
@@ -196,7 +196,7 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 Correo
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
@@ -205,7 +205,7 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 Teléfono
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="phone" onChange={this.handleOnChange} value={phone} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
@@ -214,7 +214,7 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 Website
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="website" onChange={this.handleOnChange} value={website} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
@@ -223,14 +223,14 @@ class Clientes extends Component {
                             <Form.Label column sm="3">
                                 Cliente desde
                             </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control name="yearSince" onChange={this.handleOnChange} value={yearSince} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row} >
                             <Form.Label column sm="3"> IVA </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <div>
                                 <Form.Check
                                     type="radio"
