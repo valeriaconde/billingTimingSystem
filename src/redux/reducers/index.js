@@ -1,5 +1,5 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
-        DATA_LOADED, UPDATED_USER, ADD_CLIENT } from "../../constants/action-types";
+    USERS_LOADED, UPDATED_USER, ADD_CLIENT } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -30,14 +30,18 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingClients: true
         });
-    } else if(action.type === DATA_LOADED) {
+    } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
-            users: state.users.concat(action.payload),
+            users: state.users.concat(action.payload).sort((a, b) => a.name.localeCompare(b.name)),
             loadingUsers: false
         });
     } else if(action.type === UPDATED_USER) {
+        const email = action.payload.email;
+        let tmp = state.users.filter(u => { return u.email !== email });
+        tmp.push(action.payload);
         return Object.assign({}, state, {
-            loadingUsers: false
+            loadingUsers: false,
+            users: tmp.sort((a, b) => a.name.localeCompare(b.name))
         });
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {

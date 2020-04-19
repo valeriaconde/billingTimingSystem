@@ -64,7 +64,7 @@ class Clientes extends Component {
         this.setState({ [event.target.name]: event.target.value });
     }
 
-    handleShowCliente(e) {
+    handleShowCliente() {
         this.setState({ showModalCliente: true });
     }
 

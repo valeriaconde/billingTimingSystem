@@ -1,4 +1,4 @@
-import { ADD_USER, ADD_ALERT, CLEAR_ALERT, DATA_LOADED, LOADING_USERS, UPDATED_USER, ADD_CLIENT } from "../../constants/action-types"; 
+import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, LOADING_USERS, UPDATED_USER, ADD_CLIENT } from "../../constants/action-types"; 
 import axios from 'axios';
 
 export function addUser(payload) {
@@ -34,7 +34,6 @@ export function updateUser(uid, payload) {
         return axios.put(url, payload)
             .then(response => {
                 dispatch({ type: UPDATED_USER, payload: response.data });
-                window.location.reload();
             });
     };
 }
@@ -49,7 +48,7 @@ export function getUsers() {
                     ...response.data[key],
                     uid: key,
                 }));
-                dispatch({ type: DATA_LOADED, payload: usersList.sort((a, b) => a.email.localeCompare(b.email)) });
+                dispatch({ type: USERS_LOADED, payload: usersList.sort((a, b) => a.name.localeCompare(b.name)) });
             });
     };
 }
