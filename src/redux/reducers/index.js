@@ -1,5 +1,5 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
-    USERS_LOADED, UPDATED_USER, ADD_CLIENT } from "../../constants/action-types";
+    USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -35,6 +35,11 @@ function rootReducer(state = initialState, action) {
             users: state.users.concat(action.payload).sort((a, b) => a.name.localeCompare(b.name)),
             loadingUsers: false
         });
+    } else if(action.type === CLIENTS_LOADED) {
+        return Object.assign({}, state, {
+            clients: state.clients.concat(action.payload).sort((a, b) => a.denomination.localeCompare(b.denomination)),
+            loadingClients: false
+        });
     } else if(action.type === UPDATED_USER) {
         const email = action.payload.email;
         let tmp = state.users.filter(u => { return u.email !== email });
@@ -42,6 +47,14 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingUsers: false,
             users: tmp.sort((a, b) => a.name.localeCompare(b.name))
+        });
+    } else if(action.type === UPDATED_CLIENT) {
+        const denomination = action.payload.denomination;
+        let tmp = state.clients.filter(d => { return d.denomination !== denomination });
+        tmp.push(action.payload);
+        return Object.assign({}, state, {
+            loadingClients: false,
+            clients: tmp.sort((a, b) => a.denomination.localeCompare(b.denomination))
         });
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {

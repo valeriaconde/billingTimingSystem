@@ -1,4 +1,5 @@
-import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, LOADING_USERS, UPDATED_USER, ADD_CLIENT } from "../../constants/action-types"; 
+import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
+    LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS } from "../../constants/action-types"; 
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 
@@ -36,6 +37,25 @@ export function addClient(payload) {
     }
 }
 
+export function updateClient(uid, payload) {
+    return function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/clients/${uid}.json`;
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        return axios.put(url, payload)
+            .then(response => {
+                dispatch({ type: UPDATED_CLIENT, payload: response.data });
+
+                const alert = { type: AlertType.Success, message: "Client successfully updated."};
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
 export function updateUser(uid, payload) {
     return function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
@@ -55,6 +75,25 @@ export function updateUser(uid, payload) {
     };
 }
 
+export function getClients() {
+    return function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/clients.json`;
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        return axios.get(url)
+            .then(response => {
+                const clientsList = Object.keys(response.data).map(key => ({
+                    ...response.data[key],
+                    uid: key
+                }));
+                dispatch({ type: CLIENTS_LOADED, payload: clientsList.sort((a, b) => a.denomination.localeCompare(b.denomination)) });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
 export function getUsers() {
     return function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users.json`;
@@ -63,7 +102,7 @@ export function getUsers() {
             .then(response => {
                 const usersList = Object.keys(response.data).map(key => ({
                     ...response.data[key],
-                    uid: key,
+                    uid: key
                 }));
                 dispatch({ type: USERS_LOADED, payload: usersList.sort((a, b) => a.name.localeCompare(b.name)) });
             })

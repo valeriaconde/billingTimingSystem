@@ -53,17 +53,17 @@ class UsuariosPage extends Component {
     onSave(event) {
         const { startYear, job, salary, name, uid, activeIdx } = this.state;
         if(isNaN(startYear) || startYear.length === 0) {
-            this.props.addAlert(AlertType.Error, "Start year must be a number");
+            this.props.addAlert(AlertType.Error, "Start year must be a number.");
             return;
         }
 
         if(isNaN(salary) || salary.length === 0) {
-            this.props.addAlert(AlertType.Error, "Salary must be a number");
+            this.props.addAlert(AlertType.Error, "Salary must be a number.");
             return;
         }
 
         if(job.length === 0) {
-            this.props.addAlert(AlertType.Error, "Role cannot be empty");
+            this.props.addAlert(AlertType.Error, "Role cannot be empty.");
             return;
         }
 

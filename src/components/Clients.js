@@ -1,28 +1,35 @@
 import React, { Component } from 'react';
 import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
+import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
-import { addAlert, clearAlert, addClient } from "../redux/actions/index";
+import { addAlert, clearAlert, addClient, getClients, updateClient } from "../redux/actions/index";
 
 const mapStateToProps = state => {
-    return { alerts: state.alerts };
+    return { 
+        alerts: state.alerts,
+        clients: state.clients,
+        loadingClients: state.loadingClients
+     };
 };
 
 const INITIAL_STATE = {
-    denomination: '',
-    address: '',
-    rfc: '',
-    contact: '',
-    email: '',
-    phone: '',
-    website: '',
-    yearSince: '',
-    iva: true,
+    denomination: '', currDenomination: '',
+    address: '', currAddress: '',
+    rfc: '', currRfc: '',
+    contact: '', currContact: '',
+    email: '', currEmail: '',
+    phone: '', currPhone: '',
+    website: '', currWebsite: '',
+    yearSince: '', currYearSince: '',
+    uid: '', currUid: '',
+    iva: true, currIva: true,
     validated: false,
     edit: false,
     showModalCliente: false,
-    error: null
+    error: null,
+    activeIdx: -1
 };
 
 class Clientes extends Component {
@@ -34,6 +41,63 @@ class Clientes extends Component {
         this.handleShowCliente = this.handleShowCliente.bind(this);
         this.handleNewClient = this.handleNewClient.bind(this);
         this.handleOnChange = this.handleOnChange.bind(this);
+        this.onEdit = this.onEdit.bind(this);
+        this.onClickClient = this.onClickClient.bind(this);
+        this.onChangeRadio = this.onChangeRadio.bind(this);
+        this.onChange = this.onChange.bind(this);
+        this.onSave = this.onSave.bind(this);
+    }
+
+    componentDidMount() {
+        if(this.props.clients.length === 0){
+            this.props.getClients();
+        }
+    }
+
+    onSave(event) {
+        const { currDenomination, currAddress, currRfc, currContact,
+            currEmail, currPhone, currWebsite, currYearSince, currIva, currUid } = this.state;
+        
+        if(currDenomination.length === 0) {
+            this.props.addAlert(AlertType.Error, "Business name cannot be empty.");
+            return;
+        }
+
+        if(currRfc.length === 0) {
+            this.props.addAlert(AlertType.Error, "RFC cannot be empty.");
+            return;
+        }
+
+        if(currContact.length === 0) {
+            this.props.addAlert(AlertType.Error, "Contact cannot be empty.");
+            return;
+        }
+
+        if(currEmail.length === 0) {
+            this.props.addAlert(AlertType.Error, "Email cannot be empty.");
+            return;
+        }
+
+        const payload = {
+            address: currAddress, contact: currContact, denomination: currDenomination,
+            email: currEmail, iva: currIva, phone: currPhone, rfc: currRfc,
+            website: currWebsite, yearSince: currYearSince
+        };
+        this.props.updateClient(currUid, payload);
+        
+        this.setState({ edit: false });
+    }
+
+    onChange(event) {
+        this.setState({ [event.target.name]: event.target.value });
+    }
+
+    onChangeRadio(event) {
+        this.setState({ currIva: !this.state.currIva });
+    }
+
+    onEdit() {
+        this.setState({ edit: true });
     }
 
     handleNewClient(event) {
@@ -187,11 +251,38 @@ class Clientes extends Component {
             </Modal>
         );
     }
+
+    onClickClient(event) {
+        const activeIdx = event.target.value;
+        this.setState({ activeIdx: activeIdx, edit: false,
+            currUid: this.props.clients[activeIdx].uid,
+            currDenomination: this.props.clients[activeIdx].denomination,
+            currAddress: this.props.clients[activeIdx].address,
+            currRfc: this.props.clients[activeIdx].rfc,
+            currContact: this.props.clients[activeIdx].contact,
+            currEmail: this.props.clients[activeIdx].email,
+            currPhone: this.props.clients[activeIdx].phone,
+            currWebsite: this.props.clients[activeIdx].website,
+            currYearSince: this.props.clients[activeIdx].yearSince,
+            currIva: this.props.clients[activeIdx].iva
+        });
+    }
+
+    renderClients() {
+        return(
+            <ListGroup as="ul" className="">
+                {this.props.clients.map((client, i) => <ListGroup.Item onClick={this.onClickClient} value={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{client.denomination}</ListGroup.Item>)}
+            </ListGroup>
+        );
+    }
     
     render() {
+        const { edit, currDenomination, currAddress, currRfc, currContact,
+            currEmail, currPhone, currWebsite, currYearSince, currIva } = this.state;
         return (
             <AuthUserContext.Consumer>
                 {authUser => (
+                    this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         <Container className="topMargin">
                             <Row>
@@ -199,37 +290,24 @@ class Clientes extends Component {
                                     <Button variant="success" size="lg" block onClick={this.handleShowCliente}> Nuevo Cliente </Button>
 
                                     {this.renderModal()}
-
-                                    <ListGroup as="ul" className="">
-                                        <ListGroup.Item as="li" > Cliente 1  </ListGroup.Item>
-                                        <ListGroup.Item as="li" active className="legem-primary" >Cliente 2</ListGroup.Item>
-                                        <ListGroup.Item as="li"> Cliente 3</ListGroup.Item>
-                                        <ListGroup.Item as="li">Cliente 4</ListGroup.Item>
-                                    </ListGroup>
+                                    {this.renderClients()}
                                 </Col>
-        
-                                {/* toda esta seccion estara oculta mientras no haya un cliente seleccionado */}
+
+                                { this.state.activeIdx === -1 ? <div/> :
                                 <Col sm={8}>
-                                    <Form>
-                                        {/* DENOMINACION */}
-                                        {/* excepto aqui, el placeholder debe ser DENOMINACION */}
+                                    <Form onSubmit={this.onSave}>
                                         {
                                             this.state.edit ?
-                                                <Form.Control size="lg" type="text" placeholder="Denominación" />
+                                                <Form.Control value={currDenomination || "DENOMINACION"} onChange={this.onChange} name="currDenomination" size="lg" type="text" placeholder="Denominación" />
                                                 :
-                                                <h3> DENOMINACION </h3>
+                                                <h3> { currDenomination || "DENOMINACION" } </h3>
                                         }
         
                                         {/* DOMICILIO */}
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Domicilio </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Domicilio" />
-                                                }
+                                                <Form.Control value={currAddress} onChange={this.onChange} name="currAddress" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -237,12 +315,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> RFC </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="RFC" />
-                                                }
+                                                <Form.Control value={currRfc} onChange={this.onChange} name="currRfc" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -250,12 +323,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Contacto </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Contacto" />
-                                                }
+                                                <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -263,12 +331,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Correo </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Correo" />
-                                                }
+                                                <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -276,12 +339,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Teléfono </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Telefono" />
-                                                }
+                                                <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -289,12 +347,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Website </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Website" />
-                                                }
+                                                <Form.Control value={currWebsite} onChange={this.onChange} name="currWebsite" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -302,12 +355,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Cliente desde </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="2003" />
-                                                }
+                                                <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit}  plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -315,27 +363,14 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> IVA </Form.Label>
                                             <Col sm="5">
-                                                {/* creo que este codigo puede reducirse, nada mas que togglee los botones y togglee el estado a disabled... */}
-                                                {
-                                                    this.state.edit ?
-                                                    <div>
-                                                            {['radio'].map(type => (
-                                                                <div key={`inline-${type}`} className="mb-3">
-                                                                    <Form.Check inline label="SI" type={type} id={`inline-${type}-1`} />
-                                                                    <Form.Check inline label="NO" type={type} id={`inline-${type}-1`} />
-                                                                </div>
-                                                            ))}
-                                                    </div>
-                                                        :
-                                                    <div>
-                                                            {['radio'].map(type => (
-                                                                <div key={`inline-${type}`} className="mb-3">
-                                                                    <Form.Check inline disabled label="SI" type={type} id={`inline-${type}-3`} />
-                                                                    <Form.Check inline disabled label="NO" type={type} id={`inline-${type}-3`} />
-                                                                </div>
-                                                            ))}
-                                                    </div>
-                                                }
+                                                <div>
+                                                        {['radio'].map(type => (
+                                                            <div key={`inline-${type}`} className="mb-3">
+                                                                <Form.Check onChange={this.onChangeRadio} checked={currIva} inline name="radioBtn" label="SI" type={type} id={`currIva`} />
+                                                                <Form.Check onChange={this.onChangeRadio} checked={!currIva} inline name="radioBtn" label="NO" type={type} id={`currNoIva`} />
+                                                            </div>
+                                                        ))}
+                                                </div>
                                             </Col>
                                         </Form.Group>
         
@@ -343,12 +378,16 @@ class Clientes extends Component {
                                             <Form.Label column sm="5"></Form.Label>
                                             <Col sm="5">
                                                 <>
-                                                    <Button variant="outline-dark">Editar</Button>
+                                                {
+                                                    this.state.edit ? <Button onClick={this.onSave}>Guardar</Button>
+                                                    : <Button onClick={this.onEdit} variant="outline-dark">Editar</Button>
+                                                }
                                                 </>
                                             </Col>
                                         </Form.Group>
                                     </Form>
                                 </Col>
+                                }
                             </Row>
                         </Container>
                     </div>
@@ -362,5 +401,7 @@ const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
     clearAlert,
     addAlert,
-    addClient
+    addClient,
+    getClients,
+    updateClient
 })(withAuthorization(condition)(Clientes));
