@@ -12,13 +12,6 @@ const mapStateToProps = state => {
     return { alerts: state.alerts };
 };
 
-function mapDispatchToProps(dispatch) {
-    return {
-        clearAlert: alert => dispatch(clearAlert(alert)),
-        addAlert: alert => dispatch(addAlert(alert))
-    };
-}
-
 const INITIAL_STATE = {
     email: '',
     email2: '',
@@ -39,14 +32,12 @@ class Registeruser extends Component {
 
     handleSubmit(event) {
         event.preventDefault();
-        this.setState({validated: true});
+        this.setState({ validated: true });
         const { email, email2, isAdmin } = this.state;
         const form = event.currentTarget;
 
         if(email !== email2) {
-            let alert = { type: AlertType.Error, message: 'Emails do not match' };
-            this.props.addAlert(alert);
-            setTimeout(() => this.props.clearAlert(alert), 7000);
+            this.props.addAlert(AlertType.Error, 'Emails do not match');
             return;
         }
 
@@ -66,9 +57,7 @@ class Registeruser extends Component {
             .doCreateUserWithEmailAndPassword(email, email, roles);
 
 
-        let alert = { type: AlertType.Success, message: `${email} successfully registered` };
-        this.props.addAlert(alert);
-        setTimeout(() => this.props.clearAlert(alert), 7000);
+        this.props.addAlert(AlertType.Success, `${email} successfully registered`);
 
         this.setState(INITIAL_STATE);
     }
@@ -122,7 +111,7 @@ class Registeruser extends Component {
 const condition = authUser => 
     authUser && !!authUser.roles[ROLES.ADMIN];
 
-export default connect(mapStateToProps, mapDispatchToProps)(compose(
+export default connect(mapStateToProps, { clearAlert, addAlert })(compose(
     withAuthorization(condition),
     withFirebase,
 )(Registeruser));

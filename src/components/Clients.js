@@ -1,171 +1,323 @@
 import React, { Component } from 'react';
 import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
+import BarLoader from "react-spinners/BarLoader";
+import { AlertType } from '../stores/AlertStore';
+import { connect } from "react-redux";
+import { addAlert, clearAlert, addClient, getClients, updateClient, deleteClient } from "../redux/actions/index";
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
+
+const mapStateToProps = state => {
+    return { 
+        alerts: state.alerts,
+        clients: state.clients,
+        loadingClients: state.loadingClients
+     };
+};
+
+const INITIAL_STATE = {
+    denomination: '', currDenomination: '',
+    address: '', currAddress: '',
+    rfc: '', currRfc: '',
+    contact: '', currContact: '',
+    email: '', currEmail: '',
+    phone: '', currPhone: '',
+    website: '', currWebsite: '',
+    yearSince: '', currYearSince: '',
+    uid: '', currUid: '',
+    iva: true, currIva: true,
+    validated: false,
+    edit: false,
+    showModalCliente: false,
+    error: null,
+    activeIdx: -1
+};
 
 class Clientes extends Component {
     constructor(props) {
         super(props);
-        this.state = { edit: false, showModalCliente: false };
+        this.state = { ...INITIAL_STATE };
 
         this.handleCloseCliente = this.handleCloseCliente.bind(this);
         this.handleShowCliente = this.handleShowCliente.bind(this);
+        this.handleNewClient = this.handleNewClient.bind(this);
+        this.handleOnChange = this.handleOnChange.bind(this);
+        this.onEdit = this.onEdit.bind(this);
+        this.onClickClient = this.onClickClient.bind(this);
+        this.onChangeRadio = this.onChangeRadio.bind(this);
+        this.onChange = this.onChange.bind(this);
+        this.onSave = this.onSave.bind(this);
+        this.onDelete = this.onDelete.bind(this);
     }
 
-    handleShowCliente(e) {
+    componentDidMount() {
+        if(this.props.clients.length === 0){
+            this.props.getClients();
+        }
+    }
+
+    onDelete(event) {
+        if(window.confirm('¿Seguro que desea borrar al cliente?')) {
+            this.props.deleteClient(this.props.clients[this.state.activeIdx].uid);
+            this.setState({ activeIdx: -1, edit: false });
+        }
+    }
+
+    onSave(event) {
+        const { currDenomination, currAddress, currRfc, currContact,
+            currEmail, currPhone, currWebsite, currYearSince, currIva, currUid } = this.state;
+        
+        if(currDenomination.length === 0) {
+            this.props.addAlert(AlertType.Error, "Business name cannot be empty.");
+            return;
+        }
+
+        if(currRfc.length === 0) {
+            this.props.addAlert(AlertType.Error, "RFC cannot be empty.");
+            return;
+        }
+
+        if(currContact.length === 0) {
+            this.props.addAlert(AlertType.Error, "Contact cannot be empty.");
+            return;
+        }
+
+        if(currEmail.length === 0) {
+            this.props.addAlert(AlertType.Error, "Email cannot be empty.");
+            return;
+        }
+
+        const payload = {
+            address: currAddress, contact: currContact, denomination: currDenomination,
+            email: currEmail, iva: currIva, phone: currPhone, rfc: currRfc,
+            website: currWebsite, yearSince: currYearSince, uid: currUid
+        };
+        this.props.updateClient(currUid, payload);
+        
+        this.setState({ edit: false });
+    }
+
+    onChange(event) {
+        this.setState({ [event.target.name]: event.target.value });
+    }
+
+    onChangeRadio(event) {
+        this.setState({ currIva: !this.state.currIva });
+    }
+
+    onEdit() {
+        this.setState({ edit: true });
+    }
+
+    handleNewClient(event) {
+        event.preventDefault();
+        this.setState({ validated: true });
+
+        const { denomination, address, rfc, contact, email,
+            phone, website, yearSince } = this.state;
+        const iva = document.getElementById("yesIVA").checked;
+
+        if(denomination === "" || rfc === "" || contact === "" || email === "") return;
+
+        const payload = {
+            denomination: denomination,
+            address: address,
+            rfc: rfc,
+            contact: contact,
+            email: email,
+            phone: phone,
+            website: website,
+            yearSince: yearSince,
+            iva: iva
+        };
+        this.props.addClient(payload);
+    }
+
+    handleOnChange(event) {
+        this.setState({ [event.target.name]: event.target.value });
+    }
+
+    handleShowCliente() {
         this.setState({ showModalCliente: true });
     }
 
     handleCloseCliente() {
         this.setState({ showModalCliente: false });
     }
+
+    renderModal() {
+        const { denomination, address, rfc, contact, email,
+                phone, website, yearSince } = this.state;
+        return(
+            <Modal show={this.state.showModalCliente} onHide={this.handleCloseCliente}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Nuevo cliente</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form noValidate validated={this.state.validated} onSubmit={this.handleNewClient}>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Denominación
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" required />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Domicilio
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="address" onChange={this.handleOnChange} value={address} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                RFC
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" required />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Contacto
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" required />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Correo
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Teléfono
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="phone" onChange={this.handleOnChange} value={phone} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Website
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="website" onChange={this.handleOnChange} value={website} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Cliente desde
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="yearSince" onChange={this.handleOnChange} value={yearSince} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row} >
+                            <Form.Label column sm="3"> IVA </Form.Label>
+                            <Col sm="7">
+                                <div>
+                                <Form.Check
+                                    type="radio"
+                                    label="SI"
+                                    name="ivaRadio"
+                                    id="yesIVA"
+                                    defaultChecked
+                                />
+                                <Form.Check
+                                    type="radio"
+                                    label="NO"
+                                    name="ivaRadio"
+                                    id="noIVA"
+                                />
+                                </div>
+                            </Col>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={this.handleCloseCliente}>
+                        Cancelar
+                    </Button>
+                    <Button className="legem-primary" type="submit" onClick={this.handleNewClient}>
+                        Guardar cliente
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    onClickClient(event) {
+        const activeIdx = event.target.value;
+        this.setState({ activeIdx: activeIdx, edit: false,
+            currUid: this.props.clients[activeIdx].uid,
+            currDenomination: this.props.clients[activeIdx].denomination,
+            currAddress: this.props.clients[activeIdx].address,
+            currRfc: this.props.clients[activeIdx].rfc,
+            currContact: this.props.clients[activeIdx].contact,
+            currEmail: this.props.clients[activeIdx].email,
+            currPhone: this.props.clients[activeIdx].phone,
+            currWebsite: this.props.clients[activeIdx].website,
+            currYearSince: this.props.clients[activeIdx].yearSince,
+            currIva: this.props.clients[activeIdx].iva
+        });
+    }
+
+    renderClients() {
+        return(
+            <ListGroup as="ul" className="">
+                {this.props.clients.map((client, i) => <ListGroup.Item onClick={this.onClickClient} value={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{client.denomination}</ListGroup.Item>)}
+            </ListGroup>
+        );
+    }
     
     render() {
+        const { edit, currDenomination, currAddress, currRfc, currContact,
+            currEmail, currPhone, currWebsite, currYearSince, currIva } = this.state;
         return (
             <AuthUserContext.Consumer>
                 {authUser => (
+                    this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         <Container className="topMargin">
                             <Row>
                                 <Col sm={4}>
                                     <Button variant="success" size="lg" block onClick={this.handleShowCliente}> Nuevo Cliente </Button>
-                                    
-                                    {/* MODAL */}
-                                    <Modal show={this.state.showModalCliente} onHide={this.handleCloseCliente}>
-                                            <Modal.Header closeButton>
-                                                <Modal.Title>Nuevo cliente</Modal.Title>
-                                            </Modal.Header>
-                                            <Modal.Body>
-                                                <Form>
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            Denominación
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            Domicilio
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            RFC
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            Contacto
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            Correo
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            Teléfono
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            Website
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label column sm="3">
-                                                            Cliente desde
-                                                        </Form.Label>
-                                                        <Col sm="5">
-                                                            <Form.Control as="textarea" rows="1" />
-                                                        </Col>
-                                                    </Form.Group>
-        
-                                                    <Form.Group as={Row} >
-                                                        <Form.Label column sm="3"> IVA </Form.Label>
-                                                        <Col sm="5">
-                                                            <div>
-                                                                {['radio'].map(type => (
-                                                                    <div key={`inline-${type}`} className="mb-3">
-                                                                        <Form.Check inline label="SI" type={type} id={`inline-${type}-1`} />
-                                                                        <Form.Check inline label="NO" type={type} id={`inline-${type}-1`} />
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </Col>
-                                                    </Form.Group>
-                                                </Form>
-                                            </Modal.Body>
-                                            <Modal.Footer>
-                                                <Button variant="secondary" onClick={this.handleCloseCliente}>
-                                                    Cancelar
-                                                </Button>
-                                                <Button className="legem-primary" onClick={this.handleCloseCliente}>
-                                                    Guardar cliente
-                                                </Button>
-                                            </Modal.Footer>
-                                        </Modal>
-                                    
-        
-        
-        
-                                    <ListGroup as="ul" className="">
-                                        <ListGroup.Item as="li" > Cliente 1  </ListGroup.Item>
-                                        <ListGroup.Item as="li" active className="legem-primary" >Cliente 2</ListGroup.Item>
-                                        <ListGroup.Item as="li"> Cliente 3</ListGroup.Item>
-                                        <ListGroup.Item as="li">Cliente 4</ListGroup.Item>
-                                    </ListGroup>
+
+                                    {this.renderModal()}
+                                    {this.renderClients()}
                                 </Col>
-        
-                                {/* toda esta seccion estara oculta mientras no haya un cliente seleccionado */}
+
+                                { this.state.activeIdx === -1 ? <div/> :
                                 <Col sm={8}>
-                                    <Form>
-                                        {/* DENOMINACION */}
-                                        {/* excepto aqui, el placeholder debe ser DENOMINACION */}
+                                    <Form onSubmit={this.onSave}>
                                         {
                                             this.state.edit ?
-                                                <Form.Control size="lg" type="text" placeholder="Denominación" />
+                                                <Form.Control value={currDenomination || "DENOMINACION"} onChange={this.onChange} name="currDenomination" size="lg" type="text" placeholder="Denominación" />
                                                 :
-                                                <h3> DENOMINACION </h3>
+                                                <h3> { currDenomination || "DENOMINACION" } </h3>
                                         }
         
                                         {/* DOMICILIO */}
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Domicilio </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Domicilio" />
-                                                }
+                                                <Form.Control value={currAddress} onChange={this.onChange} name="currAddress" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -173,12 +325,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> RFC </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="RFC" />
-                                                }
+                                                <Form.Control value={currRfc} onChange={this.onChange} name="currRfc" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -186,12 +333,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Contacto </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Contacto" />
-                                                }
+                                                <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -199,12 +341,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Correo </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Correo" />
-                                                }
+                                                <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -212,12 +349,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Teléfono </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Telefono" />
-                                                }
+                                                <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -225,12 +357,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Website </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="Website" />
-                                                }
+                                                <Form.Control value={currWebsite} onChange={this.onChange} name="currWebsite" readOnly={!edit} plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -238,12 +365,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> Cliente desde </Form.Label>
                                             <Col sm="5">
-                                                {
-                                                    this.state.edit ?
-                                                        <Form.Control plaintext defaultValue=" " />
-                                                        :
-                                                        <Form.Control plaintext readOnly defaultValue="2003" />
-                                                }
+                                                <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit}  plaintext />
                                             </Col>
                                         </Form.Group>
         
@@ -251,27 +373,14 @@ class Clientes extends Component {
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
                                             <Form.Label column sm="4"> IVA </Form.Label>
                                             <Col sm="5">
-                                                {/* creo que este codigo puede reducirse, nada mas que togglee los botones y togglee el estado a disabled... */}
-                                                {
-                                                    this.state.edit ?
-                                                    <div>
-                                                            {['radio'].map(type => (
-                                                                <div key={`inline-${type}`} className="mb-3">
-                                                                    <Form.Check inline label="SI" type={type} id={`inline-${type}-1`} />
-                                                                    <Form.Check inline label="NO" type={type} id={`inline-${type}-1`} />
-                                                                </div>
-                                                            ))}
-                                                    </div>
-                                                        :
-                                                    <div>
-                                                            {['radio'].map(type => (
-                                                                <div key={`inline-${type}`} className="mb-3">
-                                                                    <Form.Check inline disabled label="SI" type={type} id={`inline-${type}-3`} />
-                                                                    <Form.Check inline disabled label="NO" type={type} id={`inline-${type}-3`} />
-                                                                </div>
-                                                            ))}
-                                                    </div>
-                                                }
+                                                <div>
+                                                        {['radio'].map(type => (
+                                                            <div key={`inline-${type}`} className="mb-3">
+                                                                <Form.Check onChange={this.onChangeRadio} checked={currIva} inline name="radioBtn" label="SI" type={type} id={`currIva`} />
+                                                                <Form.Check onChange={this.onChangeRadio} checked={!currIva} inline name="radioBtn" label="NO" type={type} id={`currNoIva`} />
+                                                            </div>
+                                                        ))}
+                                                </div>
                                             </Col>
                                         </Form.Group>
         
@@ -279,12 +388,22 @@ class Clientes extends Component {
                                             <Form.Label column sm="5"></Form.Label>
                                             <Col sm="5">
                                                 <>
-                                                    <Button variant="outline-dark">Editar</Button>
+                                                {
+                                                    this.state.edit ?
+                                                    <div>
+                                                        <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                        <Button onClick={this.onSave}>Guardar</Button>
+                                                    </div>
+                                                    : <Button onClick={this.onEdit} variant="outline-dark">Editar</Button>
+                                                }
                                                 </>
                                             </Col>
                                         </Form.Group>
                                     </Form>
                                 </Col>
+                                }
                             </Row>
                         </Container>
                     </div>
@@ -295,4 +414,11 @@ class Clientes extends Component {
 }
 
 const condition = authUser => !!authUser;
-export default withAuthorization(condition)(Clientes);
+export default connect(mapStateToProps, {
+    clearAlert,
+    addAlert,
+    addClient,
+    getClients,
+    updateClient,
+    deleteClient
+})(withAuthorization(condition)(Clientes));

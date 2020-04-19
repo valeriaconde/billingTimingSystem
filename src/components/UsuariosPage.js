@@ -5,9 +5,11 @@ import { compose } from 'recompose';
 import * as ROLES from '../constants/roles';
 import { withFirebase } from './Firebase';
 import { connect } from "react-redux";
-import { addAlert, getUsers, clearAlert, updateUser } from "../redux/actions/index";
+import { addAlert, getUsers, clearAlert, updateUser, deleteUser } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 const mapStateToProps = state => {
     return { 
@@ -34,6 +36,7 @@ class UsuariosPage extends Component {
         this.onSave = this.onSave.bind(this);
         this.onEdit = this.onEdit.bind(this);
         this.onChange = this.onChange.bind(this);
+        this.onDelete = this.onDelete.bind(this);
     }
 
     componentDidMount() {
@@ -50,26 +53,27 @@ class UsuariosPage extends Component {
         this.setState({ edit: true });
     }
 
+    onDelete(event) {
+        if(window.confirm('¿Seguro que desea borrar al usuario?')) {
+            this.props.deleteUser(this.props.users[this.state.activeIdx].uid);
+            this.setState({ activeIdx: -1, edit: false });
+        }
+    }
+
     onSave(event) {
         const { startYear, job, salary, name, uid, activeIdx } = this.state;
         if(isNaN(startYear) || startYear.length === 0) {
-            let alert = { type: AlertType.Error, message: "Start year must be a number" };
-            this.props.addAlert(alert);
-            setTimeout(() => this.props.clearAlert(alert), 7000);
+            this.props.addAlert(AlertType.Error, "Start year must be a number.");
             return;
         }
 
         if(isNaN(salary) || salary.length === 0) {
-            let alert = { type: AlertType.Error, message: "Salary must be a number" };
-            this.props.addAlert(alert);
-            setTimeout(() => this.props.clearAlert(alert), 7000);
+            this.props.addAlert(AlertType.Error, "Salary must be a number.");
             return;
         }
 
         if(job.length === 0) {
-            let alert = { type: AlertType.Error, message: "Role cannot be empty" };
-            this.props.addAlert(alert);
-            setTimeout(() => this.props.clearAlert(alert), 7000);
+            this.props.addAlert(AlertType.Error, "Role cannot be empty.");
             return;
         }
 
@@ -164,7 +168,13 @@ class UsuariosPage extends Component {
                                         <Col sm="5">
                                             <>
                                             {
-                                                this.state.edit ? <Button onClick={this.onSave}>Guardar</Button>
+                                                this.state.edit ? 
+                                                <div>
+                                                    <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                    <Button onClick={this.onSave}>Guardar</Button>
+                                                </div>
                                                 : <Button onClick={this.onEdit} variant="outline-dark">Editar</Button>
                                             }
                                             </>
@@ -185,7 +195,13 @@ class UsuariosPage extends Component {
 const condition = authUser => 
     authUser && !!authUser.roles[ROLES.ADMIN];
 
-export default connect(mapStateToProps, { getUsers, addAlert, clearAlert, updateUser })(compose(
+export default connect(mapStateToProps, { 
+    getUsers, 
+    addAlert, 
+    clearAlert, 
+    updateUser,
+    deleteUser
+ })(compose(
     withAuthorization(condition),
     withFirebase,
 )(UsuariosPage));
