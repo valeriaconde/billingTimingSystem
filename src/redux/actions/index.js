@@ -1,5 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
-    LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS } from "../../constants/action-types"; 
+    LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
+    REMOVED_CLIENT, REMOVED_USER } from "../../constants/action-types"; 
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 
@@ -111,4 +112,23 @@ export function getUsers() {
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
     };
+}
+
+export function deleteUser(uid) {
+    return function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
+        dispatch({ type: LOADING_USERS, payload: {} })
+        return axios.delete(url)
+            .then(response => {
+                dispatch({ type: REMOVED_USER, payload: uid });
+
+                const alert = { type: AlertType.Success, message: "User successfully deleted."};
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
 }

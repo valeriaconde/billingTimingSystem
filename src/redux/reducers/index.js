@@ -1,5 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
-    USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT } from "../../constants/action-types";
+    USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
+    REMOVED_USER, REMOVED_CLIENT } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -29,6 +30,12 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === LOADING_CLIENTS) {
         return Object.assign({}, state, {
             loadingClients: true
+        });
+    } else if(action.type === REMOVED_USER) {
+        let tmp = state.users.filter(u => { return u.uid !== action.payload });
+        return Object.assign({}, state, {
+            loadingUsers: false,
+            users: tmp.sort((a, b) => a.name.localeCompare(b.name))
         });
     } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
