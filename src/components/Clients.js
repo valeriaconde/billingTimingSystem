@@ -81,7 +81,7 @@ class Clientes extends Component {
         const payload = {
             address: currAddress, contact: currContact, denomination: currDenomination,
             email: currEmail, iva: currIva, phone: currPhone, rfc: currRfc,
-            website: currWebsite, yearSince: currYearSince
+            website: currWebsite, yearSince: currYearSince, uid: currUid
         };
         this.props.updateClient(currUid, payload);
         

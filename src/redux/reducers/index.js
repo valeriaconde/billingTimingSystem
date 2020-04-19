@@ -49,8 +49,8 @@ function rootReducer(state = initialState, action) {
             users: tmp.sort((a, b) => a.name.localeCompare(b.name))
         });
     } else if(action.type === UPDATED_CLIENT) {
-        const denomination = action.payload.denomination;
-        let tmp = state.clients.filter(d => { return d.denomination !== denomination });
+        const uid = action.payload.uid;
+        let tmp = state.clients.filter(d => { return d.uid !== uid });
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingClients: false,
