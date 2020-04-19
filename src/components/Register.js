@@ -39,7 +39,7 @@ class Registeruser extends Component {
 
     handleSubmit(event) {
         event.preventDefault();
-        this.setState({validated: true});
+        this.setState({ validated: true });
         const { email, email2, isAdmin } = this.state;
         const form = event.currentTarget;
 

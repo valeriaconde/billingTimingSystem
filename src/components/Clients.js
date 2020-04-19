@@ -1,6 +1,20 @@
 import React, { Component } from 'react';
 import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
+import { AlertType } from '../stores/AlertStore';
+import { connect } from "react-redux";
+import { addAlert, clearAlert } from "../redux/actions/index";
+
+const mapStateToProps = state => {
+    return { alerts: state.alerts };
+};
+
+function mapDispatchToProps(dispatch) {
+    return {
+        clearAlert: alert => dispatch(clearAlert(alert)),
+        addAlert: alert => dispatch(addAlert(alert))
+    };
+}
 
 const INITIAL_STATE = {
     denomination: '',
@@ -11,7 +25,7 @@ const INITIAL_STATE = {
     phone: '',
     website: '',
     yearSince: '',
-    iva: false,
+    iva: true,
     validated: false,
     edit: false,
     showModalCliente: false,
@@ -30,6 +44,14 @@ class Clientes extends Component {
     }
 
     handleNewClient(event) {
+        event.preventDefault();
+        this.setState({ validated: true });
+
+        const { denomination, address, rfc, contact, email,
+            phone, website, yearSince } = this.state;
+        const iva = document.getElementById("yesIVA").checked;
+
+        if(denomination === "" || rfc === "" || contact === "" || email === "") return;
 
     }
 
@@ -54,13 +76,13 @@ class Clientes extends Component {
                     <Modal.Title>Nuevo cliente</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form>
+                    <Form noValidate validated={this.state.validated} onSubmit={this.handleNewClient}>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
                                 Denominación
                             </Form.Label>
                             <Col sm="5">
-                                <Form.Control name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" />
+                                <Form.Control name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
@@ -78,7 +100,7 @@ class Clientes extends Component {
                                 RFC
                             </Form.Label>
                             <Col sm="5">
-                                <Form.Control name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" />
+                                <Form.Control name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
@@ -87,7 +109,7 @@ class Clientes extends Component {
                                 Contacto
                             </Form.Label>
                             <Col sm="5">
-                                <Form.Control name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" />
+                                <Form.Control name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
@@ -96,7 +118,7 @@ class Clientes extends Component {
                                 Correo
                             </Form.Label>
                             <Col sm="5">
-                                <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" />
+                                <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
@@ -134,14 +156,14 @@ class Clientes extends Component {
                                 <Form.Check
                                     type="radio"
                                     label="SI"
-                                    name="yesIVA"
+                                    name="ivaRadio"
                                     id="yesIVA"
                                     defaultChecked
                                 />
                                 <Form.Check
                                     type="radio"
                                     label="NO"
-                                    name="noIVA"
+                                    name="ivaRadio"
                                     id="noIVA"
                                 />
                                 </div>
@@ -153,7 +175,7 @@ class Clientes extends Component {
                     <Button variant="secondary" onClick={this.handleCloseCliente}>
                         Cancelar
                     </Button>
-                    <Button className="legem-primary" onClick={this.handleCloseCliente}>
+                    <Button className="legem-primary" type="submit" onClick={this.handleNewClient}>
                         Guardar cliente
                     </Button>
                 </Modal.Footer>
@@ -332,4 +354,4 @@ class Clientes extends Component {
 }
 
 const condition = authUser => !!authUser;
-export default withAuthorization(condition)(Clientes);
+export default connect(mapStateToProps, mapDispatchToProps)(withAuthorization(condition)(Clientes));
