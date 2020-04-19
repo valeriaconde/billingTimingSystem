@@ -9,13 +9,6 @@ const mapStateToProps = state => {
     return { alerts: state.alerts };
 };
 
-function mapDispatchToProps(dispatch) {
-    return {
-        clearAlert: alert => dispatch(clearAlert(alert)),
-        addAlert: alert => dispatch(addAlert(alert))
-    };
-}
-
 const INITIAL_STATE = {
     email: '',
     error: null,
@@ -46,18 +39,14 @@ class Passrec extends Component {
             .then(() => {
                 this.setState({ ...INITIAL_STATE });
 
-                let alert = { type: AlertType.Success, message: "Check your email, we've sent you a recovery link." };
-                this.props.addAlert(alert);
-                setTimeout(() => this.props.clearAlert(alert), 7000);
+                this.props.addAlert(AlertType.Success, "Check your email, we've sent you a recovery link.");
 
                 this.props.history.push('/login');
             })
             .catch(error => {
                 this.setState({ error });
                 
-                let alert = { type: AlertType.Error, message: error.message };
-                this.props.addAlert(alert);
-                setTimeout(() => this.props.clearAlert(alert), 7000);
+                this.props.addAlert(AlertType.Error, error.message);
             });
         
     }
@@ -80,4 +69,4 @@ class Passrec extends Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(withFirebase(Passrec));
+export default connect(mapStateToProps, { clearAlert, addAlert })(withFirebase(Passrec));

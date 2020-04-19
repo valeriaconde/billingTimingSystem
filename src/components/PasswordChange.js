@@ -9,13 +9,6 @@ const mapStateToProps = state => {
     return { alerts: state.alerts };
 };
 
-function mapDispatchToProps(dispatch) {
-    return {
-        clearAlert: alert => dispatch(clearAlert(alert)),
-        addAlert: alert => dispatch(addAlert(alert))
-    };
-}
-
 const INITIAL_STATE = {
     password: '',
     password2: '',
@@ -39,9 +32,7 @@ class PassChange extends Component {
         const { password, password2 } = this.state;
 
         if(password !== password2) {
-            let alert = { type: AlertType.Error, message: "Passwords don't match" };
-            this.props.addAlert(alert);
-            setTimeout(() => this.props.clearAlert(alert), 7000);
+            this.props.addAlert(AlertType.Error, "Passwords don't match");
 
             event.stopPropagation();
             return;
@@ -58,16 +49,12 @@ class PassChange extends Component {
             .then(() => {
                 this.setState({ ...INITIAL_STATE });
 
-                let alert = { type: AlertType.Success, message: "Password changed successfully" };
-                this.props.addAlert(alert);
-                setTimeout(() => this.props.clearAlert(alert), 7000);
+                this.props.addAlert(AlertType.Success, "Password changed successfully");
 
                 this.props.history.push('/home');
             })
             .catch(error => {
-                let alert = { type: AlertType.Error, message: error.message };
-                this.props.addAlert(alert);
-                setTimeout(() => this.props.clearAlert(alert), 7000);
+                this.props.addAlert(AlertType.Error, error.message);
 
                 this.setState({ error });
             });
@@ -102,4 +89,4 @@ class PassChange extends Component {
 }
 
 const condition = authUser => !!authUser;
-export default connect(mapStateToProps, mapDispatchToProps)(withAuthorization(condition)(PassChange));
+export default connect(mapStateToProps, { clearAlert, addAlert })(withAuthorization(condition)(PassChange));

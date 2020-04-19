@@ -9,13 +9,6 @@ const mapStateToProps = state => {
     return { alerts: state.alerts };
 };
 
-function mapDispatchToProps(dispatch) {
-    return {
-        clearAlert: alert => dispatch(clearAlert(alert)),
-        addAlert: alert => dispatch(addAlert(alert))
-    };
-}
-
 const INITIAL_STATE = {
     email: '',
     password: '',
@@ -54,9 +47,7 @@ class LoginPage extends Component {
                 window.location.reload();
             })
             .catch(error => {
-                let alert = { type: AlertType.Error, message: error.message };
-                this.props.addAlert(alert);
-                setTimeout(() => this.props.clearAlert(alert), 7000);
+                this.props.addAlert(AlertType.Error, error.message);
                 this.setState({ error, password: '', email: '' });
             });
 
@@ -86,4 +77,4 @@ class LoginPage extends Component {
         );
     }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(withFirebase(LoginPage));
+export default connect(mapStateToProps, { clearAlert, addAlert })(withFirebase(LoginPage));

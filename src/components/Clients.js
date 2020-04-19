@@ -3,18 +3,11 @@ import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-boots
 import { AuthUserContext, withAuthorization } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
-import { addAlert, clearAlert } from "../redux/actions/index";
+import { addAlert, clearAlert, addClient } from "../redux/actions/index";
 
 const mapStateToProps = state => {
     return { alerts: state.alerts };
 };
-
-function mapDispatchToProps(dispatch) {
-    return {
-        clearAlert: alert => dispatch(clearAlert(alert)),
-        addAlert: alert => dispatch(addAlert(alert))
-    };
-}
 
 const INITIAL_STATE = {
     denomination: '',
@@ -53,6 +46,18 @@ class Clientes extends Component {
 
         if(denomination === "" || rfc === "" || contact === "" || email === "") return;
 
+        const payload = {
+            denomination: denomination,
+            address: address,
+            rfc: rfc,
+            contact: contact,
+            email: email,
+            phone: phone,
+            website: website,
+            yearSince: yearSince,
+            iva: iva
+        };
+        this.props.addClient(payload);
     }
 
     handleOnChange(event) {
@@ -354,4 +359,8 @@ class Clientes extends Component {
 }
 
 const condition = authUser => !!authUser;
-export default connect(mapStateToProps, mapDispatchToProps)(withAuthorization(condition)(Clientes));
+export default connect(mapStateToProps, {
+    clearAlert,
+    addAlert,
+    addClient
+})(withAuthorization(condition)(Clientes));
