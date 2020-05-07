@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Modal, Form, Row, Col, Accordion, Card, Container } from 'react-bootstrap';
+import { Button, Modal, Form, Row, Col, Accordion, Card, Container, Jumbotron } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 
 class gastos extends Component {
@@ -22,286 +22,153 @@ class gastos extends Component {
     render() {
         return (
             <AuthUserContext.Consumer>
-            { authUser =>
-                <div>
-                    {/* MODAL */}
-                    <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
-                        Registrar gasto
+                {authUser =>
+                    <div>
+                        {/* MODAL */}
+                        <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
+                            New expense
                     </Button>
 
-                    <Modal show={this.state.showModal} onHide={this.handleClose}>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Nuevo gasto</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <Form>
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Cliente
+                        <Modal show={this.state.showModal} onHide={this.handleClose}>
+                            <Modal.Header closeButton>
+                                <Modal.Title>New expense</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <Form>
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">
+                                            Client
                                     </Form.Label>
-                                    <Col sm="5">
-                                        <Form.Control as="select">
-                                            <option> Cliente 1 </option>
-                                            <option> Cliente 2 </option>
-                                        </Form.Control>
-                                    </Col>
-                                </Form.Group>
+                                        <Col sm="5">
+                                            <Form.Control as="select">
+                                                <option> Cliente 1 </option>
+                                                <option> Cliente 2 </option>
+                                            </Form.Control>
+                                        </Col>
+                                    </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Proyecto
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">
+                                            Project
                                     </Form.Label>
-                                    <Col sm="5">
-                                        <Form.Control as="select">
-                                            <option> Proyecto 1 </option>
-                                            <option> Proyecto 2 </option>
-                                        </Form.Control>
-                                    </Col>
-                                </Form.Group>
+                                        <Col sm="5">
+                                            <Form.Control as="select">
+                                                <option> Proyecto 1 </option>
+                                                <option> Proyecto 2 </option>
+                                            </Form.Control>
+                                        </Col>
+                                    </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Concepto
-                                    </Form.Label>
-                                    <Col sm="5">
-                                        <Form.Control as="textarea" rows="2" />
-                                    </Col>
-                                </Form.Group>
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">Title</Form.Label>
+                                        <Col sm="5">
+                                            <Form.Control as="textarea" rows="2" />
+                                        </Col>
+                                    </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Monto
-                                    </Form.Label>
-                                    <Col sm="5">
-                                        <Form.Control as="textarea" rows="1" />
-                                    </Col>
-                                </Form.Group>
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">Amount</Form.Label>
+                                        <Col sm="5">
+                                            <Form.Control as="textarea" rows="1" />
+                                        </Col>
+                                    </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Moneda
-                                    </Form.Label>
-                                    <Col sm="5">
-                                        <Form.Control as="select">
-                                            <option> MXN </option>
-                                            <option> USD </option>
-                                        </Form.Control>
-                                    </Col>
-                                </Form.Group>
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">Date</Form.Label>
+                                        <Col sm="5">
+                                            {/* DAY PICKER */}
+                                        </Col>
+                                    </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Fecha
-                                    </Form.Label>
-                                    <Col sm="5">
-                                        {/* DAY PICKER */}
-                                    </Col>
-                                </Form.Group>
-
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Tipo de gasto
-                                    </Form.Label>
-                                    <Col sm="5">
-                                        <Form.Control as="select">
-                                            <option> Honorarios de terceros </option>
-                                            <option> Gastos de traslado </option>
-                                            <option> Pagos (Derechos, multas, etc.) </option>
-                                            <option> Otro </option>
-                                        </Form.Control>
-                                    </Col>
-                                </Form.Group>
-                            </Form>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={this.handleClose}>
-                                Cancelar
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">Class</Form.Label>
+                                        <Col sm="5">
+                                            <Form.Control as="select">
+                                                <option> Third party fee </option>
+                                                <option> Transportation expense </option>
+                                                <option> Governmental administrative fee (Rights, fines, etc.) </option>
+                                                <option> Other </option>
+                                            </Form.Control>
+                                        </Col>
+                                    </Form.Group>
+                                </Form>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button variant="secondary" onClick={this.handleClose}>
+                                    Cancel
                             </Button>
-                            <Button className="legem-primary" onClick={this.handleClose}>
-                                Guardar proyecto
+                                <Button className="legem-primary" onClick={this.handleClose}>
+                                    Save
                             </Button>
-                        </Modal.Footer>
-                    </Modal>
+                            </Modal.Footer>
+                        </Modal>
 
-                    {/* PENDIENTE PONER COLORES A LOS TIPOS DE GASTO */}
+                        {/* EXPENSES */}
+                        {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
+                        <Jumbotron fluid>
+                            <Container>
+                                <h1>You have no registered expenses</h1>
+                            </Container>
+                        </Jumbotron>
 
-                    {/* ASUNTOS ACTIVOS */}
-                    <h4 className="topMargin leftMargin greenLetters"> Activos </h4>
-
-                    <Accordion className="topMargin leftMargin rightMargin" defaultActiveKey="0">
-                        <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey="0" ><b>
-                                <Container>
-                                    <Row>
-                                        <Col sm={8}>
-                                            CLIENTE - Vuelo MTY - CDMX (concepto)
-                                        </Col>
-                                        <Col sm={4}>
-                                            $8,000.00 MXN (monto)
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </b></Accordion.Toggle>
-                            <Accordion.Collapse eventKey="0">
-                                <Card.Body>
-                                    <Card.Text>
-                                        $8,000.00 MXN (monto)
-                                    </Card.Text>
-                                    <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                    <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                    <Card.Text> Usuario: Oscar Conde </Card.Text>
+                        <Accordion className="topMargin leftMargin rightMargin" defaultActiveKey="0">
+                            <Card>
+                                <Accordion.Toggle as={Card.Header} eventKey="0" ><b>
                                     <Container>
                                         <Row>
-                                            <Col></Col>
-                                            <Col md="auto">
-                                                <>
-                                                    <Button variant="outline-success">Marcar como completado</Button>
-                                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                                </>
-                                            </Col>
-                                            <Col lg="2">
-                                                <>
-                                                    <Button variant="outline-dark">Editar</Button>
-                                                </>
-                                            </Col>
+                                            <Col sm={8}>VCN - Anchor Bay Packaging de Mexico, S. de R.L. de C.V. - Fine payment </Col>
+                                            <Col sm={4}> $400.00 </Col>
                                         </Row>
                                     </Container>
-
-                                </Card.Body>
-                            </Accordion.Collapse>
-                        </Card>
-                        <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey="1"><b>
-                                <Container>
-                                    <Row>
-                                        <Col sm={8}>
-                                            CLIENTE - Vuelo CDMX - MTY (concepto)
-                                        </Col>
-                                        <Col sm={4}>
-                                            $600.00 USD
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </b></Accordion.Toggle>
-                            <Accordion.Collapse eventKey="1">
-                                <Card.Body>
-                                    <Card.Text>
-                                        $8,000.00 MXN (monto)
-                                    </Card.Text>
-                                    <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                    <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                    <Card.Text> Usuario: Oscar Conde </Card.Text>
+                                </b></Accordion.Toggle>
+                                <Accordion.Collapse eventKey="0">
+                                    <Card.Body>
+                                        <Card.Text> 07 de marzo de 2019 </Card.Text>
+                                        <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
+                                        <Card.Text>
+                                            <Container>
+                                                <Row>
+                                                    <Col sm={8}></Col>
+                                                    <Col sm={4}>
+                                                        <Button variant="outline-dark">Edit</Button>
+                                                        <Button variant="outline-danger" className="leftMargin">Delete</Button>
+                                                    </Col>
+                                                </Row>
+                                            </Container>
+                                        </Card.Text>
+                                    </Card.Body>
+                                </Accordion.Collapse>
+                            </Card>
+                            <Card>
+                            <Accordion.Toggle as={Card.Header} eventKey="1" ><b>
                                     <Container>
                                         <Row>
-                                            <Col></Col>
-                                            <Col md="auto">
-                                                <>
-                                                    <Button variant="outline-success">Marcar como completado</Button>
-                                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                                </>
-
-                                            </Col>
-                                            <Col lg="2">
-                                                <>
-                                                    <Button variant="outline-dark">Editar</Button>
-
-                                                </>
-                                            </Col>
+                                            <Col sm={8}> CLIENTES - CONCEPTO </Col>
+                                            <Col sm={4}> MONTO </Col>
                                         </Row>
                                     </Container>
-                                </Card.Body>
-                            </Accordion.Collapse>
-                        </Card>
-                    </Accordion>
-
-                    {/* ASUNTOS CERRADOS */}
-
-                    <h4 className="topMargin leftMargin redLetters"> Cerrados </h4>
-                    <Accordion className="topMargin leftMargin rightMargin" defaultActiveKey="0">
-                        <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey="0"><b>
-                                <Container>
-                                    <Row>
-                                        <Col sm={8}>
-                                            CLIENTE - Vuelo MTY - CDMX (concepto)
-                                        </Col>
-                                        <Col sm={4}>
-                                            $8,000.00 MXN (monto)
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </b></Accordion.Toggle>
-                            <Accordion.Collapse eventKey="0">
-                                <Card.Body>
-                                    <Card.Text>
-                                        $8,000.00 MXN (monto)
-                                    </Card.Text>
-                                    <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                    <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                    <Card.Text> Usuario: Oscar Conde </Card.Text>
-                                    <Container>
-                                        <Row>
-                                            <Col></Col>
-                                            <Col md="auto">
-                                                <>
-                                                    <Button variant="outline-success">Marcar como completado</Button>
-                                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                                </>
-                                            </Col>
-                                            <Col lg="2">
-                                                <>
-                                                    <Button variant="outline-dark">Editar</Button>
-                                                </>
-                                            </Col>
-                                        </Row>
-                                    </Container>
-
-                                </Card.Body>
-                            </Accordion.Collapse>
-                        </Card>
-                        <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey="1"><b>
-                                <Container>
-                                    <Row>
-                                        <Col sm={8}>
-                                            CLIENTE - CONCEPTO
-                                        </Col>
-                                        <Col sm={4}>
-                                            $600.00 USD
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </b></Accordion.Toggle>
-                            <Accordion.Collapse eventKey="1">
-                                <Card.Body>
-                                    <Card.Text>
-                                        $8,000.00 MXN (monto)
-                                    </Card.Text>
-                                    <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                    <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                    <Card.Text> Usuario: Oscar Conde </Card.Text>
-                                    <Container>
-                                        <Row>
-                                            <Col></Col>
-                                            <Col md="auto">
-                                                <>
-                                                    <Button variant="outline-success">Marcar como completado</Button>
-                                                    {/* alertar, de verdad quieres completar y cerrar este proyecto?  */}
-                                                </>
-                                            </Col>
-                                            <Col lg="2">
-                                                <>
-                                                    <Button variant="outline-dark">Editar</Button>
-                                                </>
-                                            </Col>
-                                        </Row>
-                                    </Container>
-                                </Card.Body>
-                            </Accordion.Collapse>
-                        </Card>
-                    </Accordion>
-                </div>
-            }
+                                </b></Accordion.Toggle>
+                                <Accordion.Collapse eventKey="1">
+                                    <Card.Body>
+                                        <Card.Text> FECHA </Card.Text>
+                                        <Card.Text> TIPO DE GASTO </Card.Text>
+                                        <Card.Text>
+                                            <Container>
+                                                <Row>
+                                                    <Col sm={8}></Col>
+                                                    <Col sm={4}>
+                                                        <Button variant="outline-dark">Edit</Button>
+                                                        <Button variant="outline-danger" className="leftMargin">Delete</Button>
+                                                    </Col>
+                                                </Row>
+                                            </Container>
+                                        </Card.Text>
+                                    </Card.Body>
+                                </Accordion.Collapse>
+                            </Card>
+                        </Accordion>
+                    </div>
+                }
             </AuthUserContext.Consumer>
         );
     }

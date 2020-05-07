@@ -4,12 +4,15 @@ blue: rgb 25, 57, 145
 
 */  
 
-/* GASTOS PAGE CSS */
+/* EXPENSES PAGE CSS */
 
 .filterbtn {
   margin-top: 10px;
 }
 
+.jumboCenter {
+  text-align: center;
+}
 
 /* LOGIN FORM CSS */
 .loginForm {
@@ -35,6 +38,10 @@ blue: rgb 25, 57, 145
   background-color: rgb(25, 57, 145) !important;
   color: white !important;
   border-color: rgb(25, 57, 145) !important;
+}
+
+.greyLetters{
+  color: grey;
 }
 
 .blueLetters {
