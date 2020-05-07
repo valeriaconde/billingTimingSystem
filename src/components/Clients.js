@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
+import { ListGroup, Container, Row, Col, Form, Button, Modal, FormControl } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
@@ -152,13 +152,13 @@ class Clientes extends Component {
         return(
             <Modal show={this.state.showModalCliente} onHide={this.handleCloseCliente}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Nuevo cliente</Modal.Title>
+                    <Modal.Title>New client</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form noValidate validated={this.state.validated} onSubmit={this.handleNewClient}>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
-                                Denominación
+                                Name
                             </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" required />
@@ -167,7 +167,7 @@ class Clientes extends Component {
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
-                                Domicilio
+                                Address
                             </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="address" onChange={this.handleOnChange} value={address} as="textarea" rows="1" />
@@ -185,7 +185,7 @@ class Clientes extends Component {
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
-                                Contacto
+                                Contact
                             </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" required />
@@ -194,7 +194,7 @@ class Clientes extends Component {
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
-                                Correo
+                                Email
                             </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
@@ -203,7 +203,7 @@ class Clientes extends Component {
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
-                                Teléfono
+                                Phone
                             </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="phone" onChange={this.handleOnChange} value={phone} as="textarea" rows="1" />
@@ -221,7 +221,7 @@ class Clientes extends Component {
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
-                                Cliente desde
+                                Client since
                             </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="yearSince" onChange={this.handleOnChange} value={yearSince} as="textarea" rows="1" />
@@ -234,14 +234,14 @@ class Clientes extends Component {
                                 <div>
                                 <Form.Check
                                     type="radio"
-                                    label="SI"
+                                    label="Yes"
                                     name="ivaRadio"
                                     id="yesIVA"
                                     defaultChecked
                                 />
                                 <Form.Check
                                     type="radio"
-                                    label="NO"
+                                    label="No"
                                     name="ivaRadio"
                                     id="noIVA"
                                 />
@@ -297,8 +297,8 @@ class Clientes extends Component {
                         <Container className="topMargin">
                             <Row>
                                 <Col sm={4}>
-                                    <Button variant="success" size="lg" block onClick={this.handleShowCliente}> Nuevo Cliente </Button>
-
+                                    <Button variant="success" size="lg" block onClick={this.handleShowCliente}> New client </Button>
+                                    <FormControl placeholder="Search"/>
                                     {this.renderModal()}
                                     {this.renderClients()}
                                 </Col>
@@ -315,7 +315,7 @@ class Clientes extends Component {
         
                                         {/* DOMICILIO */}
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
-                                            <Form.Label column sm="4"> Domicilio </Form.Label>
+                                            <Form.Label column sm="4"> Address </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currAddress} onChange={this.onChange} name="currAddress" readOnly={!edit} plaintext />
                                             </Col>
@@ -331,7 +331,7 @@ class Clientes extends Component {
         
                                         {/* CONTACTO */}
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
-                                            <Form.Label column sm="4"> Contacto </Form.Label>
+                                            <Form.Label column sm="4"> Contact </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} plaintext />
                                             </Col>
@@ -339,7 +339,7 @@ class Clientes extends Component {
         
                                         {/* CORREO */}
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
-                                            <Form.Label column sm="4"> Correo </Form.Label>
+                                            <Form.Label column sm="4"> Email </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} plaintext />
                                             </Col>
@@ -347,7 +347,7 @@ class Clientes extends Component {
         
                                         {/* TELEFONO */}
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
-                                            <Form.Label column sm="4"> Teléfono </Form.Label>
+                                            <Form.Label column sm="4"> Phone </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} plaintext />
                                             </Col>
@@ -363,7 +363,7 @@ class Clientes extends Component {
         
                                         {/* CLIENTE DESDE */}
                                         <Form.Group as={Row} controlId="formPlaintextEmail">
-                                            <Form.Label column sm="4"> Cliente desde </Form.Label>
+                                            <Form.Label column sm="4"> Client since </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit}  plaintext />
                                             </Col>
@@ -376,8 +376,8 @@ class Clientes extends Component {
                                                 <div>
                                                         {['radio'].map(type => (
                                                             <div key={`inline-${type}`} className="mb-3">
-                                                                <Form.Check onChange={this.onChangeRadio} checked={currIva} inline name="radioBtn" label="SI" type={type} id={`currIva`} />
-                                                                <Form.Check onChange={this.onChangeRadio} checked={!currIva} inline name="radioBtn" label="NO" type={type} id={`currNoIva`} />
+                                                                <Form.Check onChange={this.onChangeRadio} checked={currIva} inline name="radioBtn" label="Yes" type={type} id={`currIva`} />
+                                                                <Form.Check onChange={this.onChangeRadio} checked={!currIva} inline name="radioBtn" label="No" type={type} id={`currNoIva`} />
                                                             </div>
                                                         ))}
                                                 </div>
@@ -394,9 +394,9 @@ class Clientes extends Component {
                                                         <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
                                                             <DeleteIcon />
                                                         </IconButton>
-                                                        <Button onClick={this.onSave}>Guardar</Button>
+                                                        <Button onClick={this.onSave}>Save</Button>
                                                     </div>
-                                                    : <Button onClick={this.onEdit} variant="outline-dark">Editar</Button>
+                                                    : <Button onClick={this.onEdit} variant="outline-dark">Edit</Button>
                                                 }
                                                 </>
                                             </Col>
