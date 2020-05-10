@@ -23,6 +23,7 @@ class Menu extends Component {
                             <Nav.Link href="/proyectos" hidden={!authUser?.roles[ROLES.ADMIN]}>Projects</Nav.Link>
                             <Nav.Link href="/reportes" hidden={!authUser?.roles[ROLES.ADMIN]}>Reports</Nav.Link>
                             <Nav.Link href="/facturas" hidden={!authUser?.roles[ROLES.ADMIN]}>Bills</Nav.Link>
+                            <Nav.Link href="/detailed-project" hidden={!authUser?.roles[ROLES.ADMIN]}>DETAILED</Nav.Link>
                         </Nav>
                         <Nav className="justify-content-end">
                             {

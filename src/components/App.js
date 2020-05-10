@@ -16,6 +16,7 @@ import tiemposPage from './TiemposPage';
 import UsuariosPage from './UsuariosPage';
 import Passrec from './PasswordRecovery';
 import PassChange from './PasswordChange';
+import detailedProject from './DetailedProject';
 import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
@@ -87,6 +88,8 @@ class App extends Component {
                         <Route path="/password-recovery" exact component={Passrec} />
 
                         <Route path="/password-change" exact component={PassChange} />
+
+                        <Route path="/detailed-project" exact component={detailedProject}/>
 
                         <Route component={NotFoundPage} />
                     </Switch>

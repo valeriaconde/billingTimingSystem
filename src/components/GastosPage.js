@@ -116,13 +116,14 @@ class gastos extends Component {
                                 <Accordion.Toggle as={Card.Header} eventKey="0" ><b>
                                     <Container>
                                         <Row>
-                                            <Col sm={8}>VCN - Anchor Bay Packaging de Mexico, S. de R.L. de C.V. - Fine payment </Col>
+                                            <Col sm={8}> Anchor Bay Packaging de Mexico, S. de R.L. de C.V. - Proyecto X </Col>
                                             <Col sm={4}> $400.00 </Col>
                                         </Row>
                                     </Container>
                                 </b></Accordion.Toggle>
                                 <Accordion.Collapse eventKey="0">
                                     <Card.Body>
+                                        <Card.Text> Fine payment </Card.Text>
                                         <Card.Text> 07 de marzo de 2019 </Card.Text>
                                         <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
                                         <Card.Text>
@@ -143,13 +144,14 @@ class gastos extends Component {
                             <Accordion.Toggle as={Card.Header} eventKey="1" ><b>
                                     <Container>
                                         <Row>
-                                            <Col sm={8}> CLIENTES - CONCEPTO </Col>
+                                            <Col sm={8}> CLIENTE - PROYECTO </Col>
                                             <Col sm={4}> MONTO </Col>
                                         </Row>
                                     </Container>
                                 </b></Accordion.Toggle>
                                 <Accordion.Collapse eventKey="1">
                                     <Card.Body>
+                                        <Card.Text> CONCEPTO</Card.Text>
                                         <Card.Text> FECHA </Card.Text>
                                         <Card.Text> TIPO DE GASTO </Card.Text>
                                         <Card.Text>

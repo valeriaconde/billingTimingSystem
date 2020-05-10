@@ -252,10 +252,10 @@ class Clientes extends Component {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={this.handleCloseCliente}>
-                        Cancelar
+                        Cancel
                     </Button>
                     <Button className="legem-primary" type="submit" onClick={this.handleNewClient}>
-                        Guardar cliente
+                        Save
                     </Button>
                 </Modal.Footer>
             </Modal>
