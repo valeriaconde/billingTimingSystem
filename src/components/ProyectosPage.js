@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Button, Modal, Form, Col, Row, Container, Jumbotron, ListGroup } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
-import { List } from '@material-ui/core';
 
 class Proyectos extends Component {
     constructor(props) {

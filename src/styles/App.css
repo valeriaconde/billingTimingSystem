@@ -25,7 +25,6 @@ blue: rgb 25, 57, 145
   font-size: 14px;
 }
 
-
 /* GENERAL CSS */
 .bigLetters {
   font-size: 18pt;
@@ -62,14 +61,6 @@ blue: rgb 25, 57, 145
 
 .App {
   text-align: center;
-}
-
-.greenLetters {
-  color: green;
-}
-
-.redLetters {
-  color: red;
 }
 
 .App-logo {
