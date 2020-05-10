@@ -58,7 +58,7 @@ class Clientes extends Component {
     }
 
     onDelete(event) {
-        if(window.confirm('¿Seguro que desea borrar al cliente?')) {
+        if(window.confirm('Are you sure you want to delete this client?')) {
             this.props.deleteClient(this.props.clients[this.state.activeIdx].uid);
             this.setState({ activeIdx: -1, edit: false });
         }
