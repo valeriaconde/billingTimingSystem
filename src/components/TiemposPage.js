@@ -47,7 +47,7 @@ class tiemposPage extends Component {
                                         </Col>
                                     </Form.Group>
 
-                                    {/* ESTOS SON SOLO PROYECTOS DEL CLIENTE ELEGIDO EN LA OPCION ANTERIOR */}
+                                    {/* SOLO PROYECTOS DEL CLIENTE ELEGIDO EN LA OPCION ANTERIOR */}
                                     <Form.Group as={Row}>
                                         <Form.Label column sm="3">
                                             Project
