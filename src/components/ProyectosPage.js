@@ -10,6 +10,7 @@ import Table from '@material-ui/core/Table';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
+import BarLoader from "react-spinners/BarLoader";
 import TableBody from '@material-ui/core/TableBody';
 
 const mapStateToProps = state => {
@@ -20,14 +21,33 @@ const mapStateToProps = state => {
      };
 };
 
+const INITIAL_STATE = {
+    showModal: false,
+    selectedOption: null
+};
+
 class Proyectos extends Component {
     constructor(props) {
         super(props);
-        this.state = { showModal: false };
+        this.state = { ...INITIAL_STATE };
 
         this.handleClose = this.handleClose.bind(this);
         this.handleShow = this.handleShow.bind(this);
+        this.handleChangeSelect = this.handleChangeSelect.bind(this);
     }
+
+    componentDidMount() {
+        if(this.props.clients.length === 0) {
+            this.props.getClients();
+        }
+    }
+
+    handleChangeSelect = selectedOption => {
+        this.setState(
+          { selectedOption },
+          () => console.log(`Option selected:`, this.state.selectedOption)
+        );
+    };
 
     handleShow() {
         this.setState({ showModal: true });
@@ -92,9 +112,19 @@ class Proyectos extends Component {
     }
 
     render() {
+        const clientSelect = this.props.clients !== null ?
+        this.props.clients.map((c, i) => ({
+            label: c.denomination,
+            value: c.denomination,
+            ...c
+        })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+
+        const { selectedOption } = this.state;
+
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
+                    this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         {/* MODAL */}
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
@@ -104,10 +134,10 @@ class Proyectos extends Component {
                         {this.renderModal()}
 
                         {/* LE SELECT */}
-                        <Select className="rightMargin leftMargin topMargin"> PA CLIENTES</Select>
+                        <Select options={clientSelect} value={selectedOption} onChange={this.handleChangeSelect} className="rightMargin leftMargin topMargin"> PA CLIENTES</Select>
 
                         {/* LISTA PA MOSTRA SI HAY CLIENTES */}
-                        <br></br>
+                        <br />
 
                         <div className="tableMargins">
                             <TableContainer>
