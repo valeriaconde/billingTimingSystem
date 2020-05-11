@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { } from 'react-bootstrap';
+import { ListGroup } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -12,14 +12,25 @@ class detailedProject extends Component {
     constructor(props) {
         super(props);
     }
+
     render() {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
                     <div>
-                        <h3 className="blueLetters topMargin leftMargin">Titulo del proyecto </h3>
-                        
-                        <div className="tableMargins">
+                        <h3 className="blueLetters topMargin leftMargin"> Titulo del proyecto </h3>
+                        <h6 className="bigLeftMargin"> For Cloos Robotic Mexico, S.A. de C.V. </h6>
+
+                        <label className="leftMargin topMargin"><b>Appointed </b></label>
+                        <ListGroup horizontal="sm" className="tableMargins">
+                            <ListGroup.Item>Valesauria</ListGroup.Item>
+                            <ListGroup.Item>Elias</ListGroup.Item>
+                            <ListGroup.Item>Oscar Conde</ListGroup.Item>
+                            <ListGroup.Item>USERS APPOINTED</ListGroup.Item>
+                        </ListGroup>
+
+
+                        <div className="tableMargins topMargin">
                             <TableContainer>
                                 <Table aria-label="simple table">
                                     <TableHead>
@@ -38,8 +49,8 @@ class detailedProject extends Component {
                                             <TableCell className="centerText" >6000 </TableCell>
                                         </TableRow>
                                         <TableRow>
-                                            <TableCell>LLM - Multa IMMEX  </TableCell>
-                                            <TableCell className="centerText">900</TableCell>
+                                            <TableCell>INICIALES - NOMBRE DEL GASTO  </TableCell>
+                                            <TableCell className="centerText">MONTO</TableCell>
                                         </TableRow>
                                         <TableRow>
                                             <TableCell> Total expenses  </TableCell>

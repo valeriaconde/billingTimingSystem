@@ -18,6 +18,10 @@ blue: rgb 25, 57, 145
   text-align: right !important;
 }
 
+.bigLeftMargin {
+  margin-left: 50px;
+}
+
 /* EXPENSES PAGE CSS */
 
 .filterbtn {
