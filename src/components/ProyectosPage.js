@@ -29,7 +29,8 @@ const INITIAL_STATE = {
     selectedClientModal: null,
     selectedAppointed: null,
     projectTitle: '',
-    projectFixedFee: false
+    projectFixedFee: 'false',
+    projectFee: 0
 };
 
 class Proyectos extends Component {
@@ -85,7 +86,7 @@ class Proyectos extends Component {
                 ...u
             })).sort((a, b) => a.name.localeCompare(b.name)) : [];
 
-        const { selectedClientModal, selectedAppointed, projectTitle } = this.state;
+        const { selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
 
         return(
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -119,10 +120,17 @@ class Proyectos extends Component {
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> Billed by </Form.Label>
                             <Col sm="7">
-                                <Form.Control as="select">
-                                    <option>The hour</option>
-                                    <option>Fixed fee</option>
+                                <Form.Control name="projectFixedFee" onChange={this.onChange} as="select">
+                                    <option value={false}>The hour</option>
+                                    <option value={true}>Fixed fee</option>
                                 </Form.Control>
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row} hidden={projectFixedFee === 'false'}>
+                            <Form.Label column sm="3"> Fee </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="projectFee" value={projectFee} onChange={this.onChange}/>
                             </Col>
                         </Form.Group>
                     </Form>
