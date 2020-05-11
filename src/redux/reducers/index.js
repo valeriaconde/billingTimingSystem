@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -62,6 +62,11 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             clients: state.clients.concat(action.payload).sort((a, b) => a.denomination.localeCompare(b.denomination)),
             loadingClients: false
+        });
+    } else if(action.type === PROJECTS_LOADED) {
+        return Object.assign({}, state, {
+            projects: action.payload,
+            loadingProjects: false
         });
     } else if(action.type === UPDATED_USER) {
         const email = action.payload.email;

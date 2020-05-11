@@ -2,14 +2,12 @@ import React, { Component } from 'react';
 import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
-import { addAlert, clearAlert, getClients, getUsers, addProject } from "../redux/actions/index";
-import { AlertType } from '../stores/AlertStore';
+import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
 import { connect } from "react-redux";
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
-import TableHead from '@material-ui/core/TableHead';
 import BarLoader from "react-spinners/BarLoader";
 import TableBody from '@material-ui/core/TableBody';
 
@@ -19,6 +17,7 @@ const mapStateToProps = state => {
         clients: state.clients,
         loadingClients: state.loadingClients,
         users: state.users,
+        projects: state.projects,
         loadingUsers: state.loadingUsers,
         loadingProjects: state.loadingProjects
      };
@@ -46,6 +45,10 @@ class Proyectos extends Component {
         this.handleNewProject = this.handleNewProject.bind(this);
     }
 
+    isFloat(n) {
+        return n.length > 0 && !isNaN(n) && n > 0;
+    }
+
     componentDidMount() {
         if(this.props.clients.length === 0) {
             this.props.getClients();
@@ -60,8 +63,15 @@ class Proyectos extends Component {
         event.preventDefault();
         this.setState({ validated: true });
 
+        const form = event.currentTarget;
+            if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
         const { selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
         
+        if(!this.isFloat(projectFee)) return;
         if(projectFixedFee === 'true' && projectFee <= 0) return;
         if(projectTitle === '' || selectedClientModal == null) return;
 
@@ -79,7 +89,10 @@ class Proyectos extends Component {
         this.props.addProject(selectedClientModal.uid, payload);
     }
 
-    handleChangeMain = selectedOption => { this.setState( { selectedOption } ); };
+    handleChangeMain = selectedOption => { 
+        this.setState( { selectedOption } );
+        this.props.getProjectByClient(selectedOption.value);
+    };
     
     handleChangeClientModal = selectedClientModal => { this.setState( { selectedClientModal } ); };
     
@@ -120,18 +133,18 @@ class Proyectos extends Component {
                     <Modal.Title>New project</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form noValidate validated={this.state.validated} onSubmit={this.handleNewProject}>
+                    <Form onSubmit={this.handleNewProject}>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Client</Form.Label>
                             <Col sm="7">
-                                <Select value={selectedClientModal} placeholder="Select client..." options={clientSelect} onChange={this.handleChangeClientModal} />
+                                <Select required value={selectedClientModal} placeholder="Select client..." options={clientSelect} onChange={this.handleChangeClientModal} />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Title</Form.Label>
                             <Col sm="7">
-                                <Form.Control name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
+                                <Form.Control isInvalid={projectTitle.length === 0} name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
                             </Col>
                         </Form.Group>
 
@@ -156,7 +169,7 @@ class Proyectos extends Component {
                         <Form.Group as={Row} hidden={projectFixedFee === 'false'}>
                             <Form.Label column sm="3"> Fee </Form.Label>
                             <Col sm="7">
-                                <Form.Control name="projectFee" value={projectFee} onChange={this.onChange} required />
+                                <Form.Control isInvalid={!this.isFloat(projectFee)} name="projectFee" value={projectFee} onChange={this.onChange} required />
                             </Col>
                         </Form.Group>
                     </Form>
@@ -173,7 +186,7 @@ class Proyectos extends Component {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
                 label: c.denomination,
-                value: c.denomination,
+                value: c.uid,
                 ...c
             })).sort((a, b) => a.label.localeCompare(b.label)) : [];
 
@@ -197,32 +210,24 @@ class Proyectos extends Component {
                         {/* LISTA PA MOSTRA SI HAY CLIENTES */}
                         <br />
 
-                        <div className="tableMargins">
-                            <TableContainer>
-                                <Table aria-label="simple table">
-                                    <TableHead>
-                                        <TableRow hover>
-                                            <TableCell>Proyecto 1 </TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        <TableRow hover>
-                                            <TableCell> Proyecto 2</TableCell>
-                                        </TableRow>
-                                        <TableRow hover>
-                                            <TableCell> Proyecto 3</TableCell>
-                                        </TableRow>
-                                        <TableRow hover>
-                                            <TableCell> Proyecto 4 </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell><b> No hay proyectos activos para "CLIENTE SELETZIONADO" </b></TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </div>
-
+                        {
+                            this.props.loadingProjects ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
+                            <div className="tableMargins">
+                                <TableContainer>
+                                    <Table aria-label="simple table">
+                                        <TableBody>
+                                        {this.props.projects.map((row) => (
+                                            <TableRow key={row.projectTitle}>
+                                            <TableCell component="th" scope="row">
+                                                {row.projectTitle}
+                                            </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+                        }
                     </div>
                 }
             </AuthUserContext.Consumer>
@@ -236,5 +241,6 @@ export default connect(mapStateToProps, {
     addAlert,
     getClients,
     getUsers,
-    addProject
+    addProject,
+    getProjectByClient
 })(withAuthorization(condition)(Proyectos));

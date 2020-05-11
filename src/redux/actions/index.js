@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT } from "../../constants/action-types"; 
+    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED } from "../../constants/action-types"; 
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 
@@ -40,7 +40,7 @@ export function addClient(payload) {
 
 export function addProject(clientUid, payload) {
     return function(dispatch) {
-        const url = `${process.env.REACT_APP_DATABASE_URL}/projectRoot/${clientUid}/project.json`;
+        const url = `${process.env.REACT_APP_DATABASE_URL}/projectRoot/${clientUid}/projects.json`;
         dispatch({ type: LOADING_PROJECTS, payload: {} });
         return axios.post(url, payload)
             .then(response => {
@@ -93,6 +93,26 @@ export function updateUser(uid, payload) {
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
     };
+}
+
+
+export function getProjectByClient(clientUid) {
+    return function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/projectRoot/${clientUid}/projects.json`;
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        return axios.get(url)
+            .then(response => {
+                const projectsList = Object.keys(response.data || []).map(key => ({
+                    ...response.data[key],
+                    uid: key
+                }));
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle.localeCompare(b.projectTitle)) });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            })
+    }
 }
 
 export function getClients() {
