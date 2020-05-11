@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    REMOVED_CLIENT, REMOVED_USER } from "../../constants/action-types"; 
+    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT } from "../../constants/action-types"; 
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 
@@ -38,6 +38,25 @@ export function addClient(payload) {
     }
 }
 
+export function addProject(clientUid, payload) {
+    return function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/projectRoot/${clientUid}/project.json`;
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        return axios.post(url, payload)
+            .then(response => {
+                dispatch({ type: ADD_PROJECT, payload: response.data });
+                window.location.reload();
+                const alert = { type: AlertType.Success, message: "Project successfully created." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
 export function updateClient(uid, payload) {
     return function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/clients/${uid}.json`;
@@ -45,8 +64,8 @@ export function updateClient(uid, payload) {
         return axios.put(url, payload)
             .then(response => {
                 dispatch({ type: UPDATED_CLIENT, payload: response.data });
-
-                const alert = { type: AlertType.Success, message: "Client successfully updated."};
+                window.location.reload();
+                const alert = { type: AlertType.Success, message: "Client successfully updated." };
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
             })
