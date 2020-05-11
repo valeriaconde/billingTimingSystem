@@ -23,7 +23,8 @@ const mapStateToProps = state => {
 
 const INITIAL_STATE = {
     showModal: false,
-    selectedOption: null
+    selectedOption: null,
+    selectedClientModal: null
 };
 
 class Proyectos extends Component {
@@ -33,7 +34,7 @@ class Proyectos extends Component {
 
         this.handleClose = this.handleClose.bind(this);
         this.handleShow = this.handleShow.bind(this);
-        this.handleChangeSelect = this.handleChangeSelect.bind(this);
+        this.onChange = this.onChange.bind(this);
     }
 
     componentDidMount() {
@@ -42,12 +43,12 @@ class Proyectos extends Component {
         }
     }
 
-    handleChangeSelect = selectedOption => {
-        this.setState(
-          { selectedOption },
-          () => console.log(`Option selected:`, this.state.selectedOption)
-        );
-    };
+    handleChangeMain = selectedOption => { this.setState( { selectedOption } ); };
+    handleChangeClientModal = selectedClientModal => { this.setState( { selectedClientModal } ); };
+
+    onChange(event) {
+        this.setState({ [event.target.name]: event.target.value });
+    }
 
     handleShow() {
         this.setState({ showModal: true });
@@ -58,6 +59,15 @@ class Proyectos extends Component {
     }
 
     renderModal(){
+        const clientSelect = this.props.clients !== null ?
+            this.props.clients.map((c, i) => ({
+                label: c.denomination,
+                value: c.denomination,
+                ...c
+            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+
+        const { selectedClientModal } = this.state;
+
         return(
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
@@ -68,10 +78,7 @@ class Proyectos extends Component {
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Client</Form.Label>
                             <Col sm="5">
-                                <Form.Control as="select">
-                                    <option> Cliente 1 </option>
-                                    <option> Cliente 2 </option>
-                                </Form.Control>
+                                <Select value={selectedClientModal} placeholder="Select client..." options={clientSelect} onChange={this.handleChangeClientModal} />
                             </Col>
                         </Form.Group>
 
@@ -86,7 +93,7 @@ class Proyectos extends Component {
                             <Form.Label column sm="3">Appointed</Form.Label>
                             <Col sm="5">
                                 {/* USERS */}
-                                <Select isMulti>
+                                <Select placeholder="Select client..." options={clientSelect} onChange={this.onChange} isMulti>
 
                                 </Select>
                             </Col>
@@ -113,11 +120,11 @@ class Proyectos extends Component {
 
     render() {
         const clientSelect = this.props.clients !== null ?
-        this.props.clients.map((c, i) => ({
-            label: c.denomination,
-            value: c.denomination,
-            ...c
-        })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+            this.props.clients.map((c, i) => ({
+                label: c.denomination,
+                value: c.denomination,
+                ...c
+            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
 
         const { selectedOption } = this.state;
 
@@ -134,7 +141,7 @@ class Proyectos extends Component {
                         {this.renderModal()}
 
                         {/* LE SELECT */}
-                        <Select options={clientSelect} value={selectedOption} onChange={this.handleChangeSelect} className="rightMargin leftMargin topMargin"> PA CLIENTES</Select>
+                        <Select placeholder="Select client..." options={clientSelect} value={selectedOption} onChange={this.handleChangeMain} className="rightMargin leftMargin topMargin"> PA CLIENTES</Select>
 
                         {/* LISTA PA MOSTRA SI HAY CLIENTES */}
                         <br />
