@@ -1,13 +1,15 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
     alerts: [],
     clients: [],
+    projects: [],
     loadingUsers: false,
-    loadingClients: false
+    loadingClients: false,
+    loadingProjects: false
 };
   
 function rootReducer(state = initialState, action) {
@@ -19,9 +21,17 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             alerts: state.alerts.concat(action.payload)
         });
+    } else if(action.type === ADD_PROJECT) {
+        return Object.assign({}, state, {
+            loadingProjects: false
+        });
     } else if(action.type === CLEAR_ALERT) {
         return Object.assign({}, state, {
             alerts: state.alerts.filter(a => { return JSON.stringify(a) !== JSON.stringify(action.payload) })
+        });
+    } else if(action.type === LOADING_PROJECTS) {
+        return Object.assign({}, state, {
+            loadingProjects: true
         });
     } else if(action.type === LOADING_USERS) {
         return Object.assign({}, state, {
@@ -52,6 +62,11 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             clients: state.clients.concat(action.payload).sort((a, b) => a.denomination.localeCompare(b.denomination)),
             loadingClients: false
+        });
+    } else if(action.type === PROJECTS_LOADED) {
+        return Object.assign({}, state, {
+            projects: action.payload,
+            loadingProjects: false
         });
     } else if(action.type === UPDATED_USER) {
         const email = action.payload.email;
