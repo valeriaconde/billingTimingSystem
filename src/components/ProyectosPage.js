@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
-import { addAlert, clearAlert, getClients } from "../redux/actions/index";
+import { addAlert, clearAlert, getClients, getUsers } from "../redux/actions/index";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import TableContainer from '@material-ui/core/TableContainer';
@@ -17,14 +17,19 @@ const mapStateToProps = state => {
     return { 
         alerts: state.alerts,
         clients: state.clients,
-        loadingClients: state.loadingClients
+        loadingClients: state.loadingClients,
+        users: state.users,
+        loadingUsers: state.loadingUsers
      };
 };
 
 const INITIAL_STATE = {
     showModal: false,
     selectedOption: null,
-    selectedClientModal: null
+    selectedClientModal: null,
+    selectedAppointed: null,
+    projectTitle: '',
+    projectFixedFee: false
 };
 
 class Proyectos extends Component {
@@ -41,10 +46,17 @@ class Proyectos extends Component {
         if(this.props.clients.length === 0) {
             this.props.getClients();
         }
+
+        if(this.props.users.length === 0){
+            this.props.getUsers();
+        }
     }
 
     handleChangeMain = selectedOption => { this.setState( { selectedOption } ); };
+    
     handleChangeClientModal = selectedClientModal => { this.setState( { selectedClientModal } ); };
+    
+    handleChangeMulti = selectedAppointed => { this.setState({ selectedAppointed }); };
 
     onChange(event) {
         this.setState({ [event.target.name]: event.target.value });
@@ -62,11 +74,18 @@ class Proyectos extends Component {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
                 label: c.denomination,
-                value: c.denomination,
+                value: c.uid,
                 ...c
             })).sort((a, b) => a.label.localeCompare(b.label)) : [];
 
-        const { selectedClientModal } = this.state;
+        const userSelect = this.props.users !== null ?
+            this.props.users.map((u, i) => ({
+                label: u.name,
+                value: u.uid,
+                ...u
+            })).sort((a, b) => a.name.localeCompare(b.name)) : [];
+
+        const { selectedClientModal, selectedAppointed, projectTitle } = this.state;
 
         return(
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -77,31 +96,29 @@ class Proyectos extends Component {
                     <Form>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Client</Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Select value={selectedClientModal} placeholder="Select client..." options={clientSelect} onChange={this.handleChangeClientModal} />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Title</Form.Label>
-                            <Col sm="5">
-                                <Form.Control as="textarea" rows="3" />
+                            <Col sm="7">
+                                <Form.Control name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Appointed</Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 {/* USERS */}
-                                <Select placeholder="Select client..." options={clientSelect} onChange={this.onChange} isMulti>
-
-                                </Select>
+                                <Select value={selectedAppointed} placeholder="Select appointed..." onChange={this.handleChangeMulti} options={userSelect} isMulti />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> Billed by </Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 <Form.Control as="select">
                                     <option>The hour</option>
                                     <option>Fixed fee</option>
@@ -183,5 +200,6 @@ const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
     clearAlert,
     addAlert,
-    getClients
+    getClients,
+    getUsers
 })(withAuthorization(condition)(Proyectos));
