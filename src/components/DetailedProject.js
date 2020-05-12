@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Container, Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -142,22 +142,29 @@ class detailedProject extends Component {
                                         <TableRow>
                                             <TableCell> VCN - Vuelo NYC </TableCell>
                                             <TableCell className="rightAlign"> 8000</TableCell>
-                                            <TableCell className="centerText">
-                                                <FontAwesomeIcon icon={faTrash} color="red" />
+                                            <TableCell>
+                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
+                                                    <span className="d-inline-block">
+                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
+                                                    </span>
+                                                </OverlayTrigger>
                                             </TableCell>
-                                            <TableCell> 
-                                                <FontAwesomeIcon icon={faCheckCircle} color="green"/>
+                                            <TableCell>
+                                                <FontAwesomeIcon icon={faTrash} color="red" />
                                             </TableCell>
                                         </TableRow>
                                         <TableRow>
                                             <TableCell> OCM - Pago de peritos</TableCell>
                                             <TableCell className="rightAlign" >6000 </TableCell>
-                                            <TableCell className="centerText">
-                                                <FontAwesomeIcon icon={faCheckCircle} color="green"/>
+                                            <TableCell>
+                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
+                                                    <span className="d-inline-block">
+                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
+                                                    </span>
+                                                </OverlayTrigger>
                                             </TableCell>
-                                            <TableCell> 
+                                            <TableCell>
                                                 <FontAwesomeIcon icon={faTrash} color="red" />
-
                                             </TableCell>
                                         </TableRow>
                                         <TableRow>
@@ -225,7 +232,7 @@ class detailedProject extends Component {
                             </TableContainer>
                         </div>
 
-                        <div className="rightAlign rightMargin bottomMargin">
+                        <div className="rightAlign biggerRightMargin bottomMargin">
                             <Button variant="outline-danger">Archive project</Button>{' '}
                         </div>
 

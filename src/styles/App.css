@@ -88,6 +88,10 @@ blue: rgb 25, 57, 145
   margin-right: 50px !important;
 }
 
+.biggerRightMargin {
+  margin-right: 50px;
+}
+
 /* APP CSS */
 
 .App {
