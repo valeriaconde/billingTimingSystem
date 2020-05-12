@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ListGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -8,92 +8,221 @@ import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 
+
+const INITIAL_STATE = {
+    showModal: false,
+};
+
 class detailedProject extends Component {
-    // constructor(props) {
-    //     super(props);
-    // }
+    constructor(props) {
+        super(props);
+        this.state = { ...INITIAL_STATE };
+        this.handleClose = this.handleClose.bind(this);
+        this.handleShow = this.handleShow.bind(this);
+    }
+
+    handleShow() {
+        this.setState({ showModal: true });
+    }
+
+    handleClose() {
+        this.setState({ showModal: false });
+    }
+
+    renderModal() {
+        return (
+            <Modal show={this.state.showModal} onHide={this.handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add down payment</Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <Form>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">Date</Form.Label>
+                            <Col sm="5">
+                                {/* DAY PICKER */}
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">Amount</Form.Label>
+                            <Col sm="5">
+                                <Form.Control as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={this.handleClose}>
+                        Cancel
+                            </Button>
+                    <Button className="legem-primary" onClick={this.handleClose}>
+                        Save
+                    </Button>
+                </Modal.Footer>        
+            </Modal>
+        );
+    }
 
     render() {
         return (
-            <AuthUserContext.Consumer>
-                {authUser =>
-                    <div>
-                        <h3 className="blueLetters topMargin leftMargin"> Titulo del proyecto </h3>
-                        <h6 className="bigLeftMargin"> For Cloos Robotic Mexico, S.A. de C.V. </h6>
+                <AuthUserContext.Consumer>
+                    {authUser =>
+                        <div>
+                            <h3 className="blueLetters topMargin leftMargin"> Titulo del proyecto </h3>
+                            <h6 className="bigLeftMargin"> For Cloos Robotic Mexico, S.A. de C.V. </h6>
 
-                        <label className="leftMargin topMargin"><b>Appointed </b></label>
-                        <ListGroup horizontal="sm" className="tableMargins">
-                            <ListGroup.Item>Valesauria</ListGroup.Item>
-                            <ListGroup.Item>Elias</ListGroup.Item>
-                            <ListGroup.Item>Oscar Conde</ListGroup.Item>
-                            <ListGroup.Item>USERS APPOINTED</ListGroup.Item>
-                        </ListGroup>
+                            <Container className="bigTopMargin">
+                                <Row>
+                                    <Col className="bigLeftMargin">
+                                        <Card style={{ width: '18rem' }} >
+                                            <Card.Body>
+                                                <Card.Title>Attorney</Card.Title>
+                                                <Card.Text> Lesly Martinez </Card.Text>
+                                            </Card.Body>
+                                        </Card>
+                                        <Card style={{ width: '18rem' }} className="topMargin">
+                                            <Card.Body>
+                                                <Card.Title> Billed by fixed fee</Card.Title>
+                                                <Card.Text> $4000 </Card.Text>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+
+                                    <Col>
+                                        <Card style={{ width: '18rem' }} >
+                                            <Card.Body>
+                                                <Card.Title>Down payments</Card.Title>
+                                                <TableContainer>
+                                                    <Table aria-label="simple table">
+                                                        <TableBody>
+                                                            <TableRow>
+                                                                <TableCell> 16/02/20 </TableCell>
+                                                                <TableCell className="centerText"> 4000 </TableCell>
+                                                            </TableRow>
+                                                            <TableRow>
+                                                                <TableCell> 03/03/20 </TableCell>
+                                                                <TableCell className="centerText"> 600 </TableCell>
+                                                            </TableRow>
+                                                        </TableBody>
+                                                    </Table>
+                                                </TableContainer>
+                                            </Card.Body>
+                                            <Card.Body className="rightAlign">
+                                                <Button variant="outline-success" onClick={this.handleShow} >Add</Button>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                </Row>
+                            </Container>
+
+                            {this.renderModal()}
+
+                            <div className="tableMargins ">
+                                <TableContainer>
+                                    <Table aria-label="simple table">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell><b>Registered expenses</b></TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            <TableRow>
+                                                <TableCell>
+                                                    <Container>
+                                                        <Row>
+                                                            <Col>1 of 3</Col>
+                                                            <Col xs={6}>2 of 3 (wider)</Col>
+                                                            <Col>3 of 3</Col>
+                                                        </Row>
+                                                        <Row>
+                                                            <Col>1 of 3</Col>
+                                                            <Col xs={5}>2 of 3 (wider)</Col>
+                                                            <Col>3 of 3</Col>
+                                                        </Row>
+                                                    </Container>
+                                                </TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell> VCN - Vuelo NYC </TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell className="rightAlign"> 8000</TableCell>
+                                                <TableCell> D    B </TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell> OCM - Pago de peritos</TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell className="rightAlign" >6000 </TableCell>
+                                                <TableCell> D B</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell>INICIALES - NOMBRE DEL GASTO  </TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell className="rightAlign">MONTO</TableCell>
+                                                <TableCell> D B </TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell> Total expenses  </TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell className="rightAlign">14,900</TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+
+                            <div className="tableMargins topMargin bottomMargin">
+                                <TableContainer>
+                                    <Table aria-label="simple table">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell><b>Registered time</b></TableCell>
+                                                <TableCell> </TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            <TableRow>
+                                                <TableCell> VCN - Revision de contrato</TableCell>
+                                                <TableCell className="rightAlign"> 15m</TableCell>
+                                                <TableCell> D B  </TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell> OCM - Negociacion JCA  ksjnd akhsd ksd ksjd kdf kdj fkj dkjf skj fkjs kfjs kd skd</TableCell>
+                                                <TableCell className="rightAlign" >2h 30m </TableCell>
+                                                <TableCell> D B </TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell>LLM - Viaje </TableCell>
+                                                <TableCell className="rightAlign">3h</TableCell>
+                                                <TableCell> D B </TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell>Total time </TableCell>
+                                                <TableCell className="rightAlign">5h 45m</TableCell>
+                                                <TableCell> </TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+
+                            <div className="rightAlign rightMargin bottomMargin">
+                                <Button variant="outline-danger">Archive project</Button>{' '}
+                            </div>
 
 
-                        <div className="tableMargins topMargin">
-                            <TableContainer>
-                                <Table aria-label="simple table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell><b>Registered expenses</b></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell> VCN - Vuelo NYC</TableCell>
-                                            <TableCell className="centerText"> 8000</TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> OCM - Pago de peritos</TableCell>
-                                            <TableCell className="centerText" >6000 </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>INICIALES - NOMBRE DEL GASTO  </TableCell>
-                                            <TableCell className="centerText">MONTO</TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> Total expenses  </TableCell>
-                                            <TableCell className="centerText">14,900</TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+
                         </div>
-
-                        <div className="tableMargins topMargin">
-                            <TableContainer>
-                                <Table aria-label="simple table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell><b>Registered time</b></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell> VCN - Revision de contrato</TableCell>
-                                            <TableCell className="centerText"> 15m</TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> OCM - Negociacion JCA </TableCell>
-                                            <TableCell className="centerText" >2h 30m </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>LLM - Viaje </TableCell>
-                                            <TableCell className="centerText">3h</TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>Total time </TableCell>
-                                            <TableCell className="centerText">5h 45m</TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </div>
-                    </div>
-                }
-            </AuthUserContext.Consumer>
+                    }
+                </AuthUserContext.Consumer>
         );
     }
 }

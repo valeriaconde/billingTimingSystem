@@ -149,7 +149,7 @@ class Proyectos extends Component {
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">Appointed</Form.Label>
+                            <Form.Label column sm="3">Attorney</Form.Label>
                             <Col sm="7">
                                 {/* USERS */}
                                 <Select value={selectedAppointed} placeholder="Select appointed..." onChange={this.handleChangeMulti} options={userSelect} isMulti />
@@ -202,8 +202,6 @@ class Proyectos extends Component {
                             New project
                         </Button>
 
-                        {this.renderModal()}
-
                         {/* LE SELECT */}
                         <Select placeholder="Select client..." options={clientSelect} value={selectedOption} onChange={this.handleChangeMain} className="rightMargin leftMargin topMargin"> PA CLIENTES</Select>
 
@@ -215,15 +213,27 @@ class Proyectos extends Component {
                             <div className="tableMargins">
                                 <TableContainer>
                                     <Table aria-label="simple table">
-                                        <TableBody>
-                                        {this.props.projects.map((row) => (
-                                            <TableRow key={row.projectTitle}>
-                                            <TableCell component="th" scope="row">
-                                                {row.projectTitle}
-                                            </TableCell>
-                                            </TableRow>
-                                        ))}
-                                        </TableBody>
+                                        {
+                                            this.props.projects.length === 0 && selectedOption != null ? 
+                                            <TableBody>
+                                                <b>
+                                                    There are no active projects for this client.
+                                                </b>
+                                            </TableBody>
+
+                                            :
+                                            <TableBody>
+                                                {this.props.projects.map((row) => (
+                                                    <TableRow hover key={row.projectTitle}>
+                                                    <TableCell component="th" scope="row">
+                                                        {row.projectTitle}
+                                                    </TableCell>
+                                                    </TableRow>
+                                                ))
+                                                }
+                                            </TableBody>
+                                        }
+                                        
                                     </Table>
                                 </TableContainer>
                             </div>
