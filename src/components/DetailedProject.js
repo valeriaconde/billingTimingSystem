@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Container, Row, Col, Card, Button, Form, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Modal, Tooltip, OverlayTrigger, Popover } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -140,7 +140,18 @@ class detailedProject extends Component {
                                     </TableHead>
                                     <TableBody>
                                         <TableRow>
-                                            <TableCell> VCN - Vuelo NYC </TableCell>
+                                            <TableCell>
+                                                <OverlayTrigger overlay={
+                                                    <Tooltip id="tooltip">
+                                                        Fecha
+                                                        <br />
+                                                        Tipo de gasto
+                                                    </Tooltip>}>
+                                                    <span className="d-inline-block">
+                                                        VCN - Vuelo NYC
+                                                    </span>
+                                                </OverlayTrigger>
+                                            </TableCell>
                                             <TableCell className="rightAlign"> 8000</TableCell>
                                             <TableCell>
                                                 <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
@@ -204,7 +215,17 @@ class detailedProject extends Component {
                                     </TableHead>
                                     <TableBody>
                                         <TableRow>
-                                            <TableCell> VCN - Revision de contrato</TableCell>
+                                            <TableCell>
+
+                                                <OverlayTrigger overlay={
+                                                    <Tooltip id="tooltip">
+                                                        Fecha
+                                                    </Tooltip>}>
+                                                    <span className="d-inline-block">
+                                                        VCN - Revision de contrato
+                                                    </span>
+                                                </OverlayTrigger>
+                                                </TableCell>
                                             <TableCell className="rightAlign"> 15m</TableCell>
                                             <TableCell> D  </TableCell>
                                             <TableCell> B </TableCell>
@@ -231,13 +252,9 @@ class detailedProject extends Component {
                                 </Table>
                             </TableContainer>
                         </div>
-
                         <div className="rightAlign biggerRightMargin bottomMargin">
                             <Button variant="outline-danger">Archive project</Button>{' '}
                         </div>
-
-
-
                     </div>
                 }
             </AuthUserContext.Consumer>
