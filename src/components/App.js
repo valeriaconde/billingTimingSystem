@@ -73,23 +73,23 @@ class App extends Component {
 
                         <Route path="/home" exact component={Clientes} />
 
-                        <Route path="/register" exact component={Registeruser} />
+                        <Route path="/users/register" exact component={Registeruser} />
 
                         <Route path="/login" exact component={LoginPage} />
 
-                        <Route path="/proyectos" exact component={ProyectosPage} />
+                        <Route path="/projects" exact component={ProyectosPage} />
 
-                        <Route path="/gastos" exact component={gastos} />
+                        <Route path="/expenses" exact component={gastos} />
 
-                        <Route path="/tiempos" exact component={tiemposPage}/>
+                        <Route path="/timing" exact component={tiemposPage}/>
 
-                        <Route path="/usuarios" exact component={UsuariosPage} />
+                        <Route path="/users" exact component={UsuariosPage} />
 
                         <Route path="/password-recovery" exact component={Passrec} />
 
-                        <Route path="/password-change" exact component={PassChange} />
+                        <Route path="/password/update" exact component={PassChange} />
 
-                        <Route path="/detailed-project" exact component={detailedProject}/>
+                        <Route path="/project/details" exact component={detailedProject}/>
 
                         <Route component={NotFoundPage} />
                     </Switch>

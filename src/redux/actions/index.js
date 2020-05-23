@@ -64,7 +64,6 @@ export function updateClient(uid, payload) {
         return axios.put(url, payload)
             .then(response => {
                 dispatch({ type: UPDATED_CLIENT, payload: response.data });
-                window.location.reload();
                 const alert = { type: AlertType.Success, message: "Client successfully updated." };
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
