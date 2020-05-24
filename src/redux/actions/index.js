@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED } from "../../constants/action-types"; 
+    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES } from "../../constants/action-types"; 
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 
@@ -54,6 +54,24 @@ export function addProject(clientUid, payload) {
                 const alert = { type: AlertType.Error, message: error.message };
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
+    }
+}
+
+export function addExpense(clientUid, projectUid, payload) {
+    return function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/expenseRoot/${clientUid}/project/${projectUid}/expenses.json`;
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        return axios.post(url, payload)
+            .then(response => {
+                dispatch({ type: ADD_EXPENSE, payload: response.data });
+                const alert = { type: AlertType.Success, message: "Expense successfully created." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            })
     }
 }
 

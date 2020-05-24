@@ -2,9 +2,14 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Accordion, Card, Container, Jumbotron } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
+import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient, addExpense } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
+import DateFnsUtils from '@date-io/date-fns';
+import {
+    MuiPickersUtilsProvider,
+    KeyboardDatePicker,
+  } from '@material-ui/pickers';
 
 const mapStateToProps = state => {
     return { 
@@ -22,11 +27,11 @@ const INITIAL_STATE = {
     showModal: false,
     selectedOption: null,
     selectedClientModal: null,
-    selectedAppointed: null,
-    projectTitle: '',
-    projectFixedFee: 'false',
-    projectFee: 0,
-    validated: false
+    validated: false,
+    selectedDate: new Date(),
+    selectedProjectModal: null,
+    expenseTitle: '',
+    expenseTotal: 0
 };
 
 class gastos extends Component {
@@ -42,6 +47,10 @@ class gastos extends Component {
         if(this.props.clients.length === 0) {
             this.props.getClients();
         }
+    }
+
+    isFloat(n) {
+        return n.length > 0 && !isNaN(n) && n > 0;
     }
 
     handleShow() {
@@ -61,6 +70,41 @@ class gastos extends Component {
         this.setState( { selectedProjectModal } );
     }
 
+    handleDateChange = selectedDate => {
+        this.setState( { selectedDate } );
+    };
+
+    onChange = event => {
+        this.setState({ [event.target.name]: event.target.value });
+    }
+
+    handleNewExpense = event => {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+            if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal } = this.state;
+
+        if(!this.isFloat(expenseTotal)) return;
+        if(expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null) return;
+        console.log(selectedDate);
+        const payload = {
+            expenseTitle: expenseTitle,
+            expenseTotal: Number(expenseTotal),
+            expenseDate: selectedDate,
+            expenseClient: selectedClientModal.uid,
+            expenseProject: selectedProjectModal.uid
+        };
+
+        console.log(payload);
+        this.props.addExpense(selectedClientModal.uid, selectedProjectModal.uid, payload);
+        return;
+    }
+
     renderModal() {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
@@ -76,14 +120,14 @@ class gastos extends Component {
                 ...p
             })).sort((a, b) => a.label.localeCompare(b.label)) : [];
 
-        const { selectedClientModal, selectedProjectModal } = this.state;
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal } = this.state;
         return(
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>New expense</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form>
+                    <Form onSubmit={this.handleNewExpense}>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
                                 Client
@@ -109,14 +153,14 @@ class gastos extends Component {
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Title</Form.Label>
                                     <Col sm="7">
-                                        <Form.Control as="textarea" rows="2" />
+                                        <Form.Control isInvalid={expenseTitle.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
                                     </Col>
                                 </Form.Group>
 
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Amount</Form.Label>
                                     <Col sm="7">
-                                        <Form.Control as="textarea" rows="1" />
+                                        <Form.Control isInvalid={!this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
                                     </Col>
                                 </Form.Group>
 
@@ -124,6 +168,21 @@ class gastos extends Component {
                                     <Form.Label column sm="3">Date</Form.Label>
                                     <Col sm="7">
                                         {/* DAY PICKER */}
+                                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                                            <KeyboardDatePicker
+                                                disableToolbar
+                                                variant="inline"
+                                                format="dd/MM/yyyy"
+                                                margin="normal"
+                                                id="date-picker-inline"
+                                                label="Enter date dd/mm/yyyy"
+                                                value={selectedDate}
+                                                onChange={this.handleDateChange}
+                                                KeyboardButtonProps={{
+                                                    'aria-label': 'change date',
+                                                }}
+                                            />
+                                        </MuiPickersUtilsProvider>
                                     </Col>
                                 </Form.Group>
 
@@ -147,9 +206,9 @@ class gastos extends Component {
                     <Button variant="secondary" onClick={this.handleClose}>
                         Cancel
                 </Button>
-                    <Button className="legem-primary" onClick={this.handleClose}>
+                    <Button className="legem-primary" type="submit" onClick={this.handleNewExpense} >
                         Save
-                </Button>
+                    </Button>
                 </Modal.Footer>
             </Modal>
         );
@@ -247,5 +306,6 @@ export default connect(mapStateToProps, {
     getClients,
     getUsers,
     addProject,
-    getProjectByClient
+    getProjectByClient,
+    addExpense
 })(withAuthorization(condition)(gastos));

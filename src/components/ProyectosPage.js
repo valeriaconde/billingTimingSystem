@@ -45,10 +45,6 @@ class Proyectos extends Component {
         this.handleNewProject = this.handleNewProject.bind(this);
     }
 
-    isFloat(n) {
-        return n.length > 0 && !isNaN(n) && n > 0;
-    }
-
     componentDidMount() {
         if(this.props.clients.length === 0) {
             this.props.getClients();
@@ -57,6 +53,10 @@ class Proyectos extends Component {
         if(this.props.users.length === 0){
             this.props.getUsers();
         }
+    }
+
+    isFloat(n) {
+        return n.length > 0 && !isNaN(n) && n > 0;
     }
 
     handleNewProject(event) {
@@ -75,6 +75,7 @@ class Proyectos extends Component {
         if(projectFixedFee === 'true' && projectFee <= 0) return;
         if(projectTitle === '' || selectedClientModal == null) return;
 
+        // Picks uid for each appointed
         const pick = (...props) => o => props.reduce((a, e) => ({ ...a, [e]: o[e] }), {});
         const appointedIds = selectedAppointed?.length > 0 ? selectedAppointed.map(pick('uid')) : [];
 
@@ -83,7 +84,7 @@ class Proyectos extends Component {
             projectClient: selectedClientModal.uid,
             appointedIds: appointedIds,
             projectFixedFee: projectFixedFee === 'true',
-            projectFee: projectFee
+            projectFee: Number(projectFee)
         };
 
         this.props.addProject(selectedClientModal.uid, payload);
