@@ -203,7 +203,7 @@ class Proyectos extends Component {
                         </Button>
 
                         {/* LE SELECT */}
-                        <Select placeholder="Select client..." options={clientSelect} value={selectedOption} onChange={this.handleChangeMain} className="rightMargin leftMargin topMargin"> PA CLIENTES</Select>
+                        <Select placeholder="Select client..." options={clientSelect} value={selectedOption} onChange={this.handleChangeMain} className="rightMargin leftMargin topMargin" />
 
                         {/* LISTA PA MOSTRA SI HAY CLIENTES */}
                         <br />
