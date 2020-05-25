@@ -10,6 +10,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
+import * as ROLES from '../constants/roles';
 import { expenseClasses } from "../constants/enums";
 
 const mapStateToProps = state => {
@@ -42,12 +43,15 @@ class gastos extends Component {
         this.state = { ...INITIAL_STATE };
 
         this.handleClose = this.handleClose.bind(this);
-        this.handleShow = this.handleShow.bind(this);
     }
 
     componentDidMount() {
         if(this.props.clients.length === 0) {
             this.props.getClients();
+        }
+        
+        if(this.props.users.length === 0) {
+            this.props.getUsers();
         }
     }
 
@@ -55,7 +59,7 @@ class gastos extends Component {
         return n.length > 0 && !isNaN(n) && n > 0;
     }
 
-    handleShow() {
+    handleShow = () => {
         this.setState({ showModal: true });
     }
 
@@ -77,7 +81,11 @@ class gastos extends Component {
     };
 
     handleChangeExpense = selectedExpenseModal => {
-        this.setState( { selectedExpenseModal });
+        this.setState( { selectedExpenseModal } );
+    }
+
+    handleAttorneyModal = selectedAttorneyModal => {
+        this.setState( { selectedAttorneyModal } );
     }
 
     onChange = event => {
@@ -110,7 +118,7 @@ class gastos extends Component {
         this.props.addExpense(selectedClientModal.uid, selectedProjectModal.uid, payload);
     }
 
-    renderModal() {
+    renderModal(authUSer, isHidden) {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
                 label: c.denomination,
@@ -125,7 +133,17 @@ class gastos extends Component {
                 ...p
             })).sort((a, b) => a.label.localeCompare(b.label)) : [];
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
+        const userSelect = this.props.users !== null ?
+            this.props.users.map((u, i) => ({
+                label: u.name,
+                value: u.uid,
+                ...u
+            })).sort((a, b) => a.name.localeCompare(b.name)) : [];
+
+        const idx = userSelect.map(function(u) { return u.value }).indexOf(authUSer.uid);
+
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal } = this.state;
+        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
         return(
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
@@ -197,6 +215,13 @@ class gastos extends Component {
                                         <Select placeholder="Select class..." options={expenseClasses} value={selectedExpenseModal} onChange={this.handleChangeExpense}  />
                                     </Col>
                                 </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">Attorney</Form.Label>
+                                    <Col sm="7">
+                                        <Select placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal}  />
+                                    </Col>
+                                </Form.Group>
                             </>)
                         }
 
@@ -224,7 +249,7 @@ class gastos extends Component {
                             New expense
                         </Button>
 
-                        {this.renderModal()}
+                        {this.renderModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
                         {/* EXPENSES */}
                         {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
