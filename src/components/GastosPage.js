@@ -41,6 +41,7 @@ class gastos extends Component {
     constructor(props) {
         super(props);
         this.state = { ...INITIAL_STATE };
+        this.attorney = React.createRef();
 
         this.handleClose = this.handleClose.bind(this);
     }
@@ -96,7 +97,7 @@ class gastos extends Component {
         event.preventDefault();
 
         const form = event.currentTarget;
-            if (form.checkValidity() === false) {
+        if (form.checkValidity() === false) {
             event.preventDefault();
             event.stopPropagation();
         }
@@ -105,7 +106,8 @@ class gastos extends Component {
 
         if(!this.isFloat(expenseTotal)) return;
         if(expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
-        console.log(selectedDate);
+        
+        var att = selectedAttorneyModal || this.attorney.current.props.value.value;
         const payload = {
             expenseTitle: expenseTitle,
             expenseTotal: Number(expenseTotal),
@@ -113,9 +115,10 @@ class gastos extends Component {
             expenseClient: selectedClientModal.uid,
             expenseProject: selectedProjectModal.uid,
             expenseClass: selectedExpenseModal.value,
-            expenseAttorney: selectedAttorneyModal.value
+            expenseAttorney: att
         };
 
+        this.setState({ showModal: false });
         this.props.addExpense(selectedClientModal.uid, selectedProjectModal.uid, payload);
     }
 
@@ -220,7 +223,7 @@ class gastos extends Component {
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Attorney</Form.Label>
                                     <Col sm="7">
-                                        <Select placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal}  />
+                                        <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal}  />
                                     </Col>
                                 </Form.Group>
                             </>)
@@ -231,7 +234,7 @@ class gastos extends Component {
                 <Modal.Footer>
                     <Button variant="secondary" onClick={this.handleClose}>
                         Cancel
-                </Button>
+                    </Button>
                     <Button className="legem-primary" type="submit" onClick={this.handleNewExpense} >
                         Save
                     </Button>
