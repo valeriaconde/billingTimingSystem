@@ -9,7 +9,8 @@ import DateFnsUtils from '@date-io/date-fns';
 import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
-  } from '@material-ui/pickers';
+} from '@material-ui/pickers';
+import { expenseClasses } from "../constants/enums";
 
 const mapStateToProps = state => {
     return { 
@@ -30,6 +31,7 @@ const INITIAL_STATE = {
     validated: false,
     selectedDate: new Date(),
     selectedProjectModal: null,
+    selectedExpenseModal: null,
     expenseTitle: '',
     expenseTotal: 0
 };
@@ -74,6 +76,10 @@ class gastos extends Component {
         this.setState( { selectedDate } );
     };
 
+    handleChangeExpense = selectedExpenseModal => {
+        this.setState( { selectedExpenseModal });
+    }
+
     onChange = event => {
         this.setState({ [event.target.name]: event.target.value });
     }
@@ -87,22 +93,21 @@ class gastos extends Component {
             event.stopPropagation();
         }
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal } = this.state;
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
 
         if(!this.isFloat(expenseTotal)) return;
-        if(expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null) return;
+        if(expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
         console.log(selectedDate);
         const payload = {
             expenseTitle: expenseTitle,
             expenseTotal: Number(expenseTotal),
             expenseDate: selectedDate,
             expenseClient: selectedClientModal.uid,
-            expenseProject: selectedProjectModal.uid
+            expenseProject: selectedProjectModal.uid,
+            expenseClass: selectedExpenseModal.value
         };
 
-        console.log(payload);
         this.props.addExpense(selectedClientModal.uid, selectedProjectModal.uid, payload);
-        return;
     }
 
     renderModal() {
@@ -120,7 +125,7 @@ class gastos extends Component {
                 ...p
             })).sort((a, b) => a.label.localeCompare(b.label)) : [];
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal } = this.state;
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
         return(
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
@@ -189,12 +194,7 @@ class gastos extends Component {
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Class</Form.Label>
                                     <Col sm="7">
-                                        <Form.Control as="select">
-                                            <option> Third party fee </option>
-                                            <option> Transportation expense </option>
-                                            <option> Governmental administrative fee (Rights, fines, etc.) </option>
-                                            <option> Other </option>
-                                        </Form.Control>
+                                        <Select placeholder="Select class..." options={expenseClasses} value={selectedExpenseModal} onChange={this.handleChangeExpense}  />
                                     </Col>
                                 </Form.Group>
                             </>)

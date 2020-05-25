@@ -221,7 +221,6 @@ class Proyectos extends Component {
                                                     There are no active projects for this client.
                                                 </b>
                                             </TableBody>
-
                                             :
                                             <TableBody>
                                                 {this.props.projects.map((row) => (

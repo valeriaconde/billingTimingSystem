@@ -64,6 +64,7 @@ export function addExpense(clientUid, projectUid, payload) {
         return axios.post(url, payload)
             .then(response => {
                 dispatch({ type: ADD_EXPENSE, payload: response.data });
+                window.location.reload();
                 const alert = { type: AlertType.Success, message: "Expense successfully created." };
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
