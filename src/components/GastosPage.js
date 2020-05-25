@@ -101,7 +101,7 @@ class gastos extends Component {
             event.stopPropagation();
         }
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
+        const { selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
 
         if(!this.isFloat(expenseTotal)) return;
         if(expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
@@ -112,7 +112,8 @@ class gastos extends Component {
             expenseDate: selectedDate,
             expenseClient: selectedClientModal.uid,
             expenseProject: selectedProjectModal.uid,
-            expenseClass: selectedExpenseModal.value
+            expenseClass: selectedExpenseModal.value,
+            expenseAttorney: selectedAttorneyModal.value
         };
 
         this.props.addExpense(selectedClientModal.uid, selectedProjectModal.uid, payload);
