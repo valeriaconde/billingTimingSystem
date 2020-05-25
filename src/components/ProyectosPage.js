@@ -126,10 +126,10 @@ class Proyectos extends Component {
                 ...u
             })).sort((a, b) => a.name.localeCompare(b.name)) : [];
 
-        const { selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
+        const { showModal, selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
 
         return(
-            <Modal show={this.state.showModal} onHide={this.handleClose}>
+            <Modal show={showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>New project</Modal.Title>
                 </Modal.Header>
@@ -199,6 +199,7 @@ class Proyectos extends Component {
                     this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         {/* MODAL */}
+                        {this.renderModal()}
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
                             New project
                         </Button>
