@@ -1,15 +1,17 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE } from "../../constants/action-types";
 
 const initialState = {
     users: [],
     alerts: [],
     clients: [],
     projects: [],
+    expenses: [],
     loadingUsers: false,
     loadingClients: false,
-    loadingProjects: false
+    loadingProjects: false,
+    loadingExpenses: false
 };
   
 function rootReducer(state = initialState, action) {
@@ -22,6 +24,10 @@ function rootReducer(state = initialState, action) {
             alerts: state.alerts.concat(action.payload)
         });
     } else if(action.type === ADD_PROJECT) {
+        return Object.assign({}, state, {
+            loadingProjects: false
+        });
+    } else if(action.tye === ADD_EXPENSE) {
         return Object.assign({}, state, {
             loadingProjects: false
         });
@@ -40,6 +46,10 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === LOADING_CLIENTS) {
         return Object.assign({}, state, {
             loadingClients: true
+        });
+    } else if(action.type === LOADING_EXPENSES) {
+        return Object.assign({}, state, {
+            loadingExpenses: true
         });
     } else if(action.type === REMOVED_USER) {
         let tmp = state.users.filter(u => { return u.uid !== action.payload });

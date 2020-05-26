@@ -18,20 +18,20 @@ class Menu extends Component {
                         <Navbar.Brand href="/home"><Image src="/logo.png" height={"35"} /></Navbar.Brand>
                         <Nav className="mr-auto">
                             <Nav.Link href="/home">Clients</Nav.Link>
-                            <Nav.Link href="/gastos">Expenses</Nav.Link>
-                            <Nav.Link href="/tiempos">Timing</Nav.Link>
-                            <Nav.Link href="/proyectos" hidden={!authUser?.roles[ROLES.ADMIN]}>Projects</Nav.Link>
-                            <Nav.Link href="/reportes" hidden={!authUser?.roles[ROLES.ADMIN]}>Reports</Nav.Link>
-                            <Nav.Link href="/facturas" hidden={!authUser?.roles[ROLES.ADMIN]}>Bills</Nav.Link>
-                            <Nav.Link href="/detailed-project" hidden={!authUser?.roles[ROLES.ADMIN]}>DETAILED</Nav.Link>
+                            <Nav.Link href="/expenses">Expenses</Nav.Link>
+                            <Nav.Link href="/timing">Timing</Nav.Link>
+                            <Nav.Link href="/projects" hidden={!authUser?.roles[ROLES.ADMIN]}>Projects</Nav.Link>
+                            <Nav.Link href="/reports" hidden={!authUser?.roles[ROLES.ADMIN]}>Reports</Nav.Link>
+                            <Nav.Link href="/bills" hidden={!authUser?.roles[ROLES.ADMIN]}>Bills</Nav.Link>
+                            <Nav.Link href="/project/details" hidden={!authUser?.roles[ROLES.ADMIN]}>DETAILED</Nav.Link>
                         </Nav>
                         <Nav className="justify-content-end">
                             {
                                 authUser ?
                                 <NavDropdown title={authUser.email} drop="left">
-                                    <NavDropdown.Item href="/usuarios" hidden={!authUser.roles[ROLES.ADMIN]}>Users</NavDropdown.Item>
-                                    <NavDropdown.Item href="/register" hidden={!authUser.roles[ROLES.ADMIN]}>New user</NavDropdown.Item>
-                                    <NavDropdown.Item href="/password-change"> Change password </NavDropdown.Item>
+                                    <NavDropdown.Item href="/users" hidden={!authUser.roles[ROLES.ADMIN]}>Users</NavDropdown.Item>
+                                    <NavDropdown.Item href="/users/register" hidden={!authUser.roles[ROLES.ADMIN]}>New user</NavDropdown.Item>
+                                    <NavDropdown.Item href="/password/update"> Change password </NavDropdown.Item>
                                     <NavDropdown.Divider />
                                     <SignOutButton />
                                 </NavDropdown>

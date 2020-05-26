@@ -45,10 +45,6 @@ class Proyectos extends Component {
         this.handleNewProject = this.handleNewProject.bind(this);
     }
 
-    isFloat(n) {
-        return n.length > 0 && !isNaN(n) && n > 0;
-    }
-
     componentDidMount() {
         if(this.props.clients.length === 0) {
             this.props.getClients();
@@ -57,6 +53,10 @@ class Proyectos extends Component {
         if(this.props.users.length === 0){
             this.props.getUsers();
         }
+    }
+
+    isFloat(n) {
+        return n.length > 0 && !isNaN(n) && n > 0;
     }
 
     handleNewProject(event) {
@@ -75,6 +75,7 @@ class Proyectos extends Component {
         if(projectFixedFee === 'true' && projectFee <= 0) return;
         if(projectTitle === '' || selectedClientModal == null) return;
 
+        // Picks uid for each appointed
         const pick = (...props) => o => props.reduce((a, e) => ({ ...a, [e]: o[e] }), {});
         const appointedIds = selectedAppointed?.length > 0 ? selectedAppointed.map(pick('uid')) : [];
 
@@ -83,7 +84,7 @@ class Proyectos extends Component {
             projectClient: selectedClientModal.uid,
             appointedIds: appointedIds,
             projectFixedFee: projectFixedFee === 'true',
-            projectFee: projectFee
+            projectFee: Number(projectFee)
         };
 
         this.props.addProject(selectedClientModal.uid, payload);
@@ -125,10 +126,10 @@ class Proyectos extends Component {
                 ...u
             })).sort((a, b) => a.name.localeCompare(b.name)) : [];
 
-        const { selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
+        const { showModal, selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
 
         return(
-            <Modal show={this.state.showModal} onHide={this.handleClose}>
+            <Modal show={showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>New project</Modal.Title>
                 </Modal.Header>
@@ -198,12 +199,13 @@ class Proyectos extends Component {
                     this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         {/* MODAL */}
+                        {this.renderModal()}
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
                             New project
                         </Button>
 
                         {/* LE SELECT */}
-                        <Select placeholder="Select client..." options={clientSelect} value={selectedOption} onChange={this.handleChangeMain} className="rightMargin leftMargin topMargin"> PA CLIENTES</Select>
+                        <Select placeholder="Select client..." options={clientSelect} value={selectedOption} onChange={this.handleChangeMain} className="rightMargin leftMargin topMargin" />
 
                         {/* LISTA PA MOSTRA SI HAY CLIENTES */}
                         <br />
@@ -220,7 +222,6 @@ class Proyectos extends Component {
                                                     There are no active projects for this client.
                                                 </b>
                                             </TableBody>
-
                                             :
                                             <TableBody>
                                                 {this.props.projects.map((row) => (
