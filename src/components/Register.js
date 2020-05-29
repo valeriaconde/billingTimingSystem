@@ -49,7 +49,7 @@ class Registeruser extends Component {
 
         const roles = {};
         if(isAdmin) {
-            if(window.confirm('¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios.')) roles[ROLES.ADMIN] = ROLES.ADMIN;
+            if(window.confirm('Are you sure you want to make this user admin?')) roles[ROLES.ADMIN] = ROLES.ADMIN;
             else return;
         }
 
@@ -94,8 +94,6 @@ class Registeruser extends Component {
 
                         <Form.Group controlId="formBasicCheckbox">
                             <Form.Check onChange={this.onChange} name="isAdmin" checked={isAdmin} type="checkbox" className="formLabels" label="Make this user admin"/>
-                            {/* creas una alert que confirme si deadevis quiere que el usuario sea administrador antes de continuar pls 
-                            alert: ¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios. */}
                         </Form.Group>
                         <Button variant="primary" type="submit" className="legem-primary">Create</Button>
 

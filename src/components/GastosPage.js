@@ -1,11 +1,19 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
-import { Button, Modal, Form, Row, Col, Accordion, Card, Container, Jumbotron } from 'react-bootstrap';
+import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient, addExpense } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
+import TableContainer from '@material-ui/core/TableContainer';
+import Table from '@material-ui/core/Table';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+import TableHead from '@material-ui/core/TableHead';
+import TableBody from '@material-ui/core/TableBody';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEdit, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
 import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
@@ -14,7 +22,7 @@ import * as ROLES from '../constants/roles';
 import { expenseClasses } from "../constants/enums";
 
 const mapStateToProps = state => {
-    return { 
+    return {
         alerts: state.alerts,
         clients: state.clients,
         loadingClients: state.loadingClients,
@@ -22,7 +30,7 @@ const mapStateToProps = state => {
         projects: state.projects,
         loadingUsers: state.loadingUsers,
         loadingProjects: state.loadingProjects
-     };
+    };
 };
 
 const INITIAL_STATE = {
@@ -47,11 +55,11 @@ class gastos extends Component {
     }
 
     componentDidMount() {
-        if(this.props.clients.length === 0) {
+        if (this.props.clients.length === 0) {
             this.props.getClients();
         }
-        
-        if(this.props.users.length === 0) {
+
+        if (this.props.users.length === 0) {
             this.props.getUsers();
         }
     }
@@ -69,24 +77,24 @@ class gastos extends Component {
     }
 
     handleChangeClient = selectedClientModal => {
-        this.setState( { selectedClientModal, selectedProjectModal: null } );
+        this.setState({ selectedClientModal, selectedProjectModal: null });
         this.props.getProjectByClient(selectedClientModal.value);
     }
 
     handleChangeProject = selectedProjectModal => {
-        this.setState( { selectedProjectModal } );
+        this.setState({ selectedProjectModal });
     }
 
     handleDateChange = selectedDate => {
-        this.setState( { selectedDate } );
+        this.setState({ selectedDate });
     };
 
     handleChangeExpense = selectedExpenseModal => {
-        this.setState( { selectedExpenseModal } );
+        this.setState({ selectedExpenseModal });
     }
 
     handleAttorneyModal = selectedAttorneyModal => {
-        this.setState( { selectedAttorneyModal } );
+        this.setState({ selectedAttorneyModal });
     }
 
     onChange = event => {
@@ -104,9 +112,9 @@ class gastos extends Component {
 
         const { selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
 
-        if(!this.isFloat(expenseTotal)) return;
-        if(expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
-        
+        if (!this.isFloat(expenseTotal)) return;
+        if (expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
+
         var att = selectedAttorneyModal || this.attorney.current.props.value.value;
         const payload = {
             expenseTitle: expenseTitle,
@@ -144,11 +152,11 @@ class gastos extends Component {
                 ...u
             })).sort((a, b) => a.name.localeCompare(b.name)) : [];
 
-        const idx = userSelect.map(function(u) { return u.value }).indexOf(authUSer.uid);
+        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
 
         const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
-        return(
+        return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>New expense</Modal.Title>
@@ -166,67 +174,67 @@ class gastos extends Component {
 
                         {
                             selectedClientModal == null ? null :
-                            (this.props.loadingProjects ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
-                            <>
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">
-                                        Project
+                                (this.props.loadingProjects ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingUsers}></BarLoader> :
+                                    <>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">
+                                                Project
                                 </Form.Label>
-                                    <Col sm="7">
-                                        <Select placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject}  />
-                                    </Col>
-                                </Form.Group>
+                                            <Col sm="7">
+                                                <Select placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                            </Col>
+                                        </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">Title</Form.Label>
-                                    <Col sm="7">
-                                        <Form.Control isInvalid={expenseTitle.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
-                                    </Col>
-                                </Form.Group>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Title</Form.Label>
+                                            <Col sm="7">
+                                                <Form.Control isInvalid={expenseTitle.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                            </Col>
+                                        </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">Amount</Form.Label>
-                                    <Col sm="7">
-                                        <Form.Control isInvalid={!this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
-                                    </Col>
-                                </Form.Group>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Amount</Form.Label>
+                                            <Col sm="7">
+                                                <Form.Control isInvalid={!this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
+                                            </Col>
+                                        </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">Date</Form.Label>
-                                    <Col sm="7">
-                                        {/* DAY PICKER */}
-                                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                                            <KeyboardDatePicker
-                                                disableToolbar
-                                                variant="inline"
-                                                format="dd/MM/yyyy"
-                                                margin="normal"
-                                                id="date-picker-inline"
-                                                label="Enter date dd/mm/yyyy"
-                                                value={selectedDate}
-                                                onChange={this.handleDateChange}
-                                                KeyboardButtonProps={{
-                                                    'aria-label': 'change date',
-                                                }}
-                                            />
-                                        </MuiPickersUtilsProvider>
-                                    </Col>
-                                </Form.Group>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Date</Form.Label>
+                                            <Col sm="7">
+                                                {/* DAY PICKER */}
+                                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                                                    <KeyboardDatePicker
+                                                        disableToolbar
+                                                        variant="inline"
+                                                        format="dd/MM/yyyy"
+                                                        margin="normal"
+                                                        id="date-picker-inline"
+                                                        label="Enter date dd/mm/yyyy"
+                                                        value={selectedDate}
+                                                        onChange={this.handleDateChange}
+                                                        KeyboardButtonProps={{
+                                                            'aria-label': 'change date',
+                                                        }}
+                                                    />
+                                                </MuiPickersUtilsProvider>
+                                            </Col>
+                                        </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">Class</Form.Label>
-                                    <Col sm="7">
-                                        <Select placeholder="Select class..." options={expenseClasses} value={selectedExpenseModal} onChange={this.handleChangeExpense}  />
-                                    </Col>
-                                </Form.Group>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Type</Form.Label>
+                                            <Col sm="7">
+                                                <Select placeholder="Select class..." options={expenseClasses} value={selectedExpenseModal} onChange={this.handleChangeExpense} />
+                                            </Col>
+                                        </Form.Group>
 
-                                <Form.Group as={Row}>
-                                    <Form.Label column sm="3">Attorney</Form.Label>
-                                    <Col sm="7">
-                                        <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal}  />
-                                    </Col>
-                                </Form.Group>
-                            </>)
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Attorney</Form.Label>
+                                            <Col sm="7">
+                                                <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
+                                            </Col>
+                                        </Form.Group>
+                                    </>)
                         }
 
                     </Form>
@@ -263,64 +271,82 @@ class gastos extends Component {
                             </Container>
                         </Jumbotron>
 
-                        <Accordion className="topMargin leftMargin rightMargin" defaultActiveKey="0">
-                            <Card>
-                                <Accordion.Toggle as={Card.Header} eventKey="0" ><b>
-                                    <Container>
-                                        <Row>
-                                            <Col sm={8}> Anchor Bay Packaging de Mexico, S. de R.L. de C.V. - Proyecto X </Col>
-                                            <Col sm={4}> $400.00 </Col>
-                                        </Row>
-                                    </Container>
-                                </b></Accordion.Toggle>
-                                <Accordion.Collapse eventKey="0">
-                                    <Card.Body>
-                                        <Card.Text> Fine payment </Card.Text>
-                                        <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                        <Card.Text> Gastos de traslado (tipo de gasto)</Card.Text>
-                                        <Card.Text>
-                                            <Container>
-                                                <Row>
-                                                    <Col sm={8}></Col>
-                                                    <Col sm={4}>
-                                                        <Button variant="outline-dark">Edit</Button>
-                                                        <Button variant="outline-danger" className="leftMargin">Delete</Button>
-                                                    </Col>
-                                                </Row>
-                                            </Container>
-                                        </Card.Text>
-                                    </Card.Body>
-                                </Accordion.Collapse>
-                            </Card>
-                            <Card>
-                            <Accordion.Toggle as={Card.Header} eventKey="1" ><b>
-                                    <Container>
-                                        <Row>
-                                            <Col sm={8}> CLIENTE - PROYECTO </Col>
-                                            <Col sm={4}> MONTO </Col>
-                                        </Row>
-                                    </Container>
-                                </b></Accordion.Toggle>
-                                <Accordion.Collapse eventKey="1">
-                                    <Card.Body>
-                                        <Card.Text> CONCEPTO</Card.Text>
-                                        <Card.Text> FECHA </Card.Text>
-                                        <Card.Text> TIPO DE GASTO </Card.Text>
-                                        <Card.Text>
-                                            <Container>
-                                                <Row>
-                                                    <Col sm={8}></Col>
-                                                    <Col sm={4}>
-                                                        <Button variant="outline-dark">Edit</Button>
-                                                        <Button variant="outline-danger" className="leftMargin">Delete</Button>
-                                                    </Col>
-                                                </Row>
-                                            </Container>
-                                        </Card.Text>
-                                    </Card.Body>
-                                </Accordion.Collapse>
-                            </Card>
-                        </Accordion>
+                        {/* SE MUESTRAN EN ORDEN CRONOLOGICO */}
+                        <div className="tableMargins ">
+                            <TableContainer>
+                                <Table aria-label="simple table">
+                                    <colgroup>
+                                        <col width="80%" />
+                                        <col width="10%" />
+                                        <col width="5%" />
+                                        <col width="5%" />
+                                    </colgroup>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Registered expenses</b></TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell>
+                                                <OverlayTrigger overlay={
+                                                    <Tooltip id="tooltip">
+                                                        DATE
+                                                        <br/>
+                                                        TYPE
+                                                    </Tooltip>}>
+                                                    <span className="d-inline-block">
+                                                        CLIENTE
+                                                        <br/>
+                                                        TITULO
+                                                    </span>
+                                                </OverlayTrigger>
+                                            </TableCell>
+                                            <TableCell className="rightAlign"> MONTO </TableCell>
+                                            <TableCell>
+                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
+                                                    <span className="d-inline-block">
+                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
+                                                    </span>
+                                                </OverlayTrigger>
+                                            </TableCell>
+                                            <TableCell>
+                                                <FontAwesomeIcon icon={faEdit} className="legemblue" />
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell> OCM - Pago de peritos</TableCell>
+                                            <TableCell className="rightAlign" >6000 </TableCell>
+                                            <TableCell>
+                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
+                                                    <span className="d-inline-block">
+                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
+                                                    </span>
+                                                </OverlayTrigger>
+                                            </TableCell>
+                                            <TableCell>
+                                                <FontAwesomeIcon icon={faEdit} className="legemblue" />
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell>INICIALES - NOMBRE DEL GASTO  </TableCell>
+                                            <TableCell className="rightAlign">MONTO</TableCell>
+                                            <TableCell> D </TableCell>
+                                            <TableCell>B</TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell> Total expenses  </TableCell>
+                                            <TableCell className="rightAlign">14,900</TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell></TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </div>
                     </div>
                 }
             </AuthUserContext.Consumer>
