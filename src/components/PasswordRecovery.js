@@ -55,14 +55,14 @@ class Passrec extends Component {
         return (
             <div>
                 <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.onSubmit}>
-                    <Form.Text className="bigLetters"> Recuperar contraseña </Form.Text>
+                    <Form.Text className="bigLetters"> Recover password </Form.Text>
                     <Form.Group controlId="formBasicEmail">
-                        <Form.Label className="formLabels">Correo electrónico</Form.Label>
+                        <Form.Label className="formLabels">Email</Form.Label>
                         <Form.Control name="email" onChange={this.onChange} type="email" size="sm" placeholder="usuario@legem.mx" />
-                        <Form.Text className="text-muted"> Recibirás un correo para recuperar tu contraseña. </Form.Text>
-                        <Form.Control.Feedback type="invalid">Ingrese un correo válido</Form.Control.Feedback>
+                        <Form.Text className="text-muted"> You will receive an email to recover your password. </Form.Text>
+                        <Form.Control.Feedback type="invalid">Invalid email</Form.Control.Feedback>
                     </Form.Group>
-                    <Button variant="primary" type="submit" className="legem-primary">Recuperar</Button>
+                    <Button variant="primary" type="submit" className="legem-primary">Recover</Button>
                 </Form>
             </div>
         );

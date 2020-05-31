@@ -59,19 +59,19 @@ class LoginPage extends Component {
         return (
             <div>
                 <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.handleSubmit}>
-                    <Form.Text className="bigLetters"> Iniciar Sesión </Form.Text>
+                    <Form.Text className="bigLetters"> Login </Form.Text>
                     <Form.Group controlId="formBasicEmail">
-                        <Form.Label className="formLabels">Correo electrónico</Form.Label>
+                        <Form.Label className="formLabels">Email</Form.Label>
                         <Form.Control name="email" type="email" size="sm" placeholder="usuario@legem.mx" value={email} onChange={this.onChange} required />
-                        <Form.Control.Feedback type="invalid">Ingrese un email válido</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">Invalid email </Form.Control.Feedback>
                     </Form.Group>
                     <Form.Group controlId="formBasicPassword">
-                        <Form.Label className="formLabels">Contraseña</Form.Label>
+                        <Form.Label className="formLabels">Password</Form.Label>
                         <Form.Control name="password" type="password" size="sm" value={password} onChange={this.onChange} required />
-                        <Form.Control.Feedback type="invalid" >Ingrese su contraseña</Form.Control.Feedback>
-                        <Form.Text><a href="/password-recovery" className="text-muted" > Olvidé mi contraseña</a></Form.Text>
+                        <Form.Control.Feedback type="invalid" >Invalid password</Form.Control.Feedback>
+                        <Form.Text><a href="/password-recovery" className="text-muted" > I forgot my password</a></Form.Text>
                     </Form.Group>
-                    <Button variant="primary" type="submit" className="legem-primary" >Ingresar</Button>
+                    <Button variant="primary" type="submit" className="legem-primary" >Login</Button>
                 </Form>
             </div>
         );

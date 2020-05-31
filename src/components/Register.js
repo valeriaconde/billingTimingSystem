@@ -49,7 +49,7 @@ class Registeruser extends Component {
 
         const roles = {};
         if(isAdmin) {
-            if(window.confirm('¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios.')) roles[ROLES.ADMIN] = ROLES.ADMIN;
+            if(window.confirm('Are you sure you want to make this user admin?')) roles[ROLES.ADMIN] = ROLES.ADMIN;
             else return;
         }
 
@@ -79,25 +79,23 @@ class Registeruser extends Component {
             { authUser =>
                 <div>
                     <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.handleSubmit}>
-                        <Form.Text className="bigLetters"> Crear usuario </Form.Text>
+                        <Form.Text className="bigLetters"> New user </Form.Text>
                         <Form.Group controlId="formBasicEmail">
-                            <Form.Label className="formLabels">Correo electrónico</Form.Label>
-                            <Form.Control onChange={this.onChange} name="email" value={email} type="email" size="sm" placeholder="usuario@legem.mx" />
-                            <Form.Text className="text-muted">Este correo es el que usará para ingresar al sistema.</Form.Text>
-                            <Form.Control.Feedback type="invalid">Ingrese un correo válido</Form.Control.Feedback>
+                            <Form.Label className="formLabels">Email</Form.Label>
+                            <Form.Control onChange={this.onChange} name="email" value={email} type="email" size="sm" placeholder="user@legem.mx" />
+                            <Form.Text className="text-muted">This is the email they will use to login to the system.</Form.Text>
+                            <Form.Control.Feedback type="invalid">Invalid email</Form.Control.Feedback>
                         </Form.Group>
                         <Form.Group controlId="formBasicEmail">
-                            <Form.Label className="formLabels">Confirmar correo</Form.Label>
-                            <Form.Control onChange={this.onChange} name="email2" value={email2} type="email" size="sm" placeholder="usuario@legem.mx" />
-                            <Form.Control.Feedback type="invalid">Los correos no coinciden</Form.Control.Feedback>
+                            <Form.Label className="formLabels">Confirm email</Form.Label>
+                            <Form.Control onChange={this.onChange} name="email2" value={email2} type="email" size="sm" placeholder="user@legem.mx" />
+                            <Form.Control.Feedback type="invalid">Emails do not match.</Form.Control.Feedback>
                         </Form.Group>
 
                         <Form.Group controlId="formBasicCheckbox">
-                            <Form.Check onChange={this.onChange} name="isAdmin" checked={isAdmin} type="checkbox" className="formLabels" label="Este usuario es administrador"/>
-                            {/* creas una alert que confirme si deadevis quiere que el usuario sea administrador antes de continuar pls 
-                            alert: ¿Seguro que desea hacer este usuario administrador? - El usuario tendrá acceso a todas las funciones del sistema y podrá crear y eliminar usuarios. */}
+                            <Form.Check onChange={this.onChange} name="isAdmin" checked={isAdmin} type="checkbox" className="formLabels" label="Make this user admin"/>
                         </Form.Group>
-                        <Button variant="primary" type="submit" className="legem-primary">Registrar</Button>
+                        <Button variant="primary" type="submit" className="legem-primary">Create</Button>
 
                         {error && <p>{error.message}</p>}
                     </Form>

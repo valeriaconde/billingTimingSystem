@@ -70,16 +70,16 @@ class PassChange extends Component {
                 {authUser =>
                     <div>
                         <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.onSubmit}>
-                            <Form.Text className="bigLetters"> Actualizar contraseña </Form.Text>
+                            <Form.Text className="bigLetters"> Change password </Form.Text>
                             <Form.Group controlId="formBasicPassword">
-                                <Form.Label className="formLabels">Nueva contraseña</Form.Label>
+                                <Form.Label className="formLabels">New password</Form.Label>
                                 <Form.Control onChange={this.onChange} value={this.state.password} name="password" type="password" size="sm" required />
                             </Form.Group>
                             <Form.Group controlId="formBasicPassword">
-                                <Form.Label className="formLabels">Confirmar contraseña</Form.Label>
+                                <Form.Label className="formLabels">Confirm password</Form.Label>
                                 <Form.Control onChange={this.onChange} value={this.state.password2} name="password2" type="password" size="sm" required />
                             </Form.Group>
-                            <Button variant="primary" type="submit" className="legem-primary"> Actualizar </Button>
+                            <Button variant="primary" type="submit" className="legem-primary"> Change </Button>
                         </Form>
                     </div>
                 }

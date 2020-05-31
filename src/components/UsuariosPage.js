@@ -141,7 +141,7 @@ class UsuariosPage extends Component {
 
                                     {/* PUESTOA */}
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4"> Puesto </Form.Label>
+                                        <Form.Label column sm="4"> Position </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="job" plaintext readOnly={!this.state.edit} value={job} />
                                         </Col>
@@ -149,7 +149,7 @@ class UsuariosPage extends Component {
 
                                     {/* HORA */}
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4"> Honorarios (por hora) </Form.Label>
+                                        <Form.Label column sm="4"> Hourly fee </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="salary" plaintext readOnly={!this.state.edit} value={salary} />
                                         </Col>
@@ -157,7 +157,7 @@ class UsuariosPage extends Component {
 
                                     {/* FECHA DE INGRESO */}
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4"> Año de ingreso </Form.Label>
+                                        <Form.Label column sm="4"> Start year </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="startYear" plaintext readOnly={!this.state.edit} value={startYear} />
                                         </Col>
@@ -173,9 +173,9 @@ class UsuariosPage extends Component {
                                                     <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
                                                         <DeleteIcon />
                                                     </IconButton>
-                                                    <Button onClick={this.onSave}>Guardar</Button>
+                                                    <Button onClick={this.onSave}>Save</Button>
                                                 </div>
-                                                : <Button onClick={this.onEdit} variant="outline-dark">Editar</Button>
+                                                : <Button onClick={this.onEdit} variant="outline-dark">Edit</Button>
                                             }
                                             </>
                                         </Col>
