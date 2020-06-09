@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -11,7 +11,8 @@ const initialState = {
     loadingUsers: false,
     loadingClients: false,
     loadingProjects: false,
-    loadingExpenses: false
+    loadingExpenses: false,
+    loadedExpenseOnce: false
 };
   
 function rootReducer(state = initialState, action) {
@@ -77,6 +78,12 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             projects: action.payload,
             loadingProjects: false
+        });
+    } else if(action.type === EXPENSES_LOADED) {
+        return Object.assign({}, state, {
+            expenses: action.payload,
+            loadingExpenses: false,
+            loadedExpenseOnce: true
         });
     } else if(action.type === UPDATED_USER) {
         const email = action.payload.email;

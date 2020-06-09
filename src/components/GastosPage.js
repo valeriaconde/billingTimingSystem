@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient, addExpense } from "../redux/actions/index";
+import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -13,7 +13,7 @@ import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
 import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
@@ -29,7 +29,10 @@ const mapStateToProps = state => {
         users: state.users,
         projects: state.projects,
         loadingUsers: state.loadingUsers,
-        loadingProjects: state.loadingProjects
+        loadingProjects: state.loadingProjects,
+        expenses: state.expenses,
+        loadingExpenses: state.loadingExpenses,
+        loadedExpenseOnce: state.loadedExpenseOnce
     };
 };
 
@@ -179,7 +182,7 @@ class gastos extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">
                                                 Project
-                                </Form.Label>
+                                            </Form.Label>
                                             <Col sm="7">
                                                 <Select placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
                                             </Col>
@@ -234,9 +237,8 @@ class gastos extends Component {
                                                 <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
                                             </Col>
                                         </Form.Group>
-                                    </>)
+                                </>)
                         }
-
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -251,7 +253,20 @@ class gastos extends Component {
         );
     }
 
+    getExpenses(authUser) {
+        let self = this;
+        if(!self.props.loadedExpenseOnce) {
+            self.props.getExpenses(authUser.uid, true);
+        }
+        return null;
+    };
+
     render() {
+        const expenses = this.props.expenses !== null ?
+            this.props.expenses.map((e, i) => ({
+                ...e
+            })) : [];
+            
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
@@ -264,6 +279,7 @@ class gastos extends Component {
                         {this.renderModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
                         {/* EXPENSES */}
+                        {this.getExpenses(authUser)}
                         {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
                         <Jumbotron fluid>
                             <Container>
@@ -299,49 +315,17 @@ class gastos extends Component {
                                                         TYPE
                                                     </Tooltip>}>
                                                     <span className="d-inline-block">
-                                                        CLIENTE
+                                                        CLIENTE - PROYECTO
                                                         <br/>
                                                         TITULO
                                                     </span>
                                                 </OverlayTrigger>
                                             </TableCell>
                                             <TableCell className="rightAlign"> MONTO </TableCell>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
+                                            <TableCell></TableCell>
                                             <TableCell>
                                                 <FontAwesomeIcon icon={faEdit} className="legemblue" />
                                             </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> OCM - Pago de peritos</TableCell>
-                                            <TableCell className="rightAlign" >6000 </TableCell>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell>
-                                                <FontAwesomeIcon icon={faEdit} className="legemblue" />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>INICIALES - NOMBRE DEL GASTO  </TableCell>
-                                            <TableCell className="rightAlign">MONTO</TableCell>
-                                            <TableCell> D </TableCell>
-                                            <TableCell>B</TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> Total expenses  </TableCell>
-                                            <TableCell className="rightAlign">14,900</TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
@@ -362,5 +346,6 @@ export default connect(mapStateToProps, {
     getUsers,
     addProject,
     getProjectByClient,
-    addExpense
+    addExpense,
+    getExpenses
 })(withAuthorization(condition)(gastos));

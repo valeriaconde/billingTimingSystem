@@ -1,8 +1,10 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES } from "../../constants/action-types"; 
+    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED } from "../../constants/action-types"; 
+import { CLIENTS } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
+import firebase from "../../components/firestone";
 
 export function addUser(payload) {
     return { type: ADD_USER, payload };
@@ -22,19 +24,18 @@ export function clearAlert(payload) {
 
 export function addClient(payload) {
     return function(dispatch) {
-        const url = `${process.env.REACT_APP_DATABASE_URL}/clients.json`;
-        return axios.post(url, payload)
-            .then(response => {
-                dispatch({ type: ADD_CLIENT, payload: response.data });
-                window.location.reload();
-                const alert = { type: AlertType.Success, message: "Client successfully registered."};
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error.message };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+        firebase.firestore().collection(CLIENTS).add(payload)
+        .then(() => {
+            dispatch({ type: ADD_CLIENT, payload: {} });
+            window.location.reload();
+            const alert = { type: AlertType.Success, message: "Client successfully registered."};
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        })
+        .catch(function(error) {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
     }
 }
 
@@ -59,7 +60,30 @@ export function addProject(clientUid, payload) {
 
 export function addExpense(clientUid, projectUid, payload) {
     return function(dispatch) {
-        const url = `${process.env.REACT_APP_DATABASE_URL}/expenseRoot/${clientUid}/project/${projectUid}/expenses.json`;
+        firebase.firestore().collection("users").add({
+            fullname: "elias",
+            email: "email"
+        })
+        .then(docRef => {
+            console.log("Document successfully written!");
+            console.log(docRef);
+
+            docRef.get().then(function(doc) {
+                if(doc.exists) {
+                    console.log("wii");
+                    console.log(doc.data());
+                } else {
+                    console.log("no such document");
+                }
+            });
+        })
+        .catch(function(error) {
+            console.error("Error writing document: ", error);
+        });
+        
+        return;
+
+        const url = `${process.env.REACT_APP_DATABASE_URL}/expenses.json`;
         dispatch({ type: LOADING_EXPENSES, payload: {} });
         return axios.post(url, payload)
             .then(response => {
@@ -78,14 +102,16 @@ export function addExpense(clientUid, projectUid, payload) {
 
 export function updateClient(uid, payload) {
     return function(dispatch) {
-        const url = `${process.env.REACT_APP_DATABASE_URL}/clients/${uid}.json`;
         dispatch({ type: LOADING_CLIENTS, payload: {} });
-        return axios.put(url, payload)
-            .then(response => {
-                dispatch({ type: UPDATED_CLIENT, payload: response.data });
-                const alert = { type: AlertType.Success, message: "Client successfully updated." };
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        const docRef = firebase.firestore().collection(CLIENTS).doc(uid);
+        docRef.update(payload)
+            .then(() => {
+                docRef.get().then(snapshot => {
+                    dispatch({ type: UPDATED_CLIENT, payload: snapshot.data() });
+                    const alert = { type: AlertType.Success, message: "Client successfully updated." };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                });
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error.message };
@@ -113,7 +139,6 @@ export function updateUser(uid, payload) {
     };
 }
 
-
 export function getProjectByClient(clientUid) {
     return function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/projectRoot/${clientUid}/projects.json`;
@@ -129,24 +154,23 @@ export function getProjectByClient(clientUid) {
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error.message };
                 dispatch({ type: ADD_ALERT, payload: alert });
-            })
+            });
     }
 }
 
 export function getClients() {
-    return function(dispatch) {
-        const url = `${process.env.REACT_APP_DATABASE_URL}/clients.json`;
+    return async function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
-        return axios.get(url)
-            .then(response => {
-                const clientsList = Object.keys(response.data || []).map(key => ({
-                    ...response.data[key],
-                    uid: key
+        await firebase.firestore().collection(CLIENTS).get()
+            .then(snapshot => {
+                const clientsList = snapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    uid: doc.id
                 }));
                 dispatch({ type: CLIENTS_LOADED, payload: clientsList.sort((a, b) => a.denomination.localeCompare(b.denomination)) });
             })
             .catch(error => {
-                const alert = { type: AlertType.Error, message: error.message };
+                const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
     }
@@ -171,22 +195,37 @@ export function getUsers() {
     };
 }
 
-export function deleteClient(uid) {
+export function getExpenses(uid, byAttorney) {
     return function(dispatch) {
-        const url = `${process.env.REACT_APP_DATABASE_URL}/clients/${uid}.json`;
-        dispatch({ type: LOADING_CLIENTS, payload: {} });
-        return axios.delete(url)
+        const url = `${process.env.REACT_APP_DATABASE_URL}/expenses.json?orderBy="${byAttorney ? "expenseAttorney" : "expenseProject"}"&startAt="${uid}"`;
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        return axios.get(url)
             .then(response => {
-                dispatch({ type: REMOVED_CLIENT, payload: uid });
-
-                const alert = { type: AlertType.Success, message: "Client successfully deleted."};
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                const expensesList = Object.keys(response.data).map(key => ({
+                    ...response.data[key],
+                    uid: key
+                }));
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error.message };
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
+    };
+}
+
+export function deleteClient(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        firebase.firestore().collection(CLIENTS).doc(uid).delete().then(() => {
+            dispatch({ type: REMOVED_CLIENT, payload: uid });
+            const alert = { type: AlertType.Success, message: "Client successfully deleted."};
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }).catch(error => {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
     }
 }
 
