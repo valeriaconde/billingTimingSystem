@@ -103,7 +103,8 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {
-            loadingClients: false
+            loadingClients: false,
+            clients: state.clients.concat([action.payload]).sort((a, b) => a.denomination.localeCompare(b.denomination))
         });
     }
 

@@ -132,6 +132,8 @@ class Clientes extends Component {
             iva: iva
         };
         this.props.addClient(payload);
+
+        this.setState({ showModalCliente: false });
     }
 
     handleOnChange(event) {
@@ -314,7 +316,7 @@ class Clientes extends Component {
                                         }
         
                                         {/* DOMICILIO */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Address </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currAddress} onChange={this.onChange} name="currAddress" readOnly={!edit} plaintext />
@@ -322,7 +324,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         {/* RFC */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> RFC </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currRfc} onChange={this.onChange} name="currRfc" readOnly={!edit} plaintext />
@@ -330,7 +332,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         {/* CONTACTO */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Contact </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} plaintext />
@@ -338,7 +340,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         {/* CORREO */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Email </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} plaintext />
@@ -346,7 +348,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         {/* TELEFONO */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Phone </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} plaintext />
@@ -354,7 +356,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         {/* PAGINA WEB */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Website </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currWebsite} onChange={this.onChange} name="currWebsite" readOnly={!edit} plaintext />
@@ -362,7 +364,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         {/* CLIENTE DESDE */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Client since </Form.Label>
                                             <Col sm="5">
                                                 <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit}  plaintext />
@@ -370,7 +372,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         {/* IVA */}
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="4"> IVA </Form.Label>
                                             <Col sm="5">
                                                 <div>
@@ -384,7 +386,7 @@ class Clientes extends Component {
                                             </Col>
                                         </Form.Group>
         
-                                        <Form.Group as={Row} controlId="formPlaintextEmail">
+                                        <Form.Group as={Row}>
                                             <Form.Label column sm="5"></Form.Label>
                                             <Col sm="5">
                                                 <>
