@@ -77,7 +77,8 @@ class Proyectos extends Component {
             projectClient: selectedClientModal.uid,
             appointedIds: appointedIds,
             projectFixedFee: projectFixedFee === 'true',
-            projectFee: Number(projectFee)
+            projectFee: Number(projectFee),
+            isOpen: true
         };
         this.props.addProject(payload);
 

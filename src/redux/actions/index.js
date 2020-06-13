@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED } from "../../constants/action-types"; 
+    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING } from "../../constants/action-types"; 
 import { CLIENTS, PROJECTS, EXPENSES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -129,7 +129,9 @@ export function updateUser(uid, payload) {
 export function getProjectByClient(clientUid) {
     return function(dispatch) {
         dispatch({ type: LOADING_PROJECTS, payload: {} });
-        firebase.firestore().collection(PROJECTS).where("projectClient", "==", clientUid)
+        firebase.firestore().collection(PROJECTS)
+            .where("projectClient", "==", clientUid)
+            .where("isOpen", "==", true)
             .get()
             .then(querySnapshot => {
                 let projectsList = [];
@@ -137,6 +139,26 @@ export function getProjectByClient(clientUid) {
                     projectsList.push({ ...doc.data(), uid: doc.id });
                 });
                 dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle.localeCompare(b.projectTitle)) });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function getProjectsMapping() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS_MAPPING, payload: {} });
+        firebase.firestore().collection(PROJECTS)
+            .where("isOpen", "==", true)
+            .get()
+            .then(querySnapshot => {
+                let projectsList = [];
+                querySnapshot.forEach(doc => {
+                    projectsList.push({ ...doc.data(), uid: doc.id });
+                });
+                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: projectsList.sort((a, b) => a.projectTitle.localeCompare(b.projectTitle)) });
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -185,18 +207,20 @@ export function getUsers() {
 
 export function getExpenses(uid, byAttorney) {
     return function(dispatch) {
-        const url = `${process.env.REACT_APP_DATABASE_URL}/expenses.json?orderBy="${byAttorney ? "expenseAttorney" : "expenseProject"}"&startAt="${uid}"`;
         dispatch({ type: LOADING_EXPENSES, payload: {} });
-        return axios.get(url)
-            .then(response => {
-                const expensesList = Object.keys(response.data).map(key => ({
-                    ...response.data[key],
-                    uid: key
-                }));
+        firebase.firestore().collection(EXPENSES)
+            .where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
+            .where("isBilled", "==", false)
+            .get()
+            .then(querySnapshot => {
+                let expensesList = [];
+                querySnapshot.forEach(doc => {
+                    expensesList.push({ ...doc.data(), uid: doc.id });
+                });
                 dispatch({ type: EXPENSES_LOADED, payload: expensesList });
             })
             .catch(error => {
-                const alert = { type: AlertType.Error, message: error.message };
+                const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
     };

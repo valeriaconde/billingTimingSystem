@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
+import { addAlert, clearAlert, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -32,7 +32,10 @@ const mapStateToProps = state => {
         loadingProjects: state.loadingProjects,
         expenses: state.expenses,
         loadingExpenses: state.loadingExpenses,
-        loadedExpenseOnce: state.loadedExpenseOnce
+        loadedExpenseOnce: state.loadedExpenseOnce,
+        clientsNames: state.clientsNames,
+        projectsNames: state.projectsNames,
+        loadingProjectsMapping: state.loadingProjectsMapping
     };
 };
 
@@ -64,6 +67,10 @@ class gastos extends Component {
 
         if (this.props.users.length === 0) {
             this.props.getUsers();
+        }
+
+        if (Object.keys(this.props.projectsNames).length === 0) {
+            this.props.getProjectsMapping();
         }
     }
 
@@ -271,6 +278,7 @@ class gastos extends Component {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
+                    this.props.loadingProjectsMapping ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         {/* MODAL */}
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
@@ -282,56 +290,64 @@ class gastos extends Component {
                         {/* EXPENSES */}
                         {this.getExpenses(authUser)}
                         {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
-                        <Jumbotron fluid>
-                            <Container>
-                                <h1>You have no registered expenses</h1>
-                            </Container>
-                        </Jumbotron>
 
-                        {/* SE MUESTRAN EN ORDEN CRONOLOGICO */}
-                        <div className="tableMargins ">
-                            <TableContainer>
-                                <Table aria-label="simple table">
-                                    <colgroup>
-                                        <col width="80%" />
-                                        <col width="10%" />
-                                        <col width="5%" />
-                                        <col width="5%" />
-                                    </colgroup>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell><b>Registered expenses</b></TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={
-                                                    <Tooltip id="tooltip">
-                                                        DATE
-                                                        <br/>
-                                                        TYPE
-                                                    </Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        CLIENTE - PROYECTO
-                                                        <br/>
-                                                        TITULO
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell className="rightAlign"> MONTO </TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell>
-                                                <FontAwesomeIcon icon={faEdit} className="legemblue" />
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </div>
+                        {
+                            expenses.length === 0 ? 
+                            <Jumbotron fluid>
+                                <Container>
+                                    <h1>You have no registered expenses</h1>
+                                </Container>
+                            </Jumbotron>
+                            :
+                            <div className="tableMargins">
+                                <TableContainer>
+                                    <Table aria-label="simple table">
+                                        <colgroup>
+                                            <col width="80%" />
+                                            <col width="10%" />
+                                            <col width="5%" />
+                                            <col width="5%" />
+                                        </colgroup>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell><b>Registered expenses</b></TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {expenses.map((row) => (
+                                                <TableRow>
+                                                    <TableCell>
+                                                        <OverlayTrigger overlay={
+                                                            <Tooltip>
+                                                                {row.expenseDate.toDate().toDateString()}
+                                                                <br/>
+                                                                {expenseClasses.find(obj => {
+                                                                    return obj.value === row.expenseClass;
+                                                                }).label  }
+                                                            </Tooltip>}>
+                                                            <span className="d-inline-block">
+                                                                {this.props.clientsNames[row.expenseClient]} - {this.props.projectsNames[row.expenseProject]}
+                                                                <br/>
+                                                                {row.expenseTitle}
+                                                            </span>
+                                                        </OverlayTrigger>
+                                                    </TableCell>
+                                                        <TableCell className="rightAlign"> {row.expenseTotal} </TableCell>
+                                                    <TableCell></TableCell>
+                                                    <TableCell>
+                                                        <FontAwesomeIcon icon={faEdit} className="legemblue" />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                            }
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+                        }
                     </div>
                 }
             </AuthUserContext.Consumer>
@@ -348,5 +364,6 @@ export default connect(mapStateToProps, {
     addProject,
     getProjectByClient,
     addExpense,
-    getExpenses
+    getExpenses,
+    getProjectsMapping
 })(withAuthorization(condition)(gastos));

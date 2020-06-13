@@ -1,18 +1,21 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
     alerts: [],
     clients: [],
+    clientsNames: {},
+    projectsNames: {},
     projects: [],
     expenses: [],
     loadingUsers: false,
     loadingClients: false,
     loadingProjects: false,
     loadingExpenses: false,
-    loadedExpenseOnce: false
+    loadedExpenseOnce: false,
+    loadingProjectsMapping: false
 };
   
 function rootReducer(state = initialState, action) {
@@ -30,7 +33,8 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.tye === ADD_EXPENSE) {
         return Object.assign({}, state, {
-            loadingProjects: false
+            loadingProjects: false,
+            expenses: state.expenses.concat([action.payload]).sort((a, b) => b.expenseDate - a.expenseDate),
         });
     } else if(action.type === CLEAR_ALERT) {
         return Object.assign({}, state, {
@@ -43,6 +47,10 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === LOADING_USERS) {
         return Object.assign({}, state, {
             loadingUsers: true
+        });
+    } else if(action.type === LOADING_PROJECTS_MAPPING) {
+        return Object.assign({}, state, {
+            loadingProjectsMapping: true
         });
     } else if(action.type === LOADING_CLIENTS) {
         return Object.assign({}, state, {
@@ -69,10 +77,24 @@ function rootReducer(state = initialState, action) {
             users: state.users.concat(action.payload).sort((a, b) => a.name.localeCompare(b.name)),
             loadingUsers: false
         });
+    } else if(action.type === PROJECTS_MAPPING_LOADED) {
+        let tmp = {};
+        action.payload.forEach(project => {
+            tmp[project.uid] = project.projectTitle;
+        });
+        return Object.assign({}, state, {
+            loadingProjectsMapping: false,
+            projectsNames: tmp
+        });
     } else if(action.type === CLIENTS_LOADED) {
+        let tmp = {};
+        action.payload.forEach(client => {
+            tmp[client.uid] = client.denomination;
+        });
         return Object.assign({}, state, {
             clients: state.clients.concat(action.payload).sort((a, b) => a.denomination.localeCompare(b.denomination)),
-            loadingClients: false
+            loadingClients: false,
+            clientsNames: tmp
         });
     } else if(action.type === PROJECTS_LOADED) {
         return Object.assign({}, state, {
@@ -81,7 +103,7 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === EXPENSES_LOADED) {
         return Object.assign({}, state, {
-            expenses: action.payload,
+            expenses: action.payload.sort((a, b) => b.expenseDate - a.expenseDate),
             loadingExpenses: false,
             loadedExpenseOnce: true
         });
