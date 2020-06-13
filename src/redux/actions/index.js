@@ -33,7 +33,6 @@ export function addClient(payload) {
                         if (doc.exists) {
                             const client = { ...doc.data(), uid: doc.id };
                             dispatch({ type: ADD_CLIENT, payload: client });
-                            // window.location.reload();
                             const alert = { type: AlertType.Success, message: "Client successfully registered."};
                             dispatch({ type: ADD_ALERT, payload: alert });
                             setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
