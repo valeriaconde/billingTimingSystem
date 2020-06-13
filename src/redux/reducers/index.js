@@ -31,9 +31,9 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingProjects: false
         });
-    } else if(action.tye === ADD_EXPENSE) {
+    } else if(action.type === ADD_EXPENSE) {
         return Object.assign({}, state, {
-            loadingProjects: false,
+            loadingExpenses: false,
             expenses: state.expenses.concat([action.payload]).sort((a, b) => b.expenseDate - a.expenseDate),
         });
     } else if(action.type === CLEAR_ALERT) {
