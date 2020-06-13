@@ -126,11 +126,12 @@ class gastos extends Component {
             expenseClient: selectedClientModal.uid,
             expenseProject: selectedProjectModal.uid,
             expenseClass: selectedExpenseModal.value,
-            expenseAttorney: att
+            expenseAttorney: att,
+            isBilled: false
         };
 
-        this.setState({ showModal: false });
-        this.props.addExpense(selectedClientModal.uid, selectedProjectModal.uid, payload);
+        this.setState(INITIAL_STATE);
+        this.props.addExpense(payload);
     }
 
     renderModal(authUSer, isHidden) {

@@ -1,7 +1,7 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
     REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED } from "../../constants/action-types"; 
-import { CLIENTS, PROJECTS } from '../../constants/collections';
+import { CLIENTS, PROJECTS, EXPENSES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 import firebase from "../../components/firestone";
@@ -28,10 +28,9 @@ export function addClient(payload) {
         db.collection(CLIENTS)
             .add(payload)
             .then(docRef => {
-                db.collection(CLIENTS).doc(docRef.id)
-                    .get()
+                docRef.get()
                     .then(doc => {
-                        if (doc.exists){
+                        if (doc.exists) {
                             const client = { ...doc.data(), uid: doc.id };
                             dispatch({ type: ADD_CLIENT, payload: client });
                             // window.location.reload();
@@ -64,40 +63,27 @@ export function addProject(payload) {
     }
 }
 
-export function addExpense(clientUid, projectUid, payload) {
+export function addExpense(payload) {
     return function(dispatch) {
-        firebase.firestore().collection("users").add({
-            fullname: "elias",
-            email: "email"
-        })
-        .then(docRef => {
-
-            docRef.get().then(function(doc) {
-                if(doc.exists) {
-                } else {
-                }
-            });
-        })
-        .catch(function(error) {
-            console.error("Error writing document: ", error);
-        });
-        
-        return;
-
-        const url = `${process.env.REACT_APP_DATABASE_URL}/expenses.json`;
         dispatch({ type: LOADING_EXPENSES, payload: {} });
-        return axios.post(url, payload)
-            .then(response => {
-                dispatch({ type: ADD_EXPENSE, payload: response.data });
-                window.location.reload();
-                const alert = { type: AlertType.Success, message: "Expense successfully created." };
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        const db = firebase.firestore();
+        db.collection(EXPENSES).add(payload)
+            .then(docRef => {
+                docRef.get()
+                    .then(doc => {
+                        if(doc.exists) {
+                            const expense = { ...doc.data(), uid: doc.id };
+                            dispatch({ type: ADD_EXPENSE, payload: expense });
+                            const alert = { type: AlertType.Success, message: "Expense successfully created." };
+                            dispatch({ type: ADD_ALERT, payload: alert });
+                            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                        }
+                    });
             })
             .catch(error => {
-                const alert = { type: AlertType.Error, message: error.message };
+                const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
-            })
+            });
     }
 }
 
