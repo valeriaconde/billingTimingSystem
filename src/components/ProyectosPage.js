@@ -62,17 +62,10 @@ class Proyectos extends Component {
     handleNewProject(event) {
         event.preventDefault();
         this.setState({ validated: true });
-
-        const form = event.currentTarget;
-            if (form.checkValidity() === false) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
         const { selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
-        
-        if(!this.isFloat(projectFee)) return;
-        if(projectFixedFee === 'true' && projectFee <= 0) return;
+
+        if(projectFixedFee === 'true' && !this.isFloat(projectFee)) return;
+
         if(projectTitle === '' || selectedClientModal == null) return;
 
         // Picks uid for each appointed
@@ -84,10 +77,12 @@ class Proyectos extends Component {
             projectClient: selectedClientModal.uid,
             appointedIds: appointedIds,
             projectFixedFee: projectFixedFee === 'true',
-            projectFee: Number(projectFee)
+            projectFee: Number(projectFee),
+            isOpen: true
         };
+        this.props.addProject(payload);
 
-        this.props.addProject(selectedClientModal.uid, payload);
+        this.setState(INITIAL_STATE);
     }
 
     handleChangeMain = selectedOption => { 

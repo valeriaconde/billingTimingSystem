@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient, addExpense } from "../redux/actions/index";
+import { addAlert, clearAlert, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -13,7 +13,7 @@ import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
 import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
@@ -29,7 +29,13 @@ const mapStateToProps = state => {
         users: state.users,
         projects: state.projects,
         loadingUsers: state.loadingUsers,
-        loadingProjects: state.loadingProjects
+        loadingProjects: state.loadingProjects,
+        expenses: state.expenses,
+        loadingExpenses: state.loadingExpenses,
+        loadedExpenseOnce: state.loadedExpenseOnce,
+        clientsNames: state.clientsNames,
+        projectsNames: state.projectsNames,
+        loadingProjectsMapping: state.loadingProjectsMapping
     };
 };
 
@@ -61,6 +67,10 @@ class gastos extends Component {
 
         if (this.props.users.length === 0) {
             this.props.getUsers();
+        }
+
+        if (Object.keys(this.props.projectsNames).length === 0) {
+            this.props.getProjectsMapping();
         }
     }
 
@@ -123,11 +133,12 @@ class gastos extends Component {
             expenseClient: selectedClientModal.uid,
             expenseProject: selectedProjectModal.uid,
             expenseClass: selectedExpenseModal.value,
-            expenseAttorney: att
+            expenseAttorney: att,
+            isBilled: false
         };
 
-        this.setState({ showModal: false });
-        this.props.addExpense(selectedClientModal.uid, selectedProjectModal.uid, payload);
+        this.setState(INITIAL_STATE);
+        this.props.addExpense(payload);
     }
 
     renderModal(authUSer, isHidden) {
@@ -179,7 +190,7 @@ class gastos extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">
                                                 Project
-                                </Form.Label>
+                                            </Form.Label>
                                             <Col sm="7">
                                                 <Select placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
                                             </Col>
@@ -234,9 +245,8 @@ class gastos extends Component {
                                                 <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
                                             </Col>
                                         </Form.Group>
-                                    </>)
+                                </>)
                         }
-
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -251,10 +261,24 @@ class gastos extends Component {
         );
     }
 
+    getExpenses(authUser) {
+        let self = this;
+        if(!self.props.loadedExpenseOnce) {
+            self.props.getExpenses(authUser.uid, true);
+        }
+        return null;
+    };
+
     render() {
+        const expenses = this.props.expenses !== null ?
+            this.props.expenses.map((e, i) => ({
+                ...e
+            })) : [];
+            
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
+                    this.props.loadingProjectsMapping ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         {/* MODAL */}
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
@@ -264,89 +288,66 @@ class gastos extends Component {
                         {this.renderModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
                         {/* EXPENSES */}
+                        {this.getExpenses(authUser)}
                         {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
-                        <Jumbotron fluid>
-                            <Container>
-                                <h1>You have no registered expenses</h1>
-                            </Container>
-                        </Jumbotron>
 
-                        {/* SE MUESTRAN EN ORDEN CRONOLOGICO */}
-                        <div className="tableMargins ">
-                            <TableContainer>
-                                <Table aria-label="simple table">
-                                    <colgroup>
-                                        <col width="80%" />
-                                        <col width="10%" />
-                                        <col width="5%" />
-                                        <col width="5%" />
-                                    </colgroup>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell><b>Registered expenses</b></TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={
-                                                    <Tooltip id="tooltip">
-                                                        DATE
-                                                        <br/>
-                                                        TYPE
-                                                    </Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        CLIENTE
-                                                        <br/>
-                                                        TITULO
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell className="rightAlign"> MONTO </TableCell>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell>
-                                                <FontAwesomeIcon icon={faEdit} className="legemblue" />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> OCM - Pago de peritos</TableCell>
-                                            <TableCell className="rightAlign" >6000 </TableCell>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell>
-                                                <FontAwesomeIcon icon={faEdit} className="legemblue" />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>INICIALES - NOMBRE DEL GASTO  </TableCell>
-                                            <TableCell className="rightAlign">MONTO</TableCell>
-                                            <TableCell> D </TableCell>
-                                            <TableCell>B</TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> Total expenses  </TableCell>
-                                            <TableCell className="rightAlign">14,900</TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </div>
+                        {
+                            expenses.length === 0 ? 
+                            <Jumbotron fluid>
+                                <Container>
+                                    <h1>You have no registered expenses</h1>
+                                </Container>
+                            </Jumbotron>
+                            :
+                            <div className="tableMargins">
+                                <TableContainer>
+                                    <Table aria-label="simple table">
+                                        <colgroup>
+                                            <col width="80%" />
+                                            <col width="10%" />
+                                            <col width="5%" />
+                                            <col width="5%" />
+                                        </colgroup>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell><b>Registered expenses</b></TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {expenses.map((row) => (
+                                                <TableRow>
+                                                    <TableCell>
+                                                        <OverlayTrigger overlay={
+                                                            <Tooltip>
+                                                                {row.expenseDate.toDate().toDateString()}
+                                                                <br/>
+                                                                {expenseClasses.find(obj => {
+                                                                    return obj.value === row.expenseClass;
+                                                                }).label  }
+                                                            </Tooltip>}>
+                                                            <span className="d-inline-block">
+                                                                {this.props.clientsNames[row.expenseClient]} - {this.props.projectsNames[row.expenseProject]}
+                                                                <br/>
+                                                                {row.expenseTitle}
+                                                            </span>
+                                                        </OverlayTrigger>
+                                                    </TableCell>
+                                                        <TableCell className="rightAlign"> {row.expenseTotal} </TableCell>
+                                                    <TableCell></TableCell>
+                                                    <TableCell>
+                                                        <FontAwesomeIcon icon={faEdit} className="legemblue" />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                            }
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+                        }
                     </div>
                 }
             </AuthUserContext.Consumer>
@@ -362,5 +363,7 @@ export default connect(mapStateToProps, {
     getUsers,
     addProject,
     getProjectByClient,
-    addExpense
+    addExpense,
+    getExpenses,
+    getProjectsMapping
 })(withAuthorization(condition)(gastos));
