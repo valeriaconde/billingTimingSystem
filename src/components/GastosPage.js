@@ -127,7 +127,8 @@ class gastos extends Component {
         if (!this.isFloat(expenseTotal)) return;
         if (expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
 
-        var att = selectedAttorneyModal || this.attorney.current.props.value.value;
+        var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
+
         const payload = {
             expenseTitle: expenseTitle,
             expenseTotal: Number(expenseTotal),
