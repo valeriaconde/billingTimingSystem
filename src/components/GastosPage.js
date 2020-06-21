@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { addAlert, clearAlert, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
+import { updateExpense, addAlert, clearAlert, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -48,7 +48,8 @@ const INITIAL_STATE = {
     selectedProjectModal: null,
     selectedExpenseModal: null,
     expenseTitle: '',
-    expenseTotal: 0
+    expenseTotal: 0,
+    isModalAdd: true
 };
 
 class gastos extends Component {
@@ -79,6 +80,7 @@ class gastos extends Component {
     }
 
     handleShow = () => {
+        this.setState(INITIAL_STATE);
         this.setState({ showModal: true });
     }
 
@@ -120,7 +122,7 @@ class gastos extends Component {
             event.stopPropagation();
         }
 
-        const { selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
+        const { selectedExpenseUid, isModalAdd, selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
 
         if (!this.isFloat(expenseTotal)) return;
         if (expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
@@ -138,7 +140,23 @@ class gastos extends Component {
         };
 
         this.setState(INITIAL_STATE);
-        this.props.addExpense(payload);
+
+        if (isModalAdd) this.props.addExpense(payload);
+        else this.props.updateExpense(selectedExpenseUid, payload);
+    }
+
+    editExpense = expense => {
+        this.setState({
+            selectedClientModal: { value: expense.expenseClient, label: this.props.clientsNames[expense.expenseClient], uid: expense.expenseClient },
+            selectedProjectModal: { value: expense.expenseProject, label: this.props.projectsNames[expense.expenseProject], uid: expense.expenseProject },
+            expenseTitle: expense.expenseTitle,
+            expenseTotal: expense.expenseTotal,
+            selectedDate: expense.expenseDate.toDate(),
+            selectedExpenseModal: expenseClasses.find(obj => obj.value === expense.expenseClass),
+            showModal: true,
+            isModalAdd: false,
+            selectedExpenseUid: expense.uid
+        });
     }
 
     renderModal(authUSer, isHidden) {
@@ -165,7 +183,7 @@ class gastos extends Component {
 
         const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal } = this.state;
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -179,7 +197,7 @@ class gastos extends Component {
                                 Client
                         </Form.Label>
                             <Col sm="7">
-                                <Select placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                                <Select isDisabled={!isModalAdd} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
                             </Col>
                         </Form.Group>
 
@@ -192,7 +210,7 @@ class gastos extends Component {
                                                 Project
                                             </Form.Label>
                                             <Col sm="7">
-                                                <Select placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                                <Select isDisabled={!isModalAdd} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
                                             </Col>
                                         </Form.Group>
 
@@ -309,7 +327,7 @@ class gastos extends Component {
                                             <col width="5%" />
                                         </colgroup>
                                         <TableHead>
-                                            <TableRow>
+                                            <TableRow key="theader">
                                                 <TableCell><b>Registered expenses</b></TableCell>
                                                 <TableCell></TableCell>
                                                 <TableCell></TableCell>
@@ -318,7 +336,7 @@ class gastos extends Component {
                                         </TableHead>
                                         <TableBody>
                                             {expenses.map((row) => (
-                                                <TableRow>
+                                                <TableRow key={row.uid}>
                                                     <TableCell>
                                                         <OverlayTrigger overlay={
                                                             <Tooltip>
@@ -338,7 +356,7 @@ class gastos extends Component {
                                                         <TableCell className="rightAlign"> {row.expenseTotal} </TableCell>
                                                     <TableCell></TableCell>
                                                     <TableCell>
-                                                        <FontAwesomeIcon icon={faEdit} className="legemblue" />
+                                                        <FontAwesomeIcon onClick={() => this.editExpense(row)} icon={faEdit} className="legemblue" />
                                                     </TableCell>
                                                 </TableRow>
                                             ))
@@ -365,5 +383,6 @@ export default connect(mapStateToProps, {
     getProjectByClient,
     addExpense,
     getExpenses,
-    getProjectsMapping
+    getProjectsMapping,
+    updateExpense
 })(withAuthorization(condition)(gastos));
