@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { updateExpense, addAlert, clearAlert, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
+import { updateExpense, deleteExpense, addAlert, clearAlert, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -20,6 +20,8 @@ import {
 } from '@material-ui/pickers';
 import * as ROLES from '../constants/roles';
 import { expenseClasses } from "../constants/enums";
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 const mapStateToProps = state => {
     return {
@@ -160,6 +162,13 @@ class gastos extends Component {
         });
     }
 
+    handleDeleteExpense = event => {
+        if(window.confirm('Are you sure you want to delete this expense?')) {
+            this.props.deleteExpense(this.state.selectedExpenseUid);
+        }
+        this.setState(INITIAL_STATE);
+    }
+
     renderModal(authUSer, isHidden) {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
@@ -269,6 +278,12 @@ class gastos extends Component {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
+                    {
+                        isModalAdd ? null : 
+                        <IconButton onClick={this.handleDeleteExpense} color="secondary" aria-label="delete">
+                            <DeleteIcon />
+                        </IconButton>
+                    }
                     <Button variant="secondary" onClick={this.handleClose}>
                         Cancel
                     </Button>
@@ -341,11 +356,11 @@ class gastos extends Component {
                                                     <TableCell>
                                                         <OverlayTrigger overlay={
                                                             <Tooltip>
-                                                                {row.expenseDate.toDate().toDateString()}
+                                                                {row.expenseDate?.toDate().toDateString()}
                                                                 <br/>
                                                                 {expenseClasses.find(obj => {
                                                                     return obj.value === row.expenseClass;
-                                                                }).label  }
+                                                                })?.label  }
                                                             </Tooltip>}>
                                                             <span className="d-inline-block">
                                                                 {this.props.clientsNames[row.expenseClient]} - {this.props.projectsNames[row.expenseProject]}
@@ -385,5 +400,6 @@ export default connect(mapStateToProps, {
     addExpense,
     getExpenses,
     getProjectsMapping,
-    updateExpense
+    updateExpense,
+    deleteExpense
 })(withAuthorization(condition)(gastos));

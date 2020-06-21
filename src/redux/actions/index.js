@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE } from "../../constants/action-types"; 
+    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE } from "../../constants/action-types"; 
 import { CLIENTS, PROJECTS, EXPENSES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -245,6 +245,21 @@ export function getExpenses(uid, byAttorney) {
     };
 }
 
+export function deleteExpense(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        firebase.firestore().collection(EXPENSES).doc(uid).delete().then(() => {
+            dispatch({ type: REMOVED_EXPENSE, payload: uid });
+            const alert = { type: AlertType.Success, message: "Expense successfully deleted."};
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }).catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
+    }
+}
+
 export function deleteClient(uid) {
     return function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
@@ -254,7 +269,7 @@ export function deleteClient(uid) {
             dispatch({ type: ADD_ALERT, payload: alert });
             setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
         }).catch(error => {
-            const alert = { type: AlertType.Error, message: error.message };
+            const alert = { type: AlertType.Error, message: error };
             dispatch({ type: ADD_ALERT, payload: alert });
         });
     }

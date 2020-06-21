@@ -221,9 +221,9 @@ class Proyectos extends Component {
                                             <TableBody>
                                                 {this.props.projects.map((row) => (
                                                     <TableRow hover key={row.projectTitle}>
-                                                    <TableCell component="th" scope="row">
-                                                        {row.projectTitle}
-                                                    </TableCell>
+                                                        <TableCell component="th" scope="row">
+                                                            {row.projectTitle}
+                                                        </TableCell>
                                                     </TableRow>
                                                 ))
                                                 }
