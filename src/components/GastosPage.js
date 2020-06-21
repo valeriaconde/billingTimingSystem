@@ -317,7 +317,7 @@ class gastos extends Component {
                                 </Container>
                             </Jumbotron>
                             :
-                            <div className="tableMargins">
+                            <div className="tableMargins topMargin">
                                 <TableContainer>
                                     <Table aria-label="simple table">
                                         <colgroup>
