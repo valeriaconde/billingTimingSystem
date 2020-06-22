@@ -1,6 +1,14 @@
 import React, { Component } from 'react';
-import { Row, Col, Accordion, Card, Container, Button, Form, Modal, Jumbotron } from 'react-bootstrap';
+import { Row, Col, OverlayTrigger, Tooltip, Container, Button, Form, Modal, Jumbotron } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
+import TableContainer from '@material-ui/core/TableContainer';
+import Table from '@material-ui/core/Table';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+import TableHead from '@material-ui/core/TableHead';
+import TableBody from '@material-ui/core/TableBody';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
 
 class tiemposPage extends Component {
     constructor(props) {
@@ -9,6 +17,103 @@ class tiemposPage extends Component {
 
         this.handleClose = this.handleClose.bind(this);
         this.handleShow = this.handleShow.bind(this);
+    }
+
+    renderModal() {
+        return (
+            <Modal show={this.state.showModal} onHide={this.handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Time register</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Client
+                            </Form.Label>
+                            <Col sm="5">
+                                <Form.Control as="select">
+                                    <option> Cliente 1 </option>
+                                    <option> Cliente 2 </option>
+                                </Form.Control>
+                            </Col>
+                        </Form.Group>
+
+                        {/* SOLO PROYECTOS DEL CLIENTE ELEGIDO EN LA OPCION ANTERIOR */}
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Project
+                            </Form.Label>
+                            <Col sm="5">
+                                <Form.Control as="select">
+                                    <option> Proyecto 1 </option>
+                                    <option> Proyecto 2 </option>
+                                </Form.Control>
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Title
+                            </Form.Label>
+                            <Col sm="5">
+                                <Form.Control as="textarea" rows="2" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Date
+                            </Form.Label>
+                            <Col sm="5">
+                                {/* DAY PICKER */}
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Time
+                            </Form.Label>
+                            <Col sm="5">
+                                <Container>
+                                    <Row>
+                                        <Col>
+                                            <Form.Control as="textarea" rows="1" column="3" />
+                                        </Col>
+                                        <Col>
+                                            <Form.Control as="select">
+                                                <option> 0 </option>
+                                                <option> 15 </option>
+                                                <option> 30 </option>
+                                                <option> 45 </option>
+                                            </Form.Control>
+                                        </Col>
+                                    </Row>
+                                </Container>
+                                <Container>
+                                    <Row>
+                                        <Col>
+                                            <Form.Label> hours </Form.Label>
+                                        </Col>
+                                        <Col>
+                                            <Form.Label> minutes </Form.Label>
+                                        </Col>
+                                    </Row>
+                                </Container>
+                            </Col>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={this.handleClose}>
+                        Cancel
+                    </Button>
+                    <Button className="legem-primary" onClick={this.handleClose}>
+                        Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        )
     }
 
     handleShow() {
@@ -26,174 +131,62 @@ class tiemposPage extends Component {
                     <div>
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
                             Register time
-                    </Button>
+                        </Button>
 
-                        {/* MODAL */}
-                        <Modal show={this.state.showModal} onHide={this.handleClose}>
-                            <Modal.Header closeButton>
-                                <Modal.Title>Time register</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <Form>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">
-                                            Client
-                                    </Form.Label>
-                                        <Col sm="5">
-                                            <Form.Control as="select">
-                                                <option> Cliente 1 </option>
-                                                <option> Cliente 2 </option>
-                                            </Form.Control>
-                                        </Col>
-                                    </Form.Group>
-
-                                    {/* SOLO PROYECTOS DEL CLIENTE ELEGIDO EN LA OPCION ANTERIOR */}
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">
-                                            Project
-                                    </Form.Label>
-                                        <Col sm="5">
-                                            <Form.Control as="select">
-                                                <option> Proyecto 1 </option>
-                                                <option> Proyecto 2 </option>
-                                            </Form.Control>
-                                        </Col>
-                                    </Form.Group>
-
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">
-                                            Title
-                                    </Form.Label>
-                                        <Col sm="5">
-                                            <Form.Control as="textarea" rows="2" />
-                                        </Col>
-                                    </Form.Group>
-
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">
-                                            Date
-                                    </Form.Label>
-                                        <Col sm="5">
-                                            {/* DAY PICKER */}
-                                        </Col>
-                                    </Form.Group>
-
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">
-                                            Time
-                                    </Form.Label>
-                                        <Col sm="5">
-                                            <Container>
-                                                <Row>
-                                                    <Col>
-                                                        <Form.Control as="textarea" rows="1" column="3" />
-                                                    </Col>
-                                                    <Col>
-                                                        <Form.Control as="select">
-                                                            <option> 0 </option>
-                                                            <option> 15 </option>
-                                                            <option> 30 </option>
-                                                            <option> 45 </option>
-                                                        </Form.Control>
-                                                    </Col>
-                                                </Row>
-                                            </Container>
-                                            <Container>
-                                                <Row>
-                                                    <Col>
-                                                        <Form.Label> hours </Form.Label>
-                                                    </Col>
-                                                    <Col>
-                                                        <Form.Label> minutes </Form.Label>
-                                                    </Col>
-                                                </Row>
-                                            </Container>
-                                        </Col>
-                                    </Form.Group>
-                                </Form>
-                            </Modal.Body>
-                            <Modal.Footer>
-                                <Button variant="secondary" onClick={this.handleClose}>
-                                    Cancel
-                            </Button>
-                                <Button className="legem-primary" onClick={this.handleClose}>
-                                    Save
-                            </Button>
-                            </Modal.Footer>
-                        </Modal>
-
-                        {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED TIMES*/}
                         <Jumbotron fluid>
                             <Container>
                                 <h1>You have no registered times</h1>
                             </Container>
                         </Jumbotron>
 
-                        {/* ELSE */}
-                        <Accordion className="topMargin leftMargin rightMargin" defaultActiveKey="0">
-                            <Card>
-                                <Accordion.Toggle as={Card.Header} eventKey="0" ><b>
-                                    <Container>
-                                        <Row>
-                                            <Col sm={8}>
-                                                CLIENTE - PROYECTO
-                                        </Col>
-                                            <Col sm={4}>
-                                                1h 15m
-                                        </Col>
-                                        </Row>
-                                    </Container>
-                                </b></Accordion.Toggle>
-                                <Accordion.Collapse eventKey="0">
-                                    <Card.Body>
-                                        <Card.Text> Descripcion </Card.Text>
-                                        <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                        <Card.Text>
-                                            <Container>
-                                                <Row>
-                                                    <Col sm={8}></Col>
-                                                    <Col sm={4}>
-                                                        <Button variant="outline-dark">Edit</Button>
-                                                        <Button variant="outline-danger" className="leftMargin">Delete</Button>
-                                                    </Col>
-                                                </Row>
-                                            </Container>
-                                        </Card.Text>
-                                    </Card.Body>
-                                </Accordion.Collapse>
-                            </Card>
-                            <Card>
-                                <Accordion.Toggle as={Card.Header} eventKey="1"><b>
-                                    <Container>
-                                        <Row>
-                                            <Col sm={8}>
-                                                CLIENTE - PROYECTO
-                                        </Col>
-                                            <Col sm={4}>
-                                                15m
-                                        </Col>
-                                        </Row>
-                                    </Container>
-                                </b></Accordion.Toggle>
-                                <Accordion.Collapse eventKey="1">
-                                    <Card.Body>
-                                        <Card.Text> Descripcion </Card.Text>
-                                        <Card.Text> 07 de marzo de 2019 </Card.Text>
-                                        <Card.Text>
-                                            <Container>
-                                                <Row>
-                                                    <Col sm={8}></Col>
-                                                    <Col sm={4}>
-                                                        <Button variant="outline-dark">Edit</Button>
-                                                        <Button variant="outline-danger" className="leftMargin">Delete</Button>
-                                                    </Col>
-                                                </Row>
-                                            </Container>
-                                        </Card.Text>
-                                    </Card.Body>
-                                </Accordion.Collapse>
-                            </Card>
-                        </Accordion>
+                        <div className="tableMargins topMargin">
+                            <TableContainer>
+                                <Table aria-label="simple table">
+                                    <colgroup>
+                                        <col width="80%" />
+                                        <col width="10%" />
+                                        <col width="5%" />
+                                        <col width="5%" />
+                                    </colgroup>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Registered times</b></TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+
+                                    {/* TABLE BODY IGUAL QUE GASTOS, EXCEPTO:
+                                        - TOOLTIP SOLO MUESTRA FECHA (NO HAY TIPO DE GASTO)
+                                        - HORAS Y MINUTOS EN LUGAR DE MONTO                                    
+                                    */}
+
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell>
+                                                <OverlayTrigger overlay={
+                                                    <Tooltip>
+                                                        <br />
+                                                    </Tooltip>
+                                                }>
+                                                    <span className="d-inline-block">
+                                                        <br />
+                                                    </span>
+                                                </OverlayTrigger>
+                                            </TableCell>
+                                            <TableCell className="rightAlign">
+
+                                            </TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell>
+                                                <FontAwesomeIcon icon={faEdit} className="legemblue" />
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </div>
                     </div>
                 }
             </AuthUserContext.Consumer>
