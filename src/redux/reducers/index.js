@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, UPDATED_EXPENSE, REMOVED_EXPENSE } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -10,11 +10,14 @@ const initialState = {
     projectsNames: {},
     projects: [],
     expenses: [],
+    times: [],
+    loadingTimes: false,
     loadingUsers: false,
     loadingClients: false,
     loadingProjects: false,
     loadingExpenses: false,
     loadedExpenseOnce: false,
+    loadedTimesOnce: false,
     loadingProjectsMapping: false
 };
   
@@ -34,7 +37,12 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === ADD_EXPENSE) {
         return Object.assign({}, state, {
             loadingExpenses: false,
-            expenses: state.expenses.concat([action.payload]).sort((a, b) => b.expenseDate - a.expenseDate),
+            expenses: state.expenses.concat([action.payload]).sort((a, b) => b.expenseDate - a.expenseDate)
+        });
+    } else if(action.type === ADD_TIME) {
+        return Object.assign({}, state, {
+            loadingTimes: false,
+            times: state.times.concat([action.payload]).sort((a, b) => b.timeDate - a.timeDate)
         });
     } else if(action.type === CLEAR_ALERT) {
         return Object.assign({}, state, {
@@ -55,6 +63,10 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === LOADING_CLIENTS) {
         return Object.assign({}, state, {
             loadingClients: true
+        });
+    } else if(action.type === LOADING_TIMES) {
+        return Object.assign({}, state, {
+            loadingTimes: true
         });
     } else if(action.type === LOADING_EXPENSES) {
         return Object.assign({}, state, {
@@ -77,6 +89,12 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingExpenses: false,
             expenses: tmp.sort((a, b) => b.expenseDate - a.expenseDate)
+        });
+    } else if(action.type === REMOVED_TIME) {
+        let tmp = state.times.filter(t => t.uid !== action.payload);
+        return Object.assign({}, state, {
+            loadingTimes: false,
+            times: tmp.sort((a, b) => b.timeDate - a.timeDate)
         });
     } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
@@ -113,6 +131,12 @@ function rootReducer(state = initialState, action) {
             loadingExpenses: false,
             loadedExpenseOnce: true
         });
+    } else if(action.type === TIMES_LOADED) {
+        return Object.assign({}, state, {
+            times: action.payload.sort((a, b) => b.timeDate - a.timeDate),
+            loadingTimes: false,
+            loadedTimesOnce: true
+        });
     } else if(action.type === UPDATED_USER) {
         const email = action.payload.email;
         let tmp = state.users.filter(u => { return u.email !== email });
@@ -137,6 +161,14 @@ function rootReducer(state = initialState, action) {
             loadingExpenses: false,
             expenses: tmp.sort((a, b) => b.expenseDate - a.expenseDate)
         })
+    } else if(action.type === UPDATED_TIME) {
+        const uid = action.payload.uid;
+        let tmp = state.times.filter(t => t.uid !== uid);
+        tmp.push(action.payload);
+        return Object.assign({}, state, {
+            loadingTimes: false,
+            times: tmp.sort((a, b) => b.timeDate - a.timeDate)
+        });
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {
             loadingClients: false,
