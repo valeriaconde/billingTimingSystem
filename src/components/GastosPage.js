@@ -78,6 +78,7 @@ class gastos extends Component {
     }
 
     isFloat(n) {
+        n = n.toString();
         return n.length > 0 && !isNaN(n) && n > 0;
     }
 
