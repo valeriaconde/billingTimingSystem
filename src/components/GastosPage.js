@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { updateExpense, deleteExpense, addAlert, clearAlert, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
+import { updateExpense, deleteExpense, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -12,8 +12,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
@@ -25,7 +25,6 @@ import DeleteIcon from '@material-ui/icons/Delete';
 
 const mapStateToProps = state => {
     return {
-        alerts: state.alerts,
         clients: state.clients,
         loadingClients: state.loadingClients,
         users: state.users,
@@ -78,6 +77,7 @@ class gastos extends Component {
     }
 
     isFloat(n) {
+        n = n.toString();
         return n.length > 0 && !isNaN(n) && n > 0;
     }
 
@@ -127,7 +127,7 @@ class gastos extends Component {
         const { selectedExpenseUid, isModalAdd, selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
 
         if (!this.isFloat(expenseTotal)) return;
-        if (expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
+        if (selectedDate == null || expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
 
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
 
@@ -241,7 +241,7 @@ class gastos extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">Date</Form.Label>
                                             <Col sm="7">
-                                                {/* DAY PICKER */}
+                                                {/* DATE PICKER */}
                                                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                                                     <KeyboardDatePicker
                                                         disableToolbar
@@ -273,7 +273,8 @@ class gastos extends Component {
                                                 <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
                                             </Col>
                                         </Form.Group>
-                                </>)
+                                    </>
+                                )
                         }
                     </Form>
                 </Modal.Body>
@@ -295,7 +296,7 @@ class gastos extends Component {
         );
     }
 
-    getExpenses(authUser) {
+    getExpenses = authUser => {
         let self = this;
         if(!self.props.loadedExpenseOnce) {
             self.props.getExpenses(authUser.uid, true);
@@ -324,7 +325,6 @@ class gastos extends Component {
                         {/* EXPENSES */}
                         {this.getExpenses(authUser)}
                         {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
-
                         {
                             expenses.length === 0 ? 
                             <Jumbotron fluid>
@@ -391,8 +391,6 @@ class gastos extends Component {
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
-    clearAlert,
-    addAlert,
     getClients,
     getUsers,
     addProject,

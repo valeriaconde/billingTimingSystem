@@ -1,7 +1,7 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, 
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE } from "../../constants/action-types"; 
-import { CLIENTS, PROJECTS, EXPENSES } from '../../constants/collections';
+    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME } from "../../constants/action-types"; 
+import { CLIENTS, PROJECTS, EXPENSES, TIMES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 import firebase from "../../components/firestone";
@@ -86,6 +86,30 @@ export function addExpense(payload) {
     }
 }
 
+export function addTime(payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        const db = firebase.firestore();
+        db.collection(TIMES).add(payload)
+            .then(docRef => {
+                docRef.get()
+                    .then(doc => {
+                        if(doc.exists) {
+                            const time = { ...doc.data(), uid: doc.id };
+                            dispatch({ type: ADD_TIME, payload: time });
+                            const alert = { type: AlertType.Success, message: "Time successfully registered." };
+                            dispatch({ type: ADD_ALERT, payload: alert });
+                            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                        }
+                    });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
 export function updateClient(uid, payload) {
     return function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
@@ -118,6 +142,26 @@ export function updateExpense(uid, payload) {
                     dispatch({ type: ADD_ALERT, payload: alert });
                     setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
                 });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function updateTime(uid, payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        const docRef = firebase.firestore().collection(TIMES).doc(uid);
+        docRef.update(payload)
+            .then(() => {
+                docRef.get().then(snapshot => {
+                    dispatch({ type: UPDATED_TIME, payload: { uid: uid, ...snapshot.data() } });
+                    const alert = { type: AlertType.Success, message: "Time successfully updated." };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                })
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error.message };
@@ -245,15 +289,53 @@ export function getExpenses(uid, byAttorney) {
     };
 }
 
+export function getTimes(uid, byAttorney) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        firebase.firestore().collection(TIMES)
+            .where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
+            .where("isBilled", "==", false)
+            .get()
+            .then(querySnapshot => {
+                let timesList = [];
+                querySnapshot.forEach(doc => {
+                    timesList.push({ ...doc.data(), uid: doc.id });
+                });
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
 export function deleteExpense(uid) {
     return function(dispatch) {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
         firebase.firestore().collection(EXPENSES).doc(uid).delete().then(() => {
             dispatch({ type: REMOVED_EXPENSE, payload: uid });
-            const alert = { type: AlertType.Success, message: "Expense successfully deleted."};
+            const alert = { type: AlertType.Success, message: "Expense successfully deleted." };
             dispatch({ type: ADD_ALERT, payload: alert });
             setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-        }).catch(error => {
+        })
+        .catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
+    }
+}
+
+export function deleteTime(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        firebase.firestore().collection(TIMES).doc(uid).delete().then(() => {
+            dispatch({ type: REMOVED_TIME, payload: uid });
+            const alert = { type: AlertType.Success, message: "Time successfully deleted." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        })
+        .catch(error => {
             const alert = { type: AlertType.Error, message: error };
             dispatch({ type: ADD_ALERT, payload: alert });
         });
