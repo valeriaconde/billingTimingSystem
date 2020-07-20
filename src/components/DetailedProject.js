@@ -7,8 +7,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrash, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 
 const INITIAL_STATE = {
     showModal: false,
@@ -17,7 +17,7 @@ const INITIAL_STATE = {
 class detailedProject extends Component {
     constructor(props) {
         super(props);
-        this.state = { ...INITIAL_STATE };
+        this.state = { ...INITIAL_STATE, clientId: this.props.match.params.clientId, projectId: this.props.match.params.projectId  };
         this.handleClose = this.handleClose.bind(this);
         this.handleShow = this.handleShow.bind(this);
     }

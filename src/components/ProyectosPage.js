@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
+import { Link } from 'react-router-dom';
 import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
 import { connect } from "react-redux";
 import TableContainer from '@material-ui/core/TableContainer';
@@ -220,9 +221,9 @@ class Proyectos extends Component {
                                             :
                                             <TableBody>
                                                 {this.props.projects.map((row) => (
-                                                    <TableRow hover key={row.projectTitle}>
+                                                    <TableRow hover key={row.projectTitle} >
                                                         <TableCell component="th" scope="row">
-                                                            {row.projectTitle}
+                                                            <Link to={`/projects/${row.projectClient}/${row.uid}`}>{row.projectTitle}</Link>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))

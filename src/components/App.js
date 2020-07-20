@@ -89,7 +89,9 @@ class App extends Component {
 
                         <Route path="/password/update" exact component={PassChange} />
 
-                        <Route path="/project/details" exact component={detailedProject}/>
+                        <Route path="/project/details" exact component={detailedProject} />
+
+                        <Route path="/projects/:clientId/:projectId" component={detailedProject} />
 
                         <Route component={NotFoundPage} />
                     </Switch>
