@@ -9,9 +9,10 @@ import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import BarLoader from "react-spinners/BarLoader";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses } from "../redux/actions/index";
 import { connect } from "react-redux";
+import { expenseClasses } from "../constants/enums";
 
 const mapStateToProps = state => {
     return {
@@ -59,11 +60,11 @@ class detailedProject extends Component {
 
         let self = this;
         if(!self.props.loadedTimesOnce) {
-            self.props.getTimes(this.props.match.params.projectId, true);
+            self.props.getTimes(this.props.match.params.projectId, false);
         }
 
         if(!self.props.loadedExpenseOnce) {
-            self.props.getExpenses(this.props.match.params.projectId, true);
+            self.props.getExpenses(this.props.match.params.projectId, false);
         }
     }
 
@@ -113,6 +114,11 @@ class detailedProject extends Component {
     }
 
     render() {
+        const expenses = this.props.expenses !== null ?
+            this.props.expenses.map((e, i) => ({
+                ...e
+            })) : [];
+
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
@@ -186,51 +192,36 @@ class detailedProject extends Component {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        <TableRow>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={
-                                                    <Tooltip id="tooltip">
-                                                        Fecha
-                                                        <br />
-                                                        Tipo de gasto
-                                                    </Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        VCN - Vuelo NYC
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell className="rightAlign"> 8000</TableCell>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell>
-                                                <FontAwesomeIcon icon={faTrash} color="red" />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell> OCM - Pago de peritos</TableCell>
-                                            <TableCell className="rightAlign" >6000 </TableCell>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
-                                                    <span className="d-inline-block">
-                                                        <FontAwesomeIcon icon={faCheckCircle} color="green" />
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell>
-                                                <FontAwesomeIcon icon={faTrash} color="red" />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>INICIALES - NOMBRE DEL GASTO  </TableCell>
-                                            <TableCell className="rightAlign">MONTO</TableCell>
-                                            <TableCell> D </TableCell>
-                                            <TableCell>B</TableCell>
-                                        </TableRow>
+                                        {expenses.map((row) => (
+                                            <TableRow key={row.uid}>
+                                                <TableCell>
+                                                    <OverlayTrigger overlay={
+                                                        <Tooltip>
+                                                            {row.expenseDate?.toDate().toDateString()}
+                                                            <br/>
+                                                            {expenseClasses.find(obj => {
+                                                                return obj.value === row.expenseClass;
+                                                            })?.label  }
+                                                        </Tooltip>}>
+                                                        <span className="d-inline-block">
+                                                            {`${this.props.users.find(u => u.uid === row.expenseAttorney)?.name} - ${row.expenseTitle}`}
+                                                        </span>
+                                                    </OverlayTrigger>
+                                                </TableCell>
+                                                    <TableCell className="rightAlign"> {row.expenseTotal} </TableCell>
+                                                <TableCell>
+                                                    <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
+                                                        <span className="d-inline-block">
+                                                            {row.isBilled ? <FontAwesomeIcon icon={faCheckCircle} color="green" /> : null}
+                                                        </span>
+                                                    </OverlayTrigger>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <FontAwesomeIcon onClick={() => this.editExpense(row)} icon={faEdit} className="legemblue" />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                        }
                                         <TableRow>
                                             <TableCell> Total expenses  </TableCell>
                                             <TableCell className="rightAlign">14,900</TableCell>
