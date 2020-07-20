@@ -208,7 +208,7 @@ class detailedProject extends Component {
                                                         </span>
                                                     </OverlayTrigger>
                                                 </TableCell>
-                                                    <TableCell className="rightAlign"> {row.expenseTotal} </TableCell>
+                                                    <TableCell className="rightAlign"> ${row.expenseTotal} </TableCell>
                                                 <TableCell>
                                                     <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
                                                         <span className="d-inline-block">
