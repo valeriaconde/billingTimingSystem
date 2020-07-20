@@ -119,6 +119,11 @@ class detailedProject extends Component {
                 ...e
             })) : [];
 
+        const times = this.props.times !== null ?
+            this.props.times.map(t => ({
+                ...t
+            })) : [];
+
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
@@ -252,34 +257,27 @@ class detailedProject extends Component {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        <TableRow>
+                                    {times.map((row) => (
+                                        <TableRow key={row.uid}>
                                             <TableCell>
-
                                                 <OverlayTrigger overlay={
-                                                    <Tooltip id="tooltip">
-                                                        Fecha
-                                                    </Tooltip>}>
+                                                    <Tooltip>
+                                                        {row.timeDate?.toDate().toDateString()}
+                                                    </Tooltip>
+                                                }>
                                                     <span className="d-inline-block">
-                                                        VCN - Revision de contrato
+                                                        {`${this.props.users.find(u => u.uid === row.timeAttorney)?.name} - ${row.timeTitle}`}
                                                     </span>
                                                 </OverlayTrigger>
-                                                </TableCell>
-                                            <TableCell className="rightAlign"> 15m</TableCell>
-                                            <TableCell> D  </TableCell>
-                                            <TableCell> B </TableCell>
+                                            </TableCell>
+                                            <TableCell className="rightAlign">{`${row.timeHours}:${row.timeMinutes} hrs`}</TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell>
+                                                <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" />
+                                            </TableCell>
                                         </TableRow>
-                                        <TableRow>
-                                            <TableCell> OCM - Negociacion JCA  ksjnd akhsd ksd ksjd kdf kdj fkj dkjf skj fkjs kfjs kd skd</TableCell>
-                                            <TableCell className="rightAlign" >2h 30m </TableCell>
-                                            <TableCell> D </TableCell>
-                                            <TableCell> B </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>LLM - Viaje </TableCell>
-                                            <TableCell className="rightAlign">3h</TableCell>
-                                            <TableCell> D </TableCell>
-                                            <TableCell> B </TableCell>
-                                        </TableRow>
+                                        ))
+                                        }
                                         <TableRow>
                                             <TableCell>Total time </TableCell>
                                             <TableCell className="rightAlign">5h 45m</TableCell>
