@@ -26,3 +26,4 @@ export const ADD_TIME = "ADD_TIME";
 export const TIMES_LOADED = "TIMES_LOADED";
 export const REMOVED_TIME = "REMOVED_TIME";
 export const UPDATED_TIME = "UPDATED_TIME";
+export const PROJECT_LOADED = "PROJECT_LOADED";

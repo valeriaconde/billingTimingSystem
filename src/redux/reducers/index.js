@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -9,6 +9,7 @@ const initialState = {
     clientsNames: {},
     projectsNames: {},
     projects: [],
+    project: {},
     expenses: [],
     times: [],
     loadingTimes: false,
@@ -123,6 +124,11 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === PROJECTS_LOADED) {
         return Object.assign({}, state, {
             projects: action.payload,
+            loadingProjects: false
+        });
+    } else if(action.type === PROJECT_LOADED) {
+        return Object.assign({}, state, {
+            project: action.payload,
             loadingProjects: false
         });
     } else if(action.type === EXPENSES_LOADED) {

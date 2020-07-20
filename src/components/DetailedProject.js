@@ -7,8 +7,28 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
+import BarLoader from "react-spinners/BarLoader";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses } from "../redux/actions/index";
+import { connect } from "react-redux";
+
+const mapStateToProps = state => {
+    return {
+        loadingProjects: state.loadingProjects,
+        project: state.project,
+        users: state.users,
+        loadingUsers: state.loadingUsers,
+        clients: state.clients,
+        clientsNames: state.clientsNames,
+        expenses: state.expenses,
+        loadingExpenses: state.loadingExpenses,
+        times: state.times,
+        loadingTimes: state.loadingTimes,
+        projectsNames: state.projectsNames,
+        loadingProjectsMapping: state.loadingProjectsMapping
+     };
+};
 
 const INITIAL_STATE = {
     showModal: false,
@@ -20,6 +40,31 @@ class detailedProject extends Component {
         this.state = { ...INITIAL_STATE, clientId: this.props.match.params.clientId, projectId: this.props.match.params.projectId  };
         this.handleClose = this.handleClose.bind(this);
         this.handleShow = this.handleShow.bind(this);
+    }
+
+    componentDidMount() {
+        this.props.getProjectById(this.props.match.params.projectId);
+
+        if (this.props.clients.length === 0) {
+            this.props.getClients();
+        }
+
+        if (this.props.users.length === 0) {
+            this.props.getUsers();
+        }
+
+        if (Object.keys(this.props.projectsNames).length === 0) {
+            this.props.getProjectsMapping();
+        }
+
+        let self = this;
+        if(!self.props.loadedTimesOnce) {
+            self.props.getTimes(this.props.match.params.projectId, true);
+        }
+
+        if(!self.props.loadedExpenseOnce) {
+            self.props.getExpenses(this.props.match.params.projectId, true);
+        }
     }
 
     handleShow() {
@@ -71,9 +116,11 @@ class detailedProject extends Component {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
+                    this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
+                    <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects}></BarLoader> :
                     <div>
-                        <h3 className="blueLetters topMargin leftMargin"> Titulo del proyecto </h3>
-                        <h6 className="bigLeftMargin"> For Cloos Robotic Mexico, S.A. de C.V. </h6>
+                        <h3 className="blueLetters topMargin leftMargin"> {this.props.project?.projectTitle} </h3>
+                        <h6 className="bigLeftMargin"> For {this.props.clientsNames[this.state.clientId]} </h6>
 
                         <Container className="bigTopMargin">
                             <Row>
@@ -81,13 +128,13 @@ class detailedProject extends Component {
                                     <Card style={{ width: '18rem' }} >
                                         <Card.Body>
                                             <Card.Title>Attorney</Card.Title>
-                                            <Card.Text> Lesly Martinez </Card.Text>
+                                            <Card.Text> { this.props.users.find(u => u.uid === this.props.project?.appointedIds)?.name || "None" } </Card.Text>
                                         </Card.Body>
                                     </Card>
                                     <Card style={{ width: '18rem' }} className="topMargin">
                                         <Card.Body>
-                                            <Card.Title> Billed by fixed fee</Card.Title>
-                                            <Card.Text> $4000 </Card.Text>
+                                            <Card.Title> Billed by { this.props.project?.projectFixedFee ? "fixed fee" : "by the hour" } </Card.Title>
+                                            <Card.Text> { this.props.project?.projectFixedFee ? `$${this.props.project?.projectFee}` : null } </Card.Text>
                                         </Card.Body>
                                     </Card>
                                 </Col>
@@ -263,4 +310,11 @@ class detailedProject extends Component {
 }
 
 const condition = authUser => !!authUser;
-export default withAuthorization(condition)(detailedProject);
+export default connect(mapStateToProps, {
+    getProjectById,
+    getClients,
+    getProjectsMapping,
+    getUsers,
+    getTimes,
+    getExpenses
+})(withAuthorization(condition)(detailedProject));

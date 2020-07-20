@@ -69,14 +69,10 @@ class Proyectos extends Component {
 
         if(projectTitle === '' || selectedClientModal == null) return;
 
-        // Picks uid for each appointed
-        const pick = (...props) => o => props.reduce((a, e) => ({ ...a, [e]: o[e] }), {});
-        const appointedIds = selectedAppointed?.length > 0 ? selectedAppointed.map(pick('uid')) : [];
-
         const payload = {
             projectTitle: projectTitle,
             projectClient: selectedClientModal.uid,
-            appointedIds: appointedIds,
+            appointedIds: selectedAppointed.value,
             projectFixedFee: projectFixedFee === 'true',
             projectFee: Number(projectFee),
             isOpen: true
@@ -149,7 +145,7 @@ class Proyectos extends Component {
                             <Form.Label column sm="3">Attorney</Form.Label>
                             <Col sm="7">
                                 {/* USERS */}
-                                <Select value={selectedAppointed} placeholder="Select appointed..." onChange={this.handleChangeMulti} options={userSelect} isMulti />
+                                <Select value={selectedAppointed} placeholder="Select appointed..." onChange={this.handleChangeMulti} options={userSelect} />
                             </Col>
                         </Form.Group>
 
