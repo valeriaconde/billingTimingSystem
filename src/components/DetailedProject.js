@@ -10,7 +10,12 @@ import TableBody from '@material-ui/core/TableBody';
 import BarLoader from "react-spinners/BarLoader";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faEdit } from '@fortawesome/free-solid-svg-icons';
-import { getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses } from "../redux/actions/index";
+import DateFnsUtils from '@date-io/date-fns';
+import {
+    MuiPickersUtilsProvider,
+    KeyboardDatePicker,
+} from '@material-ui/pickers';
+import { getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
 
@@ -27,12 +32,16 @@ const mapStateToProps = state => {
         times: state.times,
         loadingTimes: state.loadingTimes,
         projectsNames: state.projectsNames,
-        loadingProjectsMapping: state.loadingProjectsMapping
+        loadingProjectsMapping: state.loadingProjectsMapping,
+        loadedPaymentsOnce: state.loadedPaymentsOnce,
+        payments: state.payments
      };
 };
 
 const INITIAL_STATE = {
     showModal: false,
+    selectedDate: new Date(),
+    paymentTotal: 0
 };
 
 class detailedProject extends Component {
@@ -66,6 +75,19 @@ class detailedProject extends Component {
         if(!self.props.loadedExpenseOnce) {
             self.props.getExpenses(this.props.match.params.projectId, false);
         }
+
+        if(!self.props.loadedPaymentsOnce) {
+            self.props.getPayments(this.props.match.params.projectId);
+        }
+    }
+
+    isFloat(n) {
+        n = n.toString();
+        return n.length > 0 && !isNaN(n) && n > 0;
+    }
+
+    onChange = event => {
+        this.setState({ [event.target.name]: event.target.value });
     }
 
     handleShow() {
@@ -76,7 +98,38 @@ class detailedProject extends Component {
         this.setState({ showModal: false });
     }
 
+    handleDateChange = selectedDate => {
+        this.setState({ selectedDate });
+    };
+
+    handleNewPayment = event => {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const { paymentTotal, selectedDate } = this.state;
+
+        if (!this.isFloat(paymentTotal)) return;
+        if (selectedDate == null) return;
+
+        const payload = {
+            paymentTotal: Number(paymentTotal),
+            paymentDate: selectedDate,
+            paymentProject: this.props.match.params.projectId
+        };
+
+        this.setState(INITIAL_STATE);
+
+        this.props.addDownPayment(payload);
+    }
+
     renderModal() {
+        const { selectedDate, paymentTotal } = this.state;
+
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
@@ -87,15 +140,30 @@ class detailedProject extends Component {
                     <Form>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Date</Form.Label>
-                            <Col sm="5">
+                            <Col sm="7">
                                 {/* DAY PICKER */}
+                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                                    <KeyboardDatePicker
+                                        
+                                        variant="inline"
+                                        format="dd/MM/yyyy"
+                                        margin="normal"
+                                        id="date-picker-inline"
+                                        label="Enter date dd/mm/yyyy"
+                                        value={selectedDate}
+                                        onChange={this.handleDateChange}
+                                        KeyboardButtonProps={{
+                                            'aria-label': 'change date',
+                                        }}
+                                    />
+                                </MuiPickersUtilsProvider>
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Amount</Form.Label>
-                            <Col sm="5">
-                                <Form.Control as="textarea" rows="1" />
+                            <Col sm="7">
+                                <Form.Control isInvalid={!this.isFloat(paymentTotal)} name="paymentTotal" value={paymentTotal} onChange={this.onChange} required />
                             </Col>
                         </Form.Group>
                     </Form>
@@ -105,7 +173,7 @@ class detailedProject extends Component {
                     <Button variant="secondary" onClick={this.handleClose}>
                         Cancel
                             </Button>
-                    <Button className="legem-primary" onClick={this.handleClose}>
+                    <Button className="legem-primary" onClick={this.handleNewPayment}>
                         Save
                     </Button>
                 </Modal.Footer>
@@ -131,6 +199,11 @@ class detailedProject extends Component {
         const times = this.props.times !== null ?
             this.props.times.map(t => ({
                 ...t
+            })) : [];
+
+        const payments = this.props.payments !== null ?
+            this.props.payments.map(p => ({
+                ...p
             })) : [];
 
         return (
@@ -165,14 +238,12 @@ class detailedProject extends Component {
                                             <TableContainer>
                                                 <Table aria-label="simple table">
                                                     <TableBody>
-                                                        <TableRow>
-                                                            <TableCell> 16/02/20 </TableCell>
-                                                            <TableCell className="centerText"> 4000 </TableCell>
-                                                        </TableRow>
-                                                        <TableRow>
-                                                            <TableCell> 03/03/20 </TableCell>
-                                                            <TableCell className="centerText"> 600 </TableCell>
-                                                        </TableRow>
+                                                        {payments.map((row) => (
+                                                            <TableRow key={row.uid}>
+                                                                <TableCell>{row.paymentDate?.toDate().toDateString()}</TableCell>
+                                                                <TableCell className="centerText">${row.paymentTotal}</TableCell>
+                                                            </TableRow>
+                                                        ))}
                                                     </TableBody>
                                                 </Table>
                                             </TableContainer>
@@ -314,5 +385,7 @@ export default connect(mapStateToProps, {
     getProjectsMapping,
     getUsers,
     getTimes,
-    getExpenses
+    getExpenses,
+    addDownPayment,
+    getPayments
 })(withAuthorization(condition)(detailedProject));
