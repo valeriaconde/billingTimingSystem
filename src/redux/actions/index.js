@@ -347,7 +347,6 @@ export function getTimes(uid, byAttorney) {
 }
 
 export function getPayments(uid) {
-    console.log(uid);
     return function(dispatch) {
         dispatch({ type: LOADING_PAYMENT, payload: {} });
         let docRef = firebase.firestore().collection(PAYMENTS).where("paymentProject", "==", uid);
