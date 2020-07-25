@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Select from 'react-select';
 import { Container, Row, Col, Card, Button, Form, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import TableContainer from '@material-ui/core/TableContainer';
@@ -10,18 +11,22 @@ import TableBody from '@material-ui/core/TableBody';
 import BarLoader from "react-spinners/BarLoader";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faEdit } from '@fortawesome/free-solid-svg-icons';
+import * as ROLES from '../constants/roles';
 import DateFnsUtils from '@date-io/date-fns';
 import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 const mapStateToProps = state => {
     return {
         loadingProjects: state.loadingProjects,
+        projects: state.projects,
         project: state.project,
         users: state.users,
         loadingUsers: state.loadingUsers,
@@ -40,6 +45,7 @@ const mapStateToProps = state => {
 
 const INITIAL_STATE = {
     showModal: false,
+    showExpenseModal: false,
     selectedDate: new Date(),
     paymentTotal: 0
 };
@@ -48,8 +54,6 @@ class detailedProject extends Component {
     constructor(props) {
         super(props);
         this.state = { ...INITIAL_STATE, clientId: this.props.match.params.clientId, projectId: this.props.match.params.projectId  };
-        this.handleClose = this.handleClose.bind(this);
-        this.handleShow = this.handleShow.bind(this);
     }
 
     componentDidMount() {
@@ -79,6 +83,10 @@ class detailedProject extends Component {
         if(!self.props.loadedPaymentsOnce) {
             self.props.getPayments(this.props.match.params.projectId);
         }
+
+        if (Object.keys(this.props.projectsNames).length === 0) {
+            this.props.getProjectsMapping();
+        }
     }
 
     isFloat(n) {
@@ -86,16 +94,26 @@ class detailedProject extends Component {
         return n.length > 0 && !isNaN(n) && n > 0;
     }
 
+    handleChangeExpense = selectedExpenseModal => {
+        this.setState({ selectedExpenseModal });
+    }
+
+    handleAttorneyModal = selectedAttorneyModal => {
+        this.setState({ selectedAttorneyModal });
+    }
+
     onChange = event => {
         this.setState({ [event.target.name]: event.target.value });
     }
 
-    handleShow() {
-        this.setState({ showModal: true });
+    handleShow = modal => {
+        if (modal === 1) this.setState({ showModal: true });
+        else if(modal === 2) this.setState({ showExpenseModal: true });
     }
 
-    handleClose() {
-        this.setState({ showModal: false });
+    handleClose = modal => {
+        if(modal === 1) this.setState({ showModal: false });
+        else if(modal === 2) this.setState({ showExpenseModal: false });
     }
 
     handleDateChange = selectedDate => {
@@ -131,7 +149,7 @@ class detailedProject extends Component {
         const { selectedDate, paymentTotal } = this.state;
 
         return (
-            <Modal show={this.state.showModal} onHide={this.handleClose}>
+            <Modal show={this.state.showModal} onHide={() => this.handleClose(1)}>
                 <Modal.Header closeButton>
                     <Modal.Title>Add down payment</Modal.Title>
                 </Modal.Header>
@@ -170,10 +188,192 @@ class detailedProject extends Component {
                 </Modal.Body>
 
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>
+                    <Button variant="secondary" onClick={() => this.handleClose(1)}>
                         Cancel
                             </Button>
                     <Button className="legem-primary" onClick={this.handleNewPayment}>
+                        Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    handleNewExpense = event => {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const { selectedExpenseUid, isModalAdd, selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
+
+        if (!this.isFloat(expenseTotal)) return;
+        if (selectedDate == null || expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
+
+        var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
+
+        const payload = {
+            expenseTitle: expenseTitle,
+            expenseTotal: Number(expenseTotal),
+            expenseDate: selectedDate,
+            expenseClient: selectedClientModal.uid,
+            expenseProject: selectedProjectModal.uid,
+            expenseClass: selectedExpenseModal.value,
+            expenseAttorney: att,
+            isBilled: false
+        };
+
+        this.setState(INITIAL_STATE);
+
+        if (isModalAdd) this.props.addExpense(payload);
+        else this.props.updateExpense(selectedExpenseUid, payload);
+    }
+
+    editExpense = expense => {
+        this.setState({
+            selectedClientModal: { value: expense.expenseClient, label: this.props.clientsNames[expense.expenseClient], uid: expense.expenseClient },
+            selectedProjectModal: { value: expense.expenseProject, label: this.props.projectsNames[expense.expenseProject], uid: expense.expenseProject },
+            selectedAttorneyModal: { value: expense.expenseAttorney, label: this.props.users.find(u => u.uid === expense.expenseAttorney)?.name},
+            expenseTitle: expense.expenseTitle,
+            expenseTotal: expense.expenseTotal,
+            selectedDate: expense.expenseDate.toDate(),
+            selectedExpenseModal: expenseClasses.find(obj => obj.value === expense.expenseClass),
+            showExpenseModal: true,
+            isModalAdd: false,
+            selectedExpenseUid: expense.uid
+        });
+    }
+
+    handleDeleteExpense = event => {
+        if(window.confirm('Are you sure you want to delete this expense?')) {
+            this.props.deleteExpense(this.state.selectedExpenseUid);
+        }
+        this.setState(INITIAL_STATE);
+    }
+
+    renderExpenseModal(authUSer, isHidden) {
+        const clientSelect = this.props.clients !== null ?
+            this.props.clients.map((c, i) => ({
+                label: c.denomination,
+                value: c.uid,
+                ...c
+            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+
+        const projectSelect = this.props.projects !== null ?
+            this.props.projects.map((p, i) => ({
+                label: p.projectTitle,
+                value: p.uid,
+                ...p
+            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+
+        const userSelect = this.props.users !== null ?
+            this.props.users.map((u, i) => ({
+                label: u.name,
+                value: u.uid,
+                ...u
+            })).sort((a, b) => a.name.localeCompare(b.name)) : [];
+
+        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
+
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
+        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
+        return (
+            <Modal show={this.state.showExpenseModal} onHide={() => this.handleClose(2)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>New expense</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={this.handleNewExpense}>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Client
+                        </Form.Label>
+                            <Col sm="7">
+                                <Select isDisabled={!isModalAdd} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                            </Col>
+                        </Form.Group>
+
+                        {
+                            selectedClientModal == null ? null :
+                                (this.props.loadingProjects ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingUsers}></BarLoader> :
+                                    <>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">
+                                                Project
+                                            </Form.Label>
+                                            <Col sm="7">
+                                                <Select isDisabled={!isModalAdd} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Title</Form.Label>
+                                            <Col sm="7">
+                                                <Form.Control isInvalid={expenseTitle.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Amount</Form.Label>
+                                            <Col sm="7">
+                                                <Form.Control isInvalid={!this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Date</Form.Label>
+                                            <Col sm="7">
+                                                {/* DATE PICKER */}
+                                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                                                    <KeyboardDatePicker
+                                                        disableToolbar
+                                                        variant="inline"
+                                                        format="dd/MM/yyyy"
+                                                        margin="normal"
+                                                        id="date-picker-inline"
+                                                        label="Enter date dd/mm/yyyy"
+                                                        value={selectedDate}
+                                                        onChange={this.handleDateChange}
+                                                        KeyboardButtonProps={{
+                                                            'aria-label': 'change date',
+                                                        }}
+                                                    />
+                                                </MuiPickersUtilsProvider>
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Type</Form.Label>
+                                            <Col sm="7">
+                                                <Select placeholder="Select class..." options={expenseClasses} value={selectedExpenseModal} onChange={this.handleChangeExpense} />
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">Attorney</Form.Label>
+                                            <Col sm="7">
+                                                <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
+                                            </Col>
+                                        </Form.Group>
+                                    </>
+                                )
+                        }
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    {
+                        isModalAdd ? null : 
+                        <IconButton onClick={this.handleDeleteExpense} color="secondary" aria-label="delete">
+                            <DeleteIcon />
+                        </IconButton>
+                    }
+                    <Button variant="secondary" onClick={() => this.handleClose(2)}>
+                        Cancel
+                    </Button>
+                    <Button className="legem-primary" type="submit" onClick={this.handleNewExpense} >
                         Save
                     </Button>
                 </Modal.Footer>
@@ -212,6 +412,9 @@ class detailedProject extends Component {
                     this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
                     <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects}></BarLoader> :
                     <div>
+                        {this.renderModal()}
+                        {this.renderExpenseModal(authUser, !authUser?.roles[ROLES.ADMIN])}
+
                         <h3 className="blueLetters topMargin leftMargin"> {this.props.project?.projectTitle} </h3>
                         <h6 className="bigLeftMargin"> For {this.props.clientsNames[this.state.clientId]} </h6>
 
@@ -249,14 +452,12 @@ class detailedProject extends Component {
                                             </TableContainer>
                                         </Card.Body>
                                         <Card.Body className="rightAlign">
-                                            <Button variant="outline-success" onClick={this.handleShow} >Add</Button>
+                                            <Button variant="outline-success" onClick={() => this.handleShow(1)} >Add</Button>
                                         </Card.Body>
                                     </Card>
                                 </Col>
                             </Row>
                         </Container>
-
-                        {this.renderModal()}
 
                         {/* EXPENSES TABLE */}
                         <div className="tableMargins ">
@@ -387,5 +588,7 @@ export default connect(mapStateToProps, {
     getTimes,
     getExpenses,
     addDownPayment,
-    getPayments
+    getPayments,
+    updateExpense,
+    deleteExpense
 })(withAuthorization(condition)(detailedProject));
