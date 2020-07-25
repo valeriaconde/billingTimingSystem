@@ -17,7 +17,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
@@ -46,6 +46,7 @@ const mapStateToProps = state => {
 const INITIAL_STATE = {
     showModal: false,
     showExpenseModal: false,
+    showTimeModal: false,
     selectedDate: new Date(),
     paymentTotal: 0
 };
@@ -54,6 +55,8 @@ class detailedProject extends Component {
     constructor(props) {
         super(props);
         this.state = { ...INITIAL_STATE, clientId: this.props.match.params.clientId, projectId: this.props.match.params.projectId  };
+        this.attorney = React.createRef();
+        this.hour = React.createRef();
     }
 
     componentDidMount() {
@@ -90,8 +93,8 @@ class detailedProject extends Component {
     }
 
     isFloat(n) {
-        n = n.toString();
-        return n.length > 0 && !isNaN(n) && n > 0;
+        n = n?.toString();
+        return n?.length > 0 && !isNaN(n) && n >= 0;
     }
 
     handleChangeExpense = selectedExpenseModal => {
@@ -100,6 +103,16 @@ class detailedProject extends Component {
 
     handleAttorneyModal = selectedAttorneyModal => {
         this.setState({ selectedAttorneyModal });
+
+        const userSelect = this.props.users !== null ?
+            this.props.users.map((u) => ({
+                label: u.name,
+                value: u.uid,
+                ...u
+            })).sort((a, b) => a.name.localeCompare(b.name)) : [];
+        const idx = userSelect.map(function (u) { return u.value }).indexOf(selectedAttorneyModal.uid);
+        const selectedHourlyRate = userSelect[idx]?.salary;
+        this.setState({ hourlyRate: selectedHourlyRate });
     }
 
     onChange = event => {
@@ -109,11 +122,13 @@ class detailedProject extends Component {
     handleShow = modal => {
         if (modal === 1) this.setState({ showModal: true });
         else if(modal === 2) this.setState({ showExpenseModal: true });
+        else if(modal === 3) this.setState({ showTimeModal: true });
     }
 
     handleClose = modal => {
         if(modal === 1) this.setState({ showModal: false });
         else if(modal === 2) this.setState({ showExpenseModal: false });
+        else if(modal === 3) this.setState({ showTimeModal: false });
     }
 
     handleDateChange = selectedDate => {
@@ -283,7 +298,7 @@ class detailedProject extends Component {
         return (
             <Modal show={this.state.showExpenseModal} onHide={() => this.handleClose(2)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>New expense</Modal.Title>
+                    <Modal.Title>Edit expense</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={this.handleNewExpense}>
@@ -312,7 +327,7 @@ class detailedProject extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">Title</Form.Label>
                                             <Col sm="7">
-                                                <Form.Control isInvalid={expenseTitle.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                                <Form.Control isInvalid={expenseTitle?.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
                                             </Col>
                                         </Form.Group>
 
@@ -381,6 +396,210 @@ class detailedProject extends Component {
         );
     }
 
+    handleNewTime = event => {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const { selectedTimeUid, timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
+        
+        if (!this.isFloat(timeHours)) return;
+        if (selectedDate == null || timeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
+        var att = selectedAttorneyModal?.value || this.attorney?.current.props.value.value;
+        var hr = hourlyRate || this.hour.current.value;
+        const payload = {
+            timeTitle: timeTitle,
+            timeDate: selectedDate,
+            timeClient: selectedClientModal.uid,
+            timeProject: selectedProjectModal.uid,
+            timeAttorney: att,
+            timeHours: timeHours,
+            timeMinutes: timeMinutes,
+            hourlyRate: hr,
+            isBilled: false
+        };
+
+        this.setState(INITIAL_STATE);
+        if(isModalAdd) this.props.addTime(payload);
+        else this.props.updateTime(selectedTimeUid, payload);
+    }
+
+    editTime = time => {
+        this.setState({
+            selectedClientModal: { value: time.timeClient, label: this.props.clientsNames[time.timeClient], uid: time.timeClient },
+            selectedProjectModal: { value: time.timeProject, label: this.props.projectsNames[time.timeProject], uid: time.timeProject },
+            selectedAttorneyModal: { value: time.timeAttorney, label: this.props.users.find(u => u.uid === time.timeAttorney)?.name},
+            timeTitle: time.timeTitle,
+            selectedDate: time.timeDate.toDate(),
+            timeHours: time.timeHours,
+            timeMinutes: time.timeMinutes,
+            showTimeModal: true,
+            isModalAdd: false,
+            selectedTimeUid: time.uid
+        });
+    }
+
+    handleDeleteTime = event => {
+        if(window.confirm('Are you sure you want to delete this time?')) {
+            this.props.deleteTime(this.state.selectedTimeUid);
+        }
+        this.setState(INITIAL_STATE);
+    }
+
+    renderTimeModal(authUser, isHidden) {
+        const clientSelect = this.props.clients !== null ?
+            this.props.clients.map((c) => ({
+                label: c.denomination,
+                value: c.uid,
+                ...c
+            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+
+        const projectSelect = this.props.projects !== null ?
+            this.props.projects.map((p) => ({
+                label: p.projectTitle,
+                value: p.uid,
+                ...p
+            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+
+        const userSelect = this.props.users !== null ?
+            this.props.users.map((u) => ({
+                label: u.name,
+                value: u.uid,
+                ...u
+            })).sort((a, b) => a.name.localeCompare(b.name)) : [];
+
+        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
+        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
+        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
+        const selectedHourlyRate = hourlyRate || userSelect[idx]?.salary;
+
+        return (
+            <Modal show={this.state.showTimeModal} onHide={() => this.handleClose(3)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Time</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Client
+                            </Form.Label>
+                            <Col sm="7">
+                                <Select isDisabled={!isModalAdd} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                            </Col>
+                        </Form.Group>
+
+                        {
+                            selectedClientModal == null ? null :
+                            (this.props.loadingProjects ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingUsers}></BarLoader> :
+                            <>
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">
+                                        Project
+                                    </Form.Label>
+                                    <Col sm="7">
+                                        <Select isDisabled={!isModalAdd} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">Title</Form.Label>
+                                    <Col sm="7">
+                                        <Form.Control isInvalid={timeTitle?.length === 0} name="timeTitle" value={timeTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">
+                                        Date
+                                    </Form.Label>
+                                    <Col sm="7">
+                                        {/* DATE PICKER */}
+                                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                                            <KeyboardDatePicker
+                                                disableToolbar
+                                                variant="inline"
+                                                format="dd/MM/yyyy"
+                                                margin="normal"
+                                                id="date-picker-inline"
+                                                label="Enter date dd/mm/yyyy"
+                                                value={selectedDate}
+                                                onChange={this.handleDateChange}
+                                                KeyboardButtonProps={{
+                                                    'aria-label': 'change date',
+                                                }}
+                                            />
+                                        </MuiPickersUtilsProvider>
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">
+                                        Time
+                                    </Form.Label>
+                                    <Col sm="7">
+                                        <Container>
+                                            <Row>
+                                                <Col>
+                                                    <Form.Control isInvalid={timeHours < 0 || timeHours > 100} value={timeHours} name="timeHours" onChange={this.onChange} type="number" min="0" max="100" required />
+                                                </Col>
+                                                <Col>
+                                                    <Form.Control name="timeMinutes" value={timeMinutes} onChange={this.onChange} as="select" required >
+                                                        <option value={0}>0</option>
+                                                        <option value={15}>15</option>
+                                                        <option value={30}>30</option>
+                                                        <option value={45}>45</option>
+                                                    </Form.Control>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col><Form.Label> hours </Form.Label></Col>
+                                                <Col><Form.Label> minutes </Form.Label></Col>
+                                            </Row>
+                                        </Container>
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">Attorney</Form.Label>
+                                    <Col sm="7">
+                                        <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">Hourly Rate</Form.Label>
+                                    <Col sm="7">
+                                        <Form.Control ref={this.hour} isInvalid={selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
+                                    </Col>
+                                </Form.Group>
+                            </>
+                            )
+                        }
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    {
+                        isModalAdd ? null : 
+                        <IconButton onClick={this.handleDeleteTime} color="secondary" aria-label="delete">
+                            <DeleteIcon />
+                        </IconButton>
+                    }
+                    <Button variant="secondary" onClick={() => this.handleClose(3)}>
+                        Cancel
+                    </Button>
+                    <Button className="legem-primary" type="submit" onClick={this.handleNewTime}>
+                        Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        )
+    }
+
     render() {
         const expenses = this.props.expenses !== null ?
             this.props.expenses.map((e, i) => ({
@@ -414,6 +633,7 @@ class detailedProject extends Component {
                     <div>
                         {this.renderModal()}
                         {this.renderExpenseModal(authUser, !authUser?.roles[ROLES.ADMIN])}
+                        {this.renderTimeModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
                         <h3 className="blueLetters topMargin leftMargin"> {this.props.project?.projectTitle} </h3>
                         <h6 className="bigLeftMargin"> For {this.props.clientsNames[this.state.clientId]} </h6>
@@ -590,5 +810,7 @@ export default connect(mapStateToProps, {
     addDownPayment,
     getPayments,
     updateExpense,
-    deleteExpense
+    deleteExpense,
+    updateTime,
+    deleteTime
 })(withAuthorization(condition)(detailedProject));
