@@ -119,6 +119,15 @@ class detailedProject extends Component {
                 ...e
             })) : [];
 
+        // eslint-disable-next-line no-extend-native
+        Array.prototype.sum = function (prop) {
+            var total = 0
+            for ( var i = 0, _len = this.length; i < _len; i++ ) {
+                total += this[i][prop]
+            }
+            return total
+        }
+
         const times = this.props.times !== null ?
             this.props.times.map(t => ({
                 ...t
@@ -229,7 +238,7 @@ class detailedProject extends Component {
                                         }
                                         <TableRow>
                                             <TableCell> Total expenses  </TableCell>
-                                            <TableCell className="rightAlign">14,900</TableCell>
+                                            <TableCell className="rightAlign">${expenses.sum("expenseTotal")}</TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
                                         </TableRow>
