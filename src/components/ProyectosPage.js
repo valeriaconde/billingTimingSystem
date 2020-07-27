@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
+import { Link } from 'react-router-dom';
 import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
 import { connect } from "react-redux";
 import TableContainer from '@material-ui/core/TableContainer';
@@ -68,14 +69,10 @@ class Proyectos extends Component {
 
         if(projectTitle === '' || selectedClientModal == null) return;
 
-        // Picks uid for each appointed
-        const pick = (...props) => o => props.reduce((a, e) => ({ ...a, [e]: o[e] }), {});
-        const appointedIds = selectedAppointed?.length > 0 ? selectedAppointed.map(pick('uid')) : [];
-
         const payload = {
             projectTitle: projectTitle,
             projectClient: selectedClientModal.uid,
-            appointedIds: appointedIds,
+            appointedIds: selectedAppointed.value,
             projectFixedFee: projectFixedFee === 'true',
             projectFee: Number(projectFee),
             isOpen: true
@@ -148,7 +145,7 @@ class Proyectos extends Component {
                             <Form.Label column sm="3">Attorney</Form.Label>
                             <Col sm="7">
                                 {/* USERS */}
-                                <Select value={selectedAppointed} placeholder="Select appointed..." onChange={this.handleChangeMulti} options={userSelect} isMulti />
+                                <Select value={selectedAppointed} placeholder="Select appointed..." onChange={this.handleChangeMulti} options={userSelect} />
                             </Col>
                         </Form.Group>
 
@@ -220,9 +217,9 @@ class Proyectos extends Component {
                                             :
                                             <TableBody>
                                                 {this.props.projects.map((row) => (
-                                                    <TableRow hover key={row.projectTitle}>
+                                                    <TableRow hover key={row.projectTitle} >
                                                         <TableCell component="th" scope="row">
-                                                            {row.projectTitle}
+                                                            <Link to={`/projects/${row.projectClient}/${row.uid}`}>{row.projectTitle}</Link>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))
