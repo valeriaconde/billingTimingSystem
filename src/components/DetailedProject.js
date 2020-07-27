@@ -17,11 +17,12 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { addTime, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import AddIcon from '@material-ui/icons/Add';
 
 const mapStateToProps = state => {
     return {
@@ -48,7 +49,19 @@ const INITIAL_STATE = {
     showExpenseModal: false,
     showTimeModal: false,
     selectedDate: new Date(),
-    paymentTotal: 0
+    paymentTotal: 0,
+    timeMinutes: 15,
+    selectedOption: null,
+    selectedClientModal: null,
+    validated: false,
+    selectedProjectModal: null,
+    selectedExpenseModal: null,
+    expenseTitle: '',
+    expenseTotal: 0,
+    timeTitle: '',
+    timeHours: 0,
+    hourlyRate: 0,
+    isModalAdd: true
 };
 
 class detailedProject extends Component {
@@ -254,6 +267,15 @@ class detailedProject extends Component {
         });
     }
 
+    handleAddExpense = () => {
+        this.setState({ 
+            showExpenseModal: true, 
+            isModalAdd: true,
+            selectedClientModal: { value: this.props.match.params.clientId, label: this.props.clientsNames[this.props.match.params.clientId], uid: this.props.match.params.clientId },
+            selectedProjectModal: { value: this.props.match.params.projectId, label: this.props.projectsNames[this.props.match.params.projectId], uid: this.props.match.params.projectId }, 
+        });
+    }
+
     handleDeleteExpense = event => {
         if(window.confirm('Are you sure you want to delete this expense?')) {
             this.props.deleteExpense(this.state.selectedExpenseUid);
@@ -299,7 +321,7 @@ class detailedProject extends Component {
                                 Client
                         </Form.Label>
                             <Col sm="7">
-                                <Select isDisabled={!isModalAdd} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                                <Select isDisabled={true} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
                             </Col>
                         </Form.Group>
 
@@ -312,7 +334,7 @@ class detailedProject extends Component {
                                                 Project
                                             </Form.Label>
                                             <Col sm="7">
-                                                <Select isDisabled={!isModalAdd} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                                <Select isDisabled={true} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
                                             </Col>
                                         </Form.Group>
 
@@ -386,6 +408,15 @@ class detailedProject extends Component {
                 </Modal.Footer>
             </Modal>
         );
+    }
+
+    handleAddTime = () => {
+        this.setState({ 
+            showTimeModal: true, 
+            isModalAdd: true,
+            selectedClientModal: { value: this.props.match.params.clientId, label: this.props.clientsNames[this.props.match.params.clientId], uid: this.props.match.params.clientId },
+            selectedProjectModal: { value: this.props.match.params.projectId, label: this.props.projectsNames[this.props.match.params.projectId], uid: this.props.match.params.projectId }, 
+        });
     }
 
     handleNewTime = event => {
@@ -481,7 +512,7 @@ class detailedProject extends Component {
                                 Client
                             </Form.Label>
                             <Col sm="7">
-                                <Select isDisabled={!isModalAdd} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                                <Select isDisabled={true} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
                             </Col>
                         </Form.Group>
 
@@ -494,7 +525,7 @@ class detailedProject extends Component {
                                         Project
                                     </Form.Label>
                                     <Col sm="7">
-                                        <Select isDisabled={!isModalAdd} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                        <Select isDisabled={true} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
                                     </Col>
                                 </Form.Group>
 
@@ -695,7 +726,12 @@ class detailedProject extends Component {
                                     </colgroup>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell><b>Registered expenses</b></TableCell>
+                                            <TableCell>
+                                                <b>Registered expenses</b>
+                                                <IconButton onClick={this.handleAddExpense} aria-label="Add expense">
+                                                    <AddIcon className="legemblue" />
+                                                </IconButton>
+                                            </TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
@@ -733,36 +769,23 @@ class detailedProject extends Component {
                                         ))
                                         }
                                         <TableRow>
-                                            <TableCell> Total expenses  </TableCell>
+                                            <TableCell>Total</TableCell>
                                             <TableCell className="rightAlign">${expenses.sum("expenseTotal")}</TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
                                         </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </div>
-
-                        {/* TIME TABLE */}
-                        <div className="tableMargins topMargin bottomMargin">
-                            <TableContainer>
-                                <Table aria-label="simple table">
-                                    <colgroup>
-                                        <col width="80%" />
-                                        <col width="10%" />
-                                        <col width="5%" />
-                                        <col width="5%" />
-                                    </colgroup>
-                                    <TableHead>
                                         <TableRow>
-                                            <TableCell><b>Registered time</b></TableCell>
+                                            <TableCell>
+                                                <b>Registered time</b>
+                                                <IconButton onClick={this.handleAddTime} aria-label="Add time">
+                                                    <AddIcon className="legemblue" />
+                                                </IconButton>
+                                            </TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
                                         </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                    {times.map((row) => (
+                                        {times.map((row) => (
                                         <TableRow key={row.uid}>
                                             <TableCell>
                                                 <OverlayTrigger overlay={
@@ -784,7 +807,7 @@ class detailedProject extends Component {
                                         ))
                                         }
                                         <TableRow>
-                                            <TableCell>Total time </TableCell>
+                                            <TableCell>Total </TableCell>
                                             <TableCell className="rightAlign">5h 45m</TableCell>
                                             <TableCell> </TableCell>
                                             <TableCell></TableCell>
@@ -793,6 +816,7 @@ class detailedProject extends Component {
                                 </Table>
                             </TableContainer>
                         </div>
+                        <br />
                         <div className="rightAlign biggerRightMargin bottomMargin">
                             <Button variant="outline-danger">Archive project</Button>{' '}
                         </div>
@@ -817,5 +841,7 @@ export default connect(mapStateToProps, {
     deleteExpense,
     updateTime,
     deleteTime,
-    deletePayment
+    deletePayment,
+    addTime,
+    addExpense
 })(withAuthorization(condition)(detailedProject));
