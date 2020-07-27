@@ -1,6 +1,6 @@
 import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, PAYMENTS_LOADED } from "../../constants/action-types"; 
+    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT } from "../../constants/action-types"; 
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -389,6 +389,22 @@ export function deleteTime(uid) {
         firebase.firestore().collection(TIMES).doc(uid).delete().then(() => {
             dispatch({ type: REMOVED_TIME, payload: uid });
             const alert = { type: AlertType.Success, message: "Time successfully deleted." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        })
+        .catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
+    }
+}
+
+export function deletePayment(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PAYMENT, payload: {} });
+        firebase.firestore().collection(PAYMENTS).doc(uid).delete().then(() => {
+            dispatch({ type: REMOVED_PAYMENT, payload: uid });
+            const alert = { type: AlertType.Success, message: "Down payment successfully deleted." };
             dispatch({ type: ADD_ALERT, payload: alert });
             setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
         })
