@@ -49,6 +49,7 @@ const INITIAL_STATE = {
     timeTitle: '',
     timeHours: 0,
     timeMinutes: 0,
+    hourlyRate: 0,
     isModalAdd: true
 };
 
@@ -57,6 +58,7 @@ class tiemposPage extends Component {
         super(props);
         this.state = { ...INITIAL_STATE };
         this.attorney = React.createRef();
+        this.hour = React.createRef();
 
         this.handleClose = this.handleClose.bind(this);
         this.handleShow = this.handleShow.bind(this);
@@ -105,14 +107,20 @@ class tiemposPage extends Component {
 
     handleAttorneyModal = selectedAttorneyModal => {
         this.setState({ selectedAttorneyModal });
+
+        const userSelect = this.props.users !== null ?
+            this.props.users.map((u) => ({
+                label: u.name,
+                value: u.uid,
+                ...u
+            })).sort((a, b) => a.name.localeCompare(b.name)) : [];
+        const idx = userSelect.map(function (u) { return u.value }).indexOf(selectedAttorneyModal.uid);
+        const selectedHourlyRate = userSelect[idx]?.salary;
+        this.setState({ hourlyRate: selectedHourlyRate });
     }
 
     handleChangeTime = selectedTimeModal => {
         this.setState({ selectedTimeModal });
-    }
-
-    handleAttorneyModal = selectedAttorneyModal => {
-        this.setState({ selectedAttorneyModal });
     }
 
     onChange = event => {
@@ -128,11 +136,11 @@ class tiemposPage extends Component {
             event.stopPropagation();
         }
 
-        const { selectedTimeUid, timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd } = this.state;
+        const { selectedTimeUid, timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
         if (!this.isFloat(timeHours)) return;
         if (selectedDate == null || timeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
-        
+        var hr = hourlyRate || this.hour.current.value;
         const payload = {
             timeTitle: timeTitle,
             timeDate: selectedDate,
@@ -141,6 +149,7 @@ class tiemposPage extends Component {
             timeAttorney: att,
             timeHours: timeHours,
             timeMinutes: timeMinutes,
+            hourlyRate: hr,
             isBilled: false
         };
 
@@ -193,8 +202,9 @@ class tiemposPage extends Component {
             })).sort((a, b) => a.name.localeCompare(b.name)) : [];
 
         const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
-        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd } = this.state;
+        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
+        const selectedHourlyRate = hourlyRate || userSelect[idx]?.salary;
 
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -287,6 +297,13 @@ class tiemposPage extends Component {
                                     <Form.Label column sm="3">Attorney</Form.Label>
                                     <Col sm="7">
                                         <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">Hourly Rate</Form.Label>
+                                    <Col sm="7">
+                                        <Form.Control ref={this.hour} isInvalid={selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
                                     </Col>
                                 </Form.Group>
                             </>
