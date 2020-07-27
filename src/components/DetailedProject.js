@@ -17,7 +17,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
@@ -75,17 +75,9 @@ class detailedProject extends Component {
         }
 
         let self = this;
-        if(!self.props.loadedTimesOnce) {
-            self.props.getTimes(this.props.match.params.projectId, false);
-        }
-
-        if(!self.props.loadedExpenseOnce) {
-            self.props.getExpenses(this.props.match.params.projectId, false);
-        }
-
-        if(!self.props.loadedPaymentsOnce) {
-            self.props.getPayments(this.props.match.params.projectId);
-        }
+        self.props.getTimes(this.props.match.params.projectId, false);
+        self.props.getExpenses(this.props.match.params.projectId, false);
+        self.props.getPayments(this.props.match.params.projectId);
 
         if (Object.keys(this.props.projectsNames).length === 0) {
             this.props.getProjectsMapping();
@@ -600,6 +592,13 @@ class detailedProject extends Component {
         )
     }
 
+    handleDeletePayment = payment => {
+        if(window.confirm('Are you sure you want to delete this down payment?')) {
+            this.props.deletePayment(payment.uid);
+        }
+        this.setState(INITIAL_STATE);
+    }
+
     render() {
         const expenses = this.props.expenses !== null ?
             this.props.expenses.map((e, i) => ({
@@ -655,7 +654,7 @@ class detailedProject extends Component {
                                     </Card>
                                 </Col>
                                 <Col className="leftMargin">
-                                    <Card style={{ width: '18rem' }} >
+                                    <Card style={{ width: '22rem' }} >
                                         <Card.Body>
                                             <Card.Title>Down payments</Card.Title>
                                             <TableContainer>
@@ -665,6 +664,11 @@ class detailedProject extends Component {
                                                             <TableRow key={row.uid}>
                                                                 <TableCell>{row.paymentDate?.toDate().toDateString()}</TableCell>
                                                                 <TableCell className="centerText">${row.paymentTotal}</TableCell>
+                                                                <TableCell>
+                                                                    <IconButton onClick={() => this.handleDeletePayment(row)} color="secondary" aria-label="delete">
+                                                                        <DeleteIcon />
+                                                                    </IconButton>
+                                                                </TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>
@@ -812,5 +816,6 @@ export default connect(mapStateToProps, {
     updateExpense,
     deleteExpense,
     updateTime,
-    deleteTime
+    deleteTime,
+    deletePayment
 })(withAuthorization(condition)(detailedProject));
