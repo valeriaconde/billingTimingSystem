@@ -17,6 +17,7 @@ import UsuariosPage from './UsuariosPage';
 import Passrec from './PasswordRecovery';
 import PassChange from './PasswordChange';
 import detailedProject from './DetailedProject';
+import Billing from './Billing';
 import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
@@ -78,6 +79,8 @@ class App extends Component {
                         <Route path="/login" exact component={LoginPage} />
 
                         <Route path="/projects" exact component={ProyectosPage} />
+
+                        <Route path="/billing" exact component={Billing} />
 
                         <Route path="/expenses" exact component={gastos} />
 
