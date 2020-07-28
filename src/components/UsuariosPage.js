@@ -144,7 +144,7 @@ class UsuariosPage extends Component {
                                     }
 
                                     {/* PUESTO */}
-                                    <Form.Group as={Row} controlId="formPlaintext">
+                                    <Form.Group as={Row}>
                                         <Form.Label column sm="4"> Position </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="job" plaintext readOnly={!this.state.edit} value={job} />
@@ -152,7 +152,7 @@ class UsuariosPage extends Component {
                                     </Form.Group>
 
                                     {/* HORA */}
-                                    <Form.Group as={Row} controlId="formPlaintext">
+                                    <Form.Group as={Row} >
                                         <Form.Label column sm="4"> Hourly fee </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="salary" plaintext readOnly={!this.state.edit} value={salary} />
@@ -160,21 +160,21 @@ class UsuariosPage extends Component {
                                     </Form.Group>
 
                                     {/* FECHA DE INGRESO */}
-                                    <Form.Group as={Row} controlId="formPlaintext">
+                                    <Form.Group as={Row}>
                                         <Form.Label column sm="4"> Start year </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="startYear" plaintext readOnly={!this.state.edit} value={startYear} />
                                         </Col>
                                     </Form.Group>
 
-                                    <Form.Group as={Row} controlId="formPlaintext">
+                                    <Form.Group as={Row}>
                                         <Form.Label column sm="4"> Initials </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="initials" plaintext readOnly={!this.state.edit} value={initials} />
                                         </Col>
                                     </Form.Group>
 
-                                    <Form.Group as={Row} controlId="formPlaintext">
+                                    <Form.Group as={Row}>
                                         <Form.Label column sm="5"></Form.Label>
                                         <Col sm="5">
                                             <>
