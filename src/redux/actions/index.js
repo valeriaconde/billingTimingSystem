@@ -191,7 +191,6 @@ export function updateTime(uid, payload) {
 }
 
 export function updateUser(uid, payload) {
-    console.log(uid, payload);
     return function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
         dispatch({ type: LOADING_USERS, payload: {} });
