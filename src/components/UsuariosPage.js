@@ -55,7 +55,7 @@ class UsuariosPage extends Component {
     }
 
     onDelete(event) {
-        if(window.confirm('¿Seguro que desea borrar al usuario?')) {
+        if(window.confirm('Are you sure you want to delete this user?')) {
             this.props.deleteUser(this.props.users[this.state.activeIdx].uid);
             this.setState({ activeIdx: -1, edit: false });
         }
@@ -138,7 +138,7 @@ class UsuariosPage extends Component {
                                     {/* DENOMINACION */}
                                     {
                                         this.state.edit ?
-                                            <Form.Control onChange={this.onChange} name="name" size="lg" type="text" value={name || "NOMBRE DE ABOGADO"} />
+                                            <Form.Control onChange={this.onChange} name="name" size="lg" type="text" value={name || "Name"} />
                                             :
                                             <h3>{name || "Name"}</h3>
                                     }
