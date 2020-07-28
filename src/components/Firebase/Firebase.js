@@ -38,7 +38,8 @@ class Firebase {
                     salary: 0,
                     startYear: 2003,
                     job: "Associate",
-                    name: email
+                    name: email,
+                    initials: "AAA"
                 });
         })
         .catch(error => {

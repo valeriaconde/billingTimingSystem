@@ -24,7 +24,8 @@ const INITIAL_STATE = {
     job: '',
     salary: '',
     startYear: '',
-    name: ''
+    name: '',
+    initials: ''
 };
 
 class UsuariosPage extends Component {
@@ -61,7 +62,7 @@ class UsuariosPage extends Component {
     }
 
     onSave(event) {
-        const { startYear, job, salary, name, uid, activeIdx } = this.state;
+        const { startYear, job, salary, name, uid, activeIdx, initials } = this.state;
         if(isNaN(startYear) || startYear.length === 0) {
             this.props.addAlert(AlertType.Error, "Start year must be a number.");
             return;
@@ -83,7 +84,8 @@ class UsuariosPage extends Component {
             salary: salary,
             startYear: startYear,
             email: this.props.users[activeIdx].email,
-            roles: this.props.users[activeIdx].roles
+            roles: this.props.users[activeIdx].roles,
+            initials: initials
         };
         this.props.updateUser(uid, payload);
 
@@ -97,7 +99,9 @@ class UsuariosPage extends Component {
             job: this.props.users[activeIdx].job,
             startYear: this.props.users[activeIdx].startYear, 
             salary: this.props.users[activeIdx].salary,
-            name: this.props.users[activeIdx].name || this.props.users[activeIdx].email });
+            name: this.props.users[activeIdx].name || this.props.users[activeIdx].email,
+            initials: this.props.users[activeIdx].initials || "AAA"
+        });
     }
 
     renderUsers() {
@@ -109,7 +113,7 @@ class UsuariosPage extends Component {
     }
 
     render() {
-        const { startYear, job, salary, name } = this.state;
+        const { startYear, job, salary, name, initials } = this.state;
         return (
             <AuthUserContext.Consumer>
             { authUser =>
@@ -117,7 +121,7 @@ class UsuariosPage extends Component {
                 <div>
                     <Jumbotron>
                         <h1 >{authUser.name || authUser.email}</h1>
-                        <h5 className="blueLetters"><b>{authUser.job || "Puesto desconocido"}</b></h5>
+                        <h5 className="blueLetters"><b>{authUser.job || "Unknown position"}</b></h5>
                     </Jumbotron>
 
                     <Container className="topMargin">
@@ -136,11 +140,11 @@ class UsuariosPage extends Component {
                                         this.state.edit ?
                                             <Form.Control onChange={this.onChange} name="name" size="lg" type="text" value={name || "NOMBRE DE ABOGADO"} />
                                             :
-                                            <h3>{name || "NOMBRE DE ABOGADO"}</h3>
+                                            <h3>{name || "Name"}</h3>
                                     }
 
-                                    {/* PUESTOA */}
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    {/* PUESTO */}
+                                    <Form.Group as={Row} controlId="formPlaintext">
                                         <Form.Label column sm="4"> Position </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="job" plaintext readOnly={!this.state.edit} value={job} />
@@ -148,7 +152,7 @@ class UsuariosPage extends Component {
                                     </Form.Group>
 
                                     {/* HORA */}
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Group as={Row} controlId="formPlaintext">
                                         <Form.Label column sm="4"> Hourly fee </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="salary" plaintext readOnly={!this.state.edit} value={salary} />
@@ -156,14 +160,21 @@ class UsuariosPage extends Component {
                                     </Form.Group>
 
                                     {/* FECHA DE INGRESO */}
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Group as={Row} controlId="formPlaintext">
                                         <Form.Label column sm="4"> Start year </Form.Label>
                                         <Col sm="5">
                                             <Form.Control onChange={this.onChange} name="startYear" plaintext readOnly={!this.state.edit} value={startYear} />
                                         </Col>
                                     </Form.Group>
 
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
+                                    <Form.Group as={Row} controlId="formPlaintext">
+                                        <Form.Label column sm="4"> Initials </Form.Label>
+                                        <Col sm="5">
+                                            <Form.Control onChange={this.onChange} name="initials" plaintext readOnly={!this.state.edit} value={initials} />
+                                        </Col>
+                                    </Form.Group>
+
+                                    <Form.Group as={Row} controlId="formPlaintext">
                                         <Form.Label column sm="5"></Form.Label>
                                         <Col sm="5">
                                             <>
