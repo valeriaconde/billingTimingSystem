@@ -4,6 +4,12 @@ blue: rgb 25, 57, 145
 
 */  
 
+/* BILLING CSS */
+.enEsMargin {
+  margin-left:auto;
+  margin-right:0;
+}
+
 /* DETAILED PROJECT CSS */
 
 .centerText {
