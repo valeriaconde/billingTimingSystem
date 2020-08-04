@@ -1,18 +1,26 @@
 export const expenseClasses = [
     {
-        label: 'Third party fee',
+        label: 'Third party fee (translators, experts, outside consulting)',
         value: 0
     },
     {
-        label: 'Transportation expense',
+        label: 'Notary and governmental payments (RPPC, IMPI, SE)',
         value: 1
     },
     {
-        label: 'Governmental administrative fee (Rights, fines, etc.)',
+        label: 'Fines',
         value: 2
     },
     {
-        label: 'Other',
+        label: 'Courier and paperwork expenses',
         value: 3
+    },
+    {
+        label: 'Traveling & transportation expenses (taxi, uber, flights, hotels, meals)',
+        value: 4
+    },
+    {
+        label: 'Other',
+        value: 5
     }
 ];
