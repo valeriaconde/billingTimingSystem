@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ListGroup, Container, Row, Col, Form, Button, Modal, FormControl } from 'react-bootstrap';
+import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
@@ -7,6 +7,7 @@ import { connect } from "react-redux";
 import { addAlert, clearAlert, addClient, getClients, updateClient, deleteClient } from "../redux/actions/index";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import Select from 'react-select';
 
 const mapStateToProps = state => {
     return { 
@@ -19,6 +20,10 @@ const mapStateToProps = state => {
 const INITIAL_STATE = {
     denomination: '', currDenomination: '',
     address: '', currAddress: '',
+    address2: '', currAddress2: '',
+    city: '', currCity: '',
+    state: '', currState: '',
+    zipCode: '', currZipCode: '',
     rfc: '', currRfc: '',
     contact: '', currContact: '',
     email: '', currEmail: '',
@@ -44,7 +49,6 @@ class Clientes extends Component {
         this.handleNewClient = this.handleNewClient.bind(this);
         this.handleOnChange = this.handleOnChange.bind(this);
         this.onEdit = this.onEdit.bind(this);
-        this.onClickClient = this.onClickClient.bind(this);
         this.onChangeRadio = this.onChangeRadio.bind(this);
         this.onChange = this.onChange.bind(this);
         this.onSave = this.onSave.bind(this);
@@ -65,8 +69,8 @@ class Clientes extends Component {
     }
 
     onSave(event) {
-        const { currDenomination, currAddress, currRfc, currContact,
-            currEmail, currPhone, currWebsite, currYearSince, currIva, currUid } = this.state;
+        const { currDenomination, currAddress, currAddress2, currCity, currState, currZipCode,
+             currRfc, currContact, currEmail, currPhone, currWebsite, currYearSince, currIva, currUid } = this.state;
         
         if(currDenomination.length === 0) {
             this.props.addAlert(AlertType.Error, "Business name cannot be empty.");
@@ -89,7 +93,8 @@ class Clientes extends Component {
         }
 
         const payload = {
-            address: currAddress, contact: currContact, denomination: currDenomination,
+            address: currAddress, address2: currAddress2, city: currCity, state: currState,
+            zipCode: currZipCode, contact: currContact, denomination: currDenomination,
             email: currEmail, iva: currIva, phone: currPhone, rfc: currRfc,
             website: currWebsite, yearSince: currYearSince, uid: currUid
         };
@@ -114,8 +119,8 @@ class Clientes extends Component {
         event.preventDefault();
         this.setState({ validated: true });
 
-        const { denomination, address, rfc, contact, email,
-            phone, website, yearSince } = this.state;
+        const { denomination, address, address2, city, state, zipCode,
+             rfc, contact, email, phone, website, yearSince } = this.state;
         const iva = document.getElementById("yesIVA").checked;
 
         if(denomination === "" || rfc === "" || contact === "" || email === "") return;
@@ -123,6 +128,10 @@ class Clientes extends Component {
         const payload = {
             denomination: denomination,
             address: address,
+            address2: address2,
+            city: city,
+            state: state,
+            zipCode: zipCode,
             rfc: rfc,
             contact: contact,
             email: email,
@@ -149,8 +158,8 @@ class Clientes extends Component {
     }
 
     renderModal() {
-        const { denomination, address, rfc, contact, email,
-                phone, website, yearSince } = this.state;
+        const { denomination, address, address2, rfc, contact, email,
+                phone, website, yearSince, city, state, zipCode } = this.state;
         return(
             <Modal show={this.state.showModalCliente} onHide={this.handleCloseCliente}>
                 <Modal.Header closeButton>
@@ -172,7 +181,44 @@ class Clientes extends Component {
                                 Address
                             </Form.Label>
                             <Col sm="7">
-                                <Form.Control name="address" onChange={this.handleOnChange} value={address} as="textarea" rows="1" />
+                                <Form.Control placeholder="Street Address" name="address" onChange={this.handleOnChange} value={address} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Address 2
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control placeholder="Street Address Line 2" name="address2" onChange={this.handleOnChange} value={address2} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Col sm="10">
+                                <Container>
+                                    <Row>
+                                        <Col>
+                                            <Form.Control name="city" onChange={this.handleOnChange} value={city} as="textarea" rows="1" />
+                                        </Col>
+                                        <Col>
+                                            <Form.Control name="state" onChange={this.handleOnChange} value={state} as="textarea" rows="1" />
+                                        </Col>
+                                    </Row>
+                                    <Row>
+                                        <Col><Form.Label>City</Form.Label></Col>
+                                        <Col><Form.Label>State</Form.Label></Col>
+                                    </Row>
+                                </Container>
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">
+                                Zip Code
+                            </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="zipCode" onChange={this.handleOnChange} value={zipCode} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
@@ -264,21 +310,27 @@ class Clientes extends Component {
         );
     }
 
-    onClickClient(event) {
-        const activeIdx = event.target.value;
-        this.setState({ activeIdx: activeIdx, edit: false,
-            currUid: this.props.clients[activeIdx].uid,
-            currDenomination: this.props.clients[activeIdx].denomination,
-            currAddress: this.props.clients[activeIdx].address,
-            currRfc: this.props.clients[activeIdx].rfc,
-            currContact: this.props.clients[activeIdx].contact,
-            currEmail: this.props.clients[activeIdx].email,
-            currPhone: this.props.clients[activeIdx].phone,
-            currWebsite: this.props.clients[activeIdx].website,
-            currYearSince: this.props.clients[activeIdx].yearSince,
-            currIva: this.props.clients[activeIdx].iva
-        });
-    }
+    handleChangeClientModal = selectedClientModal => {
+        console.log(selectedClientModal);
+        this.setState( { selectedClientModal,
+            activeIdx: selectedClientModal.idx,
+            edit: false,
+            currUid: selectedClientModal.uid,
+            currDenomination: selectedClientModal.denomination,
+            currAddress: selectedClientModal.address,
+            currAddress2: selectedClientModal.address2,
+            currCity: selectedClientModal.city,
+            currState: selectedClientModal.state,
+            currZipCode: selectedClientModal.zipCode,
+            currRfc: selectedClientModal.rfc,
+            currContact: selectedClientModal.contact,
+            currEmail: selectedClientModal.email,
+            currPhone: selectedClientModal.phone,
+            currWebsite: selectedClientModal.website,
+            currYearSince: selectedClientModal.yearSince,
+            currIva: selectedClientModal.iva
+        }); 
+    };
 
     renderClients() {
         return(
@@ -289,37 +341,79 @@ class Clientes extends Component {
     }
     
     render() {
-        const { edit, currDenomination, currAddress, currRfc, currContact,
-            currEmail, currPhone, currWebsite, currYearSince, currIva } = this.state;
+        const clientSelect = this.props.clients !== null ?
+            this.props.clients.map((c, i) => ({
+                label: c.denomination,
+                value: c.uid,
+                idx: i,
+                ...c
+            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+
+        const { edit, currDenomination, currAddress, currAddress2, currRfc, currContact, selectedClientModal,
+            currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState, currZipCode } = this.state;
         return (
             <AuthUserContext.Consumer>
                 {authUser => (
                     this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
+                        {this.renderModal()}
                         <Container className="topMargin">
                             <Row>
-                                <Col sm={4}>
+                                <Col sm={10}>
                                     <Button variant="success" size="lg" block onClick={this.handleShowCliente}> New client </Button>
-                                    <FormControl placeholder="Search"/>
-                                    {this.renderModal()}
-                                    {this.renderClients()}
+                                    <Select required value={selectedClientModal} placeholder="Select client..." options={clientSelect} onChange={this.handleChangeClientModal} />
                                 </Col>
-
+                            </Row>
+                            <Row><br/></Row>
+                            <Row>
                                 { this.state.activeIdx === -1 ? <div/> :
-                                <Col sm={8}>
+                                <Col sm={10}>
                                     <Form onSubmit={this.onSave}>
                                         {
                                             this.state.edit ?
-                                                <Form.Control value={currDenomination || "DENOMINACION"} onChange={this.onChange} name="currDenomination" size="lg" type="text" placeholder="Denominación" />
+                                                <Form.Control value={currDenomination || "DENOMINATION"} onChange={this.onChange} name="currDenomination" size="lg" type="text" placeholder="DENOMINATION" />
                                                 :
-                                                <h3> { currDenomination || "DENOMINACION" } </h3>
+                                                <h3> { currDenomination || "DENOMINATION" } </h3>
                                         }
         
                                         {/* DOMICILIO */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Address </Form.Label>
+                                            <Col sm="6">
+                                                <Form.Control value={currAddress} onChange={this.onChange} name="currAddress" readOnly={!edit} />
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="4"> Address 2 </Form.Label>
+                                            <Col sm="6">
+                                                <Form.Control value={currAddress2} onChange={this.onChange} name="currAddress2" readOnly={!edit} />
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Col sm="10">
+                                                <Container>
+                                                    <Row>
+                                                        <Col>
+                                                            <Form.Control name="currCity" onChange={this.onChange} value={currCity} readOnly={!edit} />
+                                                        </Col>
+                                                        <Col>
+                                                            <Form.Control name="currState" onChange={this.onChange} value={currState} readOnly={!edit} />
+                                                        </Col>
+                                                    </Row>
+                                                    <Row>
+                                                        <Col><Form.Label>City</Form.Label></Col>
+                                                        <Col><Form.Label>State</Form.Label></Col>
+                                                    </Row>
+                                                </Container>
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="4"> ZIP Code </Form.Label>
                                             <Col sm="5">
-                                                <Form.Control value={currAddress} onChange={this.onChange} name="currAddress" readOnly={!edit} plaintext />
+                                                <Form.Control value={currZipCode} onChange={this.onChange} name="currZipCode" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
         
@@ -327,7 +421,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> RFC </Form.Label>
                                             <Col sm="5">
-                                                <Form.Control value={currRfc} onChange={this.onChange} name="currRfc" readOnly={!edit} plaintext />
+                                                <Form.Control value={currRfc} onChange={this.onChange} name="currRfc" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
         
@@ -335,7 +429,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Contact </Form.Label>
                                             <Col sm="5">
-                                                <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} plaintext />
+                                                <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
         
@@ -343,7 +437,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Email </Form.Label>
                                             <Col sm="5">
-                                                <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} plaintext />
+                                                <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
         
@@ -351,7 +445,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Phone </Form.Label>
                                             <Col sm="5">
-                                                <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} plaintext />
+                                                <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
         
@@ -359,7 +453,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Website </Form.Label>
                                             <Col sm="5">
-                                                <Form.Control value={currWebsite} onChange={this.onChange} name="currWebsite" readOnly={!edit} plaintext />
+                                                <Form.Control value={currWebsite} onChange={this.onChange} name="currWebsite" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
         
@@ -367,7 +461,7 @@ class Clientes extends Component {
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Client since </Form.Label>
                                             <Col sm="5">
-                                                <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit}  plaintext />
+                                                <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
         
@@ -387,7 +481,7 @@ class Clientes extends Component {
                                         </Form.Group>
         
                                         <Form.Group as={Row}>
-                                            <Form.Label column sm="5"></Form.Label>
+                                            <Form.Label column sm="4"></Form.Label>
                                             <Col sm="5">
                                                 <>
                                                 {

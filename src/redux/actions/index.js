@@ -1,6 +1,10 @@
 import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT } from "../../constants/action-types"; 
+    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, 
+    ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, 
+    LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, 
+    ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, 
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED } from "../../constants/action-types"; 
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -302,8 +306,42 @@ export function getProjectById(uid) {
     }
 }
 
+export function getReportData(uids) {
+    return dispatch => {
+        dispatch({ type: LOADING_REPORT, payload: {} });
+
+        let expRef = firebase.firestore().collection(EXPENSES).where("expenseProject", 'in', uids).where("isBilled", '==', false);
+        expRef
+            .get()
+            .then(querySnapshot => {
+                let expensesList = [];
+                querySnapshot.forEach(doc => expensesList.push({ ...doc.data(), uid: doc.id }));
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+
+        let timeRef = firebase.firestore().collection(TIMES).where("timeProject", 'in', uids).where("isBilled", '==', false);
+        timeRef
+            .get()
+            .then(querySnapshot => {
+                let timesList = [];
+                querySnapshot.forEach(doc => timesList.push({ ...doc.data(), uid: doc.id }));
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+        
+        dispatch({ type: REPORT_LOADED, payload: {} });
+    }
+}
+
 export function getExpenses(uid, byAttorney) {
-    return function(dispatch) {
+    return dispatch => {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
         let docRef = firebase.firestore().collection(EXPENSES).where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid);
         if(!byAttorney) docRef.where("isBilled", "==", false);
@@ -325,7 +363,7 @@ export function getExpenses(uid, byAttorney) {
 }
 
 export function getTimes(uid, byAttorney) {
-    return function(dispatch) {
+    return dispatch => {
         dispatch({ type: LOADING_TIMES, payload: {} });
         let docRef = firebase.firestore().collection(TIMES).where(byAttorney ? "timeAttorney" : "timeProject", "==", uid);
         if(!byAttorney) docRef.where("isBilled", "==", false);

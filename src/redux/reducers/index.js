@@ -1,6 +1,6 @@
 import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -22,7 +22,9 @@ const initialState = {
     loadedTimesOnce: false,
     loadingPayments: false,
     loadedPaymentsOnce: false,
-    loadingProjectsMapping: false
+    loadingProjectsMapping: false,
+    loadingReport: false,
+    reportReady: false
 };
   
 function rootReducer(state = initialState, action) {
@@ -64,6 +66,10 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === LOADING_USERS) {
         return Object.assign({}, state, {
             loadingUsers: true
+        });
+    } else if(action.type === LOADING_REPORT) {
+        return Object.assign({}, state, {
+            loadingReport: true
         });
     } else if(action.type === LOADING_PROJECTS_MAPPING) {
         return Object.assign({}, state, {
@@ -138,6 +144,11 @@ function rootReducer(state = initialState, action) {
             clients: state.clients.concat(action.payload).sort((a, b) => a.denomination.localeCompare(b.denomination)),
             loadingClients: false,
             clientsNames: tmp
+        });
+    } else if(action.type === REPORT_LOADED) {
+        return Object.assign({}, state, {
+            loadingReport: false,
+            reportReady: true
         });
     } else if(action.type === PROJECTS_LOADED) {
         return Object.assign({}, state, {

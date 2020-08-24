@@ -141,6 +141,7 @@ class tiemposPage extends Component {
         if (selectedDate == null || timeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
         var hr = hourlyRate || this.hour.current.value;
+        const timeTotal = +hr * (+timeHours + timeMinutes / 60.0);
         const payload = {
             timeTitle: timeTitle,
             timeDate: selectedDate,
@@ -149,6 +150,7 @@ class tiemposPage extends Component {
             timeAttorney: att,
             timeHours: timeHours,
             timeMinutes: timeMinutes,
+            timeTotal: timeTotal,
             hourlyRate: hr,
             isBilled: false
         };
@@ -403,7 +405,7 @@ class tiemposPage extends Component {
                                                     </OverlayTrigger>
                                                 </TableCell>
                                                 <TableCell className="rightAlign">{`${row.timeHours}:${row.timeMinutes} hrs`}</TableCell>
-                                                <TableCell></TableCell>
+                                                <TableCell>{`$${row.timeTotal}`}</TableCell>
                                                 <TableCell>
                                                     <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" />
                                                 </TableCell>
