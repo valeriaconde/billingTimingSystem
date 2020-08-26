@@ -1,6 +1,10 @@
 import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
-    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT } from "../../constants/action-types"; 
+    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, 
+    ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, 
+    LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, 
+    ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, 
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED } from "../../constants/action-types"; 
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -191,21 +195,21 @@ export function updateTime(uid, payload) {
 }
 
 export function updateUser(uid, payload) {
-    return function(dispatch) {
+    return async function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
         dispatch({ type: LOADING_USERS, payload: {} });
-        return axios.put(url, payload)
-            .then(response => {
-                dispatch({ type: UPDATED_USER, payload: response.data });
+        try {
+            const response = await axios.put(url, payload);
+            dispatch({ type: UPDATED_USER, payload: response.data });
 
-                const alert = { type: AlertType.Success, message: "User successfully updated."};
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error.message };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+            const alert = { type: AlertType.Success, message: "User successfully updated." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }
+        catch (error) {
+            const alert_1 = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert_1 });
+        }
     };
 }
 
@@ -270,21 +274,21 @@ export function getClients() {
 }
 
 export function getUsers() {
-    return function(dispatch) {
+    return async function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users.json`;
         dispatch({ type: LOADING_USERS, payload: {} });
-        return axios.get(url)
-            .then(response => {
-                const usersList = Object.keys(response.data).map(key => ({
-                    ...response.data[key],
-                    uid: key
-                }));
-                dispatch({ type: USERS_LOADED, payload: usersList.sort((a, b) => a.name.localeCompare(b.name)) });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error.message };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+        try {
+            const response = await axios.get(url);
+            const usersList = Object.keys(response.data).map(key => ({
+                ...response.data[key],
+                uid: key
+            }));
+            dispatch({ type: USERS_LOADED, payload: usersList.sort((a, b) => a.name.localeCompare(b.name)) });
+        }
+        catch (error) {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        }
     };
 }
 
@@ -302,8 +306,42 @@ export function getProjectById(uid) {
     }
 }
 
+export function getReportData(uids) {
+    return dispatch => {
+        dispatch({ type: LOADING_REPORT, payload: {} });
+
+        let expRef = firebase.firestore().collection(EXPENSES).where("expenseProject", 'in', uids).where("isBilled", '==', false);
+        expRef
+            .get()
+            .then(querySnapshot => {
+                let expensesList = [];
+                querySnapshot.forEach(doc => expensesList.push({ ...doc.data(), uid: doc.id }));
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+
+        let timeRef = firebase.firestore().collection(TIMES).where("timeProject", 'in', uids).where("isBilled", '==', false);
+        timeRef
+            .get()
+            .then(querySnapshot => {
+                let timesList = [];
+                querySnapshot.forEach(doc => timesList.push({ ...doc.data(), uid: doc.id }));
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+        
+        dispatch({ type: REPORT_LOADED, payload: {} });
+    }
+}
+
 export function getExpenses(uid, byAttorney) {
-    return function(dispatch) {
+    return dispatch => {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
         let docRef = firebase.firestore().collection(EXPENSES).where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid);
         if(!byAttorney) docRef.where("isBilled", "==", false);
@@ -325,7 +363,7 @@ export function getExpenses(uid, byAttorney) {
 }
 
 export function getTimes(uid, byAttorney) {
-    return function(dispatch) {
+    return dispatch => {
         dispatch({ type: LOADING_TIMES, payload: {} });
         let docRef = firebase.firestore().collection(TIMES).where(byAttorney ? "timeAttorney" : "timeProject", "==", uid);
         if(!byAttorney) docRef.where("isBilled", "==", false);
@@ -431,20 +469,20 @@ export function deleteClient(uid) {
 }
 
 export function deleteUser(uid) {
-    return function(dispatch) {
+    return async function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
         dispatch({ type: LOADING_USERS, payload: {} });
-        return axios.delete(url)
-            .then(response => {
-                dispatch({ type: REMOVED_USER, payload: uid });
+        try {
+            await axios.delete(url);
+            dispatch({ type: REMOVED_USER, payload: uid });
 
-                const alert = { type: AlertType.Success, message: "User successfully deleted."};
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error.message };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+            const alert = { type: AlertType.Success, message: "User successfully deleted." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }
+        catch (error) {
+            const alert_1 = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert_1 });
+        }
     }
 }

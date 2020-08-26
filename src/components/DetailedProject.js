@@ -91,10 +91,6 @@ class detailedProject extends Component {
         self.props.getTimes(this.props.match.params.projectId, false);
         self.props.getExpenses(this.props.match.params.projectId, false);
         self.props.getPayments(this.props.match.params.projectId);
-
-        if (Object.keys(this.props.projectsNames).length === 0) {
-            this.props.getProjectsMapping();
-        }
     }
 
     isFloat(n) {
@@ -798,8 +794,8 @@ class detailedProject extends Component {
                                                     </span>
                                                 </OverlayTrigger>
                                             </TableCell>
-                                            <TableCell className="rightAlign">{`${row.timeHours}:${row.timeMinutes} hrs`}</TableCell>
-                                            <TableCell></TableCell>
+                                            <TableCell className="rightAlign">{`$${row.timeTotal}`}</TableCell>
+                                            <TableCell>{`${row.timeHours}:${row.timeMinutes} hrs`}</TableCell>
                                             <TableCell>
                                                 <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" />
                                             </TableCell>
@@ -808,8 +804,8 @@ class detailedProject extends Component {
                                         }
                                         <TableRow>
                                             <TableCell>Total </TableCell>
-                                            <TableCell className="rightAlign">5h 45m</TableCell>
-                                            <TableCell> </TableCell>
+                                            <TableCell className="rightAlign">${times.sum("timeTotal")}</TableCell>
+                                            <TableCell></TableCell>
                                             <TableCell></TableCell>
                                         </TableRow>
                                     </TableBody>
