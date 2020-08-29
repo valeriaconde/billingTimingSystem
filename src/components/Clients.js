@@ -311,7 +311,6 @@ class Clientes extends Component {
     }
 
     handleChangeClientModal = selectedClientModal => {
-        console.log(selectedClientModal);
         this.setState( { selectedClientModal,
             activeIdx: selectedClientModal.idx,
             edit: false,

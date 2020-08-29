@@ -148,10 +148,10 @@ class tiemposPage extends Component {
             timeClient: selectedClientModal.uid,
             timeProject: selectedProjectModal.uid,
             timeAttorney: att,
-            timeHours: timeHours,
-            timeMinutes: timeMinutes,
-            timeTotal: timeTotal,
-            hourlyRate: hr,
+            timeHours: Number(timeHours),
+            timeMinutes: Number(timeMinutes),
+            timeTotal: Number(timeTotal),
+            hourlyRate: Number(hr),
             isBilled: false
         };
 
@@ -404,8 +404,8 @@ class tiemposPage extends Component {
                                                         </span>
                                                     </OverlayTrigger>
                                                 </TableCell>
-                                                <TableCell className="rightAlign">{`${row.timeHours}:${row.timeMinutes} hrs`}</TableCell>
-                                                <TableCell>{`$${row.timeTotal}`}</TableCell>
+                                                <TableCell className="rightAlign">{`${row.timeHours}:${row.timeMinutes > 0 ? row.timeMinutes : '00'} hrs`}</TableCell>
+                                                <TableCell>{`$${row.timeTotal.toFixed(2)}`}</TableCell>
                                                 <TableCell>
                                                     <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" />
                                                 </TableCell>

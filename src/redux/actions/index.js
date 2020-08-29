@@ -4,8 +4,8 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
     ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, 
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, 
     ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, 
-    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED } from "../../constants/action-types"; 
-import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS } from '../../constants/collections';
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED } from "../../constants/action-types"; 
+import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 import firebase from "../../components/firestone";
@@ -194,6 +194,15 @@ export function updateTime(uid, payload) {
     }
 }
 
+export function updateInvoice() {
+    return function(dispatch) {
+        const docRef = firebase.firestore().collection(MISC).doc(INVOICE);
+        docRef.update({
+            current: firebase.firestore.FieldValue.increment(1)
+        });
+    }
+}
+
 export function updateUser(uid, payload) {
     return async function(dispatch) {
         const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
@@ -307,8 +316,17 @@ export function getProjectById(uid) {
 }
 
 export function getReportData(uids) {
-    return dispatch => {
+    return async dispatch => {
         dispatch({ type: LOADING_REPORT, payload: {} });
+
+        let invRef = firebase.firestore().collection(MISC).doc(INVOICE);
+        const invDoc = await invRef.get();
+        if(!invDoc.exists) {
+            const alert = { type: AlertType.Error, message: "Invoice number not found" };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        } else {
+            dispatch({ type: INVOICE_LOADED, payload: invDoc.data() });
+        }
 
         let expRef = firebase.firestore().collection(EXPENSES).where("expenseProject", 'in', uids).where("isBilled", '==', false);
         expRef
