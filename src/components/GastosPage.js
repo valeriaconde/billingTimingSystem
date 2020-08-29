@@ -369,7 +369,7 @@ class gastos extends Component {
                                                             </span>
                                                         </OverlayTrigger>
                                                     </TableCell>
-                                                        <TableCell className="rightAlign"> ${row.expenseTotal} </TableCell>
+                                                        <TableCell className="rightAlign"> ${row.expenseTotal.toFixed(2)} </TableCell>
                                                     <TableCell></TableCell>
                                                     <TableCell>
                                                         <FontAwesomeIcon onClick={() => this.editExpense(row)} icon={faEdit} className="legemblue" />

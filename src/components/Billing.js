@@ -5,7 +5,7 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
 import { getProjectByClient,addTime, addExpense, deletePayment, updateTime, deleteTime,
     updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients,
-    getUsers, getTimes, getExpenses, addDownPayment, getPayments, getReportData
+    getUsers, getTimes, getExpenses, addDownPayment, getPayments, getReportData, updateInvoice
 } from "../redux/actions/index";
 import FileSaver from "file-saver";
 import Docxtemplater from 'docxtemplater';
@@ -31,7 +31,8 @@ const mapStateToProps = state => {
         loadedPaymentsOnce: state.loadedPaymentsOnce,
         payments: state.payments,
         reportReady: state.reportReady,
-        loadingReport: state.loadingReport
+        loadingReport: state.loadingReport,
+        invoice: state.invoice
      };
 };
 
@@ -100,16 +101,37 @@ class billing extends Component {
         let totalExpenses = 0;
         this.props.expenses.map(e => totalExpenses += Number(e.expenseTotal));
 
-        var amount = 0;
+        var amount = 0, totalTimes = 0, totalHours = 0, totalMinutes = 0;
         var projects = [];
+        var times = [];
         for(let project of this.state.selectedProjects) {
             var totalProjectTaxable = Number(project.projectFee) || 0;
 
-            let times = this.props.times.filter(t => t.timeProject === project.uid);
-            times.map(t => totalProjectTaxable += Number(t.timeTotal));
+            /* Times */
+            let currTimes = this.props.times.filter(t => t.timeProject === project.uid);
+            currTimes.forEach(t => {
+                totalProjectTaxable += Number(t.timeTotal);
+                totalTimes += Number(t.timeTotal);
+                totalHours += Number(t.timeHours);
+                totalMinutes += Number(t.timeMinutes);
+
+                const attorney = this.props.users.find(u => u.uid === t.timeAttorney);
+
+                times.push({
+                    uid: t.uid,
+                    hrs: `${t.timeHours}:${t.timeMinutes > 0 ? t.timeMinutes : '00'}`,
+                    rate: t.hourlyRate.toFixed(2),
+                    totalT: t.timeTotal.toFixed(2),
+                    dateFull: t.timeDate?.toDate().toDateString().split(' ').slice(1).join(' '),
+                    description: t.timeTitle,
+                    initials: attorney.initials,
+                    attorney: attorney.name
+                });
+            });
             amount += totalProjectTaxable;
 
             projects.push({
+                uid: project.uid,
                 name: project.projectTitle,
                 billingType: (project.projectFixedFee ? "Fixed Fee" : "Hourly Billing"),
                 totalP: totalProjectTaxable
@@ -119,7 +141,6 @@ class billing extends Component {
         /* IVA */
         let tax = 0;
         if(this.state.selectedClient.iva) {
-            console.log("si hay tax papu");
             tax = amount * 0.16;
         }
 
@@ -127,8 +148,9 @@ class billing extends Component {
         const grandTotal = total + totalExpenses;
 
         const data = {
-            invoice: 123,
+            invoice: this.props.invoice.current,
             date: `${day}/${month}/${year}`,
+            date2: `${month.toUpperCase()} ${year}`,
             contact: this.state.selectedClient.contact,
             denomination: this.state.selectedClient.denomination,
             address1: this.state.selectedClient.address,
@@ -140,11 +162,13 @@ class billing extends Component {
             amount: amount.toFixed(2),
             tax: tax.toFixed(2),
             expenses: totalExpenses.toFixed(2),
+            times: times,
+            hasTimes: times.length > 0,
             total: total.toFixed(2),
-            grandTotal: grandTotal.toFixed(2)
+            grandTotal: grandTotal.toFixed(2),
+            totalTimes: totalTimes,
+            totalHrs: `${totalHours + Math.floor(totalMinutes / 60)}:${totalMinutes % 60 > 0 ? totalMinutes % 60 : '00'}`
         };
-
-        console.log(data);
 
         this.loadFile("/template.docx", (error, content) => {
             if(error) throw error;
@@ -156,13 +180,6 @@ class billing extends Component {
             try {
                 doc.render();
             } catch(error) {
-                var e = {
-                    message: error.message,
-                    name: error.name,
-                    stack: error.stack,
-                    properties: error.properties,
-                };
-                console.log(JSON.stringify({error: e}));
                 throw error;
             }
 
@@ -170,9 +187,9 @@ class billing extends Component {
                                                 type: "blob",
                                                 mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                             });
-            console.log("blob");
-            console.log(blob);
-            FileSaver.saveAs(blob, "output.docx");
+            FileSaver.saveAs(blob, `#${this.props.invoice.current} ${this.state.selectedClient.denomination}.docx`);
+            this.props.updateInvoice();
+            this.setState({ ...INITIAL_STATE });
         });
     }
 
@@ -239,7 +256,7 @@ class billing extends Component {
                                         this.props.loadingReport ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                                         <div>
                                             <Button className="legem-primary" type="submit" onClick={this.generateData} hidden={selectedProjects == null || selectedProjects.length === 0 || this.props.reportReady}> Generate charge notice </Button>
-                                            <Button className="legem-primary" type="submit" onClick={this.generateDoc} hidden={!this.props.reportReady}> Download </Button>
+                                            <Button className="legem-primary" type="submit" onClick={this.generateDoc} hidden={!this.props.reportReady}> {`Download Invoice #${this.props.invoice.current}`} </Button>
                                         </div>
                                     }
                                 </div>
@@ -270,5 +287,6 @@ export default connect(mapStateToProps, {
     addTime,
     addExpense,
     getProjectByClient,
-    getReportData
+    getReportData,
+    updateInvoice
 })(withAuthorization(condition)(billing));
