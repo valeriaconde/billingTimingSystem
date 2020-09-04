@@ -195,10 +195,12 @@ export function updateTime(uid, payload) {
 }
 
 export function updateInvoice() {
-    return function(dispatch) {
+    return async function(dispatch) {
         const docRef = firebase.firestore().collection(MISC).doc(INVOICE);
-        docRef.update({
+        await docRef.update({
             current: firebase.firestore.FieldValue.increment(1)
+        }).then(response => {
+            window.location.reload();
         });
     }
 }
@@ -327,6 +329,19 @@ export function getReportData(uids) {
         } else {
             dispatch({ type: INVOICE_LOADED, payload: invDoc.data() });
         }
+
+        let payRef = firebase.firestore().collection(PAYMENTS).where("paymentProject", 'in', uids);
+        payRef
+            .get()
+            .then(querySnapshot => {
+                let paymentsList = [];
+                querySnapshot.forEach(doc => paymentsList.push({ ...doc.data(), uid: doc.id }));
+                dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
 
         let expRef = firebase.firestore().collection(EXPENSES).where("expenseProject", 'in', uids).where("isBilled", '==', false);
         expRef

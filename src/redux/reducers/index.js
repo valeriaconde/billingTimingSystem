@@ -73,7 +73,7 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === LOADING_REPORT) {
         return Object.assign({}, state, {
-            loadingReport: true
+            loadingReport: true,
         });
     } else if(action.type === LOADING_PROJECTS_MAPPING) {
         return Object.assign({}, state, {
