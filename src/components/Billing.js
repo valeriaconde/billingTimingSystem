@@ -101,11 +101,30 @@ class billing extends Component {
         let totalExpenses = 0;
         this.props.expenses.map(e => totalExpenses += Number(e.expenseTotal));
 
+        /* Down Payments */
+        let totalDiscount = 0;
+        this.props.payments.map(p => totalDiscount += Number(p.paymentTotal));
+
         var amount = 0, totalTimes = 0, totalHours = 0, totalMinutes = 0;
         var projects = [];
         var times = [];
+        var expenses = [];
         for(let project of this.state.selectedProjects) {
             var totalProjectTaxable = Number(project.projectFee) || 0;
+
+            /* Expenses */
+            let currExpenses = this.props.expenses.filter(e => e.expenseProject === project.uid);
+            currExpenses.forEach(e => {
+                const attorney = this.props.users.find(u => u.uid === e.expenseAttorney);
+
+                expenses.push({
+                    uid: e.uid,
+                    totalE: e.expenseTotal.toFixed(2),
+                    description: e.expenseTitle,
+                    initials: attorney.initials,
+                    dateFull: e.expenseDate?.toDate().toDateString().split(' ').slice(1).join(' ')
+                });
+            });
 
             /* Times */
             let currTimes = this.props.times.filter(t => t.timeProject === project.uid);
@@ -145,7 +164,8 @@ class billing extends Component {
         }
 
         const total = amount + tax;
-        const grandTotal = total + totalExpenses;
+        const amount_discount = total - totalDiscount;
+        const grandTotal = amount_discount + totalExpenses;
 
         const data = {
             invoice: this.props.invoice.current,
@@ -161,10 +181,15 @@ class billing extends Component {
             projects: projects,
             amount: amount.toFixed(2),
             tax: tax.toFixed(2),
-            expenses: totalExpenses.toFixed(2),
+            totalExpenses: totalExpenses.toFixed(2),
             times: times,
+            expenses: expenses,
+            hasExpenses: expenses.length > 0,
             hasTimes: times.length > 0,
+            hasDiscount: totalDiscount > 0,
+            discount: totalDiscount.toFixed(2),
             total: total.toFixed(2),
+            amount_discount: amount_discount.toFixed(2),
             grandTotal: grandTotal.toFixed(2),
             totalTimes: totalTimes,
             totalHrs: `${totalHours + Math.floor(totalMinutes / 60)}:${totalMinutes % 60 > 0 ? totalMinutes % 60 : '00'}`
