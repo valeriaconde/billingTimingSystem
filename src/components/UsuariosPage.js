@@ -100,20 +100,21 @@ class UsuariosPage extends Component {
             startYear: this.props.users[activeIdx].startYear, 
             salary: this.props.users[activeIdx].salary,
             name: this.props.users[activeIdx].name || this.props.users[activeIdx].email,
-            initials: this.props.users[activeIdx].initials || "AAA"
+            initials: this.props.users[activeIdx].initials || "AAA",
+            email: this.props.users[activeIdx].email
         });
     }
 
     renderUsers() {
         return (
             <ListGroup as="ul" className="">
-                {this.props.users.map((user, i) => <ListGroup.Item onClick={this.onClickUser} value={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{user.name || user.email}</ListGroup.Item>)}
+                {this.props.users.map((user, i) => <ListGroup.Item onClick={this.onClickUser} value={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{user.name || user.email} {user.roles && !!user.roles[ROLES.ADMIN] ? "(Admin)" : ""}</ListGroup.Item>)}
             </ListGroup>
         );
     }
 
     render() {
-        const { startYear, job, salary, name, initials } = this.state;
+        const { startYear, job, salary, name, initials, email } = this.state;
         return (
             <AuthUserContext.Consumer>
             { authUser =>
@@ -140,8 +141,10 @@ class UsuariosPage extends Component {
                                         this.state.edit ?
                                             <Form.Control onChange={this.onChange} name="name" size="lg" type="text" value={name || "Name"} />
                                             :
-                                            <h3>{name || "Name"}</h3>
+                                            <h3>{name || ""}</h3>
                                     }
+
+                                    <h5>Email: {email}</h5>
 
                                     {/* PUESTO */}
                                     <Form.Group as={Row}>
