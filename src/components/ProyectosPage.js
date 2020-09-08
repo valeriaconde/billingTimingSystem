@@ -26,8 +26,6 @@ const mapStateToProps = state => {
 
 const INITIAL_STATE = {
     showModal: false,
-    selectedOption: null,
-    selectedClientModal: null,
     selectedAppointed: null,
     projectTitle: '',
     projectFixedFee: 'false',
@@ -67,7 +65,7 @@ class Proyectos extends Component {
 
         if(projectFixedFee === 'true' && !this.isFloat(projectFee)) return;
 
-        if(projectTitle === '' || selectedClientModal == null) return;
+        if(projectTitle === '' || selectedClientModal == null || selectedAppointed == null) return;
 
         const payload = {
             projectTitle: projectTitle,
@@ -78,8 +76,8 @@ class Proyectos extends Component {
             isOpen: true
         };
         this.props.addProject(payload);
-
-        this.setState(INITIAL_STATE);
+        this.props.getProjectByClient(selectedClientModal.value);
+        this.setState({ ...INITIAL_STATE, selectedOption: selectedClientModal });
     }
 
     handleChangeMain = selectedOption => { 
