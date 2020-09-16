@@ -139,9 +139,9 @@ class UsuariosPage extends Component {
                                     {/* DENOMINACION */}
                                     {
                                         this.state.edit ?
-                                            <Form.Control onChange={this.onChange} name="name" size="lg" type="text" value={name || "Name"} />
+                                            <Form.Control onChange={this.onChange} name="name" size="lg" type="text" value={name} />
                                             :
-                                            <h3>{name || ""}</h3>
+                                            <h3>{name || "Name"}</h3>
                                     }
 
                                     <h5>Email: {email}</h5>
