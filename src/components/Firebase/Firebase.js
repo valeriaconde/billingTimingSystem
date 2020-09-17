@@ -65,19 +65,23 @@ class Firebase {
                     .then(snapshot => {
                         const dbUser = snapshot.val();
 
-                        // default empty roles
-                        if(!dbUser.roles) {
-                            dbUser.roles = {};
+                        if(dbUser.email !== authUser.email) {
+                            fallback();
+                        } else {
+                            // default empty roles
+                            if(!dbUser.roles) {
+                                dbUser.roles = {};
+                            }
+
+                            // merge auth and db user
+                            this.mergedUser = {
+                                ...authUser,
+                                ...dbUser,
+                            };
+
+                            console.log(this.mergedUser);
+                            next(this.mergedUser);
                         }
-
-                        // merge auth and db user
-                        authUser = {
-                            uid: authUser.uid,
-                            email: authUser.email,
-                            ...dbUser,
-                        };
-
-                        next(authUser);
                     });
             } else {
                 fallback();
