@@ -39,12 +39,10 @@ class LoginPage extends Component {
             event.stopPropagation();
             return;
         }
-
         this.props.firebase
             .doSignInWithEmailAndPassword(email, password)
             .then(() => { // log in success
                 this.props.history.push('/home');
-                window.location.reload();
             })
             .catch(error => {
                 this.props.addAlert(AlertType.Error, error.message);
