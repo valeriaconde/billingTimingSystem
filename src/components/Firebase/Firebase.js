@@ -79,7 +79,6 @@ class Firebase {
                                 ...dbUser,
                             };
 
-                            console.log(this.mergedUser);
                             next(this.mergedUser);
                         }
                     });
