@@ -122,6 +122,7 @@ class billing extends Component {
                     totalE: e.expenseTotal.toFixed(2),
                     description: e.expenseTitle,
                     initials: attorney.initials,
+                    project: project.projectTitle,
                     dateFull: e.expenseDate?.toDate().toDateString().split(' ').slice(1).join(' ')
                 });
             });
