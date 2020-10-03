@@ -142,7 +142,7 @@ class Clientes extends Component {
         };
         this.props.addClient(payload);
 
-        this.setState({ showModalCliente: false });
+        this.setState({ ...INITIAL_STATE });
     }
 
     handleOnChange(event) {
