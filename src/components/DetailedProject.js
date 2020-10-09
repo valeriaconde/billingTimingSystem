@@ -430,6 +430,7 @@ class detailedProject extends Component {
         if (selectedDate == null || timeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
         var att = selectedAttorneyModal?.value || this.attorney?.current.props.value.value;
         var hr = hourlyRate || this.hour.current.value;
+        const timeTotal = +hr * (+timeHours + timeMinutes / 60.0);
         const payload = {
             timeTitle: timeTitle,
             timeDate: selectedDate,
@@ -438,6 +439,7 @@ class detailedProject extends Component {
             timeAttorney: att,
             timeHours: timeHours,
             timeMinutes: timeMinutes,
+            timeTotal: timeTotal,
             hourlyRate: hr,
             isBilled: false
         };
