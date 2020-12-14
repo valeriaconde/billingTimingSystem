@@ -17,7 +17,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addTime, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { addTime, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
@@ -40,7 +40,8 @@ const mapStateToProps = state => {
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping,
         loadedPaymentsOnce: state.loadedPaymentsOnce,
-        payments: state.payments
+        payments: state.payments,
+        loadingProject: state.loadingProject
      };
 };
 
@@ -628,6 +629,15 @@ class detailedProject extends Component {
         this.setState(INITIAL_STATE);
     }
 
+    archiveProject = event => {
+        let payload = this.props.project;
+        payload.isOpen = false;
+
+        if(window.confirm('Are you sure you want to archive this project?')) {
+            this.props.updateProject(this.props.match.params.projectId, payload);
+        }
+    }
+
     render() {
         const expenses = this.props.expenses !== null ?
             this.props.expenses.map((e, i) => ({
@@ -816,7 +826,7 @@ class detailedProject extends Component {
                         </div>
                         <br />
                         <div className="rightAlign biggerRightMargin bottomMargin">
-                            <Button variant="outline-danger">Archive project</Button>{' '}
+                            <Button onClick={this.archiveProject} variant="outline-danger">Archive project</Button>{' '}
                         </div>
                     </div>
                 }
@@ -841,5 +851,6 @@ export default connect(mapStateToProps, {
     deleteTime,
     deletePayment,
     addTime,
-    addExpense
+    addExpense,
+    updateProject
 })(withAuthorization(condition)(detailedProject));

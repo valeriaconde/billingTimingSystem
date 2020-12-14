@@ -4,7 +4,7 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
     ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, 
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, 
     ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, 
-    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED } from "../../constants/action-types"; 
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT } from "../../constants/action-types"; 
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -146,6 +146,26 @@ export function updateClient(uid, payload) {
                     dispatch({ type: ADD_ALERT, payload: alert });
                     setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
                 });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function updateProject(uid, payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECT, payload: {} });
+        const docRef = firebase.firestore().collection(PROJECTS).doc(uid);
+        docRef.update(payload)
+            .then(() => {
+                docRef.get().then(snapshot => {
+                    dispatch({ type: UPDATED_PROJECT, payload: { uid: uid, ...snapshot.data() } });
+                    const alert = { type: AlertType.Success, message: "Project successfully updated." };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                })
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error.message };
