@@ -17,7 +17,8 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addTime, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
@@ -40,7 +41,8 @@ const mapStateToProps = state => {
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping,
         loadedPaymentsOnce: state.loadedPaymentsOnce,
-        payments: state.payments
+        payments: state.payments,
+        loadingProject: state.loadingProject
      };
 };
 
@@ -48,6 +50,7 @@ const INITIAL_STATE = {
     showModal: false,
     showExpenseModal: false,
     showTimeModal: false,
+    showEditModal: false,
     selectedDate: new Date(),
     paymentTotal: 0,
     timeMinutes: 15,
@@ -61,7 +64,8 @@ const INITIAL_STATE = {
     timeTitle: '',
     timeHours: 0,
     hourlyRate: 0,
-    isModalAdd: true
+    isModalAdd: true,
+    projectTitle: null
 };
 
 class detailedProject extends Component {
@@ -124,12 +128,14 @@ class detailedProject extends Component {
         if (modal === 1) this.setState({ showModal: true });
         else if(modal === 2) this.setState({ showExpenseModal: true });
         else if(modal === 3) this.setState({ showTimeModal: true });
+        else if(modal === 4) this.setState({ showEditModal: true });
     }
 
     handleClose = modal => {
         if(modal === 1) this.setState({ showModal: false });
         else if(modal === 2) this.setState({ showExpenseModal: false });
         else if(modal === 3) this.setState({ showTimeModal: false });
+        else if(modal === 4) this.setState({ showEditModal: false });
     }
 
     handleDateChange = selectedDate => {
@@ -628,6 +634,64 @@ class detailedProject extends Component {
         this.setState(INITIAL_STATE);
     }
 
+    archiveProject = event => {
+        let payload = this.props.project;
+        payload.isOpen = false;
+
+        if(window.confirm('Are you sure you want to archive this project?')) {
+            this.props.updateProject(this.props.match.params.projectId, payload);
+        }
+    }
+
+    onDelete = event => {
+        if(window.confirm('Are you sure you want to delete this project?')) {
+            this.props.deleteProject(this.props.match.params.projectId);
+            this.props.history.push('/projects');
+            this.props.addAlert(AlertType.Success, "Project successfully deleted.");
+        }
+    }
+
+    handleEditProject = event => {
+        event.preventDefault();
+        this.setState({ validated: true });
+        const { projectTitle } = this.state;
+
+        if(projectTitle === '') return;
+
+        let payload = this.props.project;
+        payload.projectTitle = projectTitle;
+
+        this.props.updateProject(this.props.match.params.projectId, payload);
+        this.setState({ ...INITIAL_STATE });
+    }
+
+    renderEditModal(){
+        const { showEditModal } = this.state;
+        const projectTitle = this.state.projectTitle ?? this.props.project?.projectTitle;
+
+        return(
+            <Modal show={showEditModal} onHide={() => this.handleClose(4)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>New project</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={this.handleNewProject}>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">Title</Form.Label>
+                            <Col sm="9">
+                                <Form.Control isInvalid={projectTitle?.length === 0} name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
+                            </Col>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => this.handleClose(4)}>Cancel</Button>
+                    <Button className="legem-primary" type="submit" onClick={this.handleEditProject}> Save </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
     render() {
         const expenses = this.props.expenses !== null ?
             this.props.expenses.map((e, i) => ({
@@ -656,12 +720,13 @@ class detailedProject extends Component {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
-                    this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
+                    this.props.loadingProject || this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
                     <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects}></BarLoader> :
                     <div>
                         {this.renderModal()}
                         {this.renderExpenseModal(authUser, !authUser?.roles[ROLES.ADMIN])}
                         {this.renderTimeModal(authUser, !authUser?.roles[ROLES.ADMIN])}
+                        {this.renderEditModal()}
 
                         <h3 className="blueLetters topMargin leftMargin"> {this.props.project?.projectTitle} </h3>
                         <h6 className="bigLeftMargin"> For {this.props.clientsNames[this.state.clientId]} </h6>
@@ -816,7 +881,12 @@ class detailedProject extends Component {
                         </div>
                         <br />
                         <div className="rightAlign biggerRightMargin bottomMargin">
-                            <Button variant="outline-danger">Archive project</Button>{' '}
+                            <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                <DeleteIcon />
+                            </IconButton>
+                            <Button onClick={() => this.handleShow(4)} variant="outline-dark">Edit project</Button>
+                            &nbsp;&nbsp;
+                            <Button onClick={this.archiveProject} variant="outline-danger">Archive project</Button>{' '}
                         </div>
                     </div>
                 }
@@ -841,5 +911,8 @@ export default connect(mapStateToProps, {
     deleteTime,
     deletePayment,
     addTime,
-    addExpense
+    addExpense,
+    updateProject,
+    deleteProject,
+    addAlert
 })(withAuthorization(condition)(detailedProject));

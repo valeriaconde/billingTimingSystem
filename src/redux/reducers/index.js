@@ -3,7 +3,7 @@ import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, 
     LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, 
     UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, 
-    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED } from "../../constants/action-types";
+    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -19,6 +19,7 @@ const initialState = {
     loadingTimes: false,
     loadingUsers: false,
     loadingClients: false,
+    loadingProject: false,
     loadingProjects: false,
     loadingExpenses: false,
     loadedExpenseOnce: false,
@@ -91,6 +92,10 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingExpenses: true
         });
+    } else if(action.type === LOADING_PROJECT) {
+        return Object.assign({}, state, {
+            loadingProject: true
+        });
     } else if(action.type === LOADING_PAYMENT) {
         return Object.assign({}, state, {
             loadingPayments: true
@@ -106,6 +111,12 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingClients: false,
             clients: tmp.sort((a, b) => a.denomination.localeCompare(b.denomination))
+        });
+    } else if(action.type === REMOVED_PROJECT) {
+        let tmp = state.projects.filter(p => { return p.uid !== action.payload });
+        return Object.assign({}, state, {
+            loadingProject: false,
+            projects: tmp
         });
     } else if(action.type === REMOVED_EXPENSE) {
         let tmp = state.expenses.filter(e => e.uid !== action.payload);
@@ -193,6 +204,11 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingUsers: false,
             users: tmp.sort((a, b) => a.name.localeCompare(b.name))
+        });
+    } else if(action.type === UPDATED_PROJECT) {
+        return Object.assign({}, state, {
+            loadingProject: false,
+            project: action.payload
         });
     } else if(action.type === UPDATED_CLIENT) {
         const uid = action.payload.uid;
