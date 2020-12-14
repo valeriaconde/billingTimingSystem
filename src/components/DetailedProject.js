@@ -50,6 +50,7 @@ const INITIAL_STATE = {
     showModal: false,
     showExpenseModal: false,
     showTimeModal: false,
+    showEditModal: false,
     selectedDate: new Date(),
     paymentTotal: 0,
     timeMinutes: 15,
@@ -63,7 +64,8 @@ const INITIAL_STATE = {
     timeTitle: '',
     timeHours: 0,
     hourlyRate: 0,
-    isModalAdd: true
+    isModalAdd: true,
+    projectTitle: null
 };
 
 class detailedProject extends Component {
@@ -126,12 +128,14 @@ class detailedProject extends Component {
         if (modal === 1) this.setState({ showModal: true });
         else if(modal === 2) this.setState({ showExpenseModal: true });
         else if(modal === 3) this.setState({ showTimeModal: true });
+        else if(modal === 4) this.setState({ showEditModal: true });
     }
 
     handleClose = modal => {
         if(modal === 1) this.setState({ showModal: false });
         else if(modal === 2) this.setState({ showExpenseModal: false });
         else if(modal === 3) this.setState({ showTimeModal: false });
+        else if(modal === 4) this.setState({ showEditModal: false });
     }
 
     handleDateChange = selectedDate => {
@@ -647,6 +651,47 @@ class detailedProject extends Component {
         }
     }
 
+    handleEditProject = event => {
+        event.preventDefault();
+        this.setState({ validated: true });
+        const { projectTitle } = this.state;
+
+        if(projectTitle === '') return;
+
+        let payload = this.props.project;
+        payload.projectTitle = projectTitle;
+
+        this.props.updateProject(this.props.match.params.projectId, payload);
+        this.setState({ ...INITIAL_STATE });
+    }
+
+    renderEditModal(){
+        const { showEditModal } = this.state;
+        const projectTitle = this.state.projectTitle ?? this.props.project?.projectTitle;
+
+        return(
+            <Modal show={showEditModal} onHide={() => this.handleClose(4)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>New project</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={this.handleNewProject}>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">Title</Form.Label>
+                            <Col sm="9">
+                                <Form.Control isInvalid={projectTitle?.length === 0} name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
+                            </Col>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => this.handleClose(4)}>Cancel</Button>
+                    <Button className="legem-primary" type="submit" onClick={this.handleEditProject}> Save </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
     render() {
         const expenses = this.props.expenses !== null ?
             this.props.expenses.map((e, i) => ({
@@ -681,6 +726,7 @@ class detailedProject extends Component {
                         {this.renderModal()}
                         {this.renderExpenseModal(authUser, !authUser?.roles[ROLES.ADMIN])}
                         {this.renderTimeModal(authUser, !authUser?.roles[ROLES.ADMIN])}
+                        {this.renderEditModal()}
 
                         <h3 className="blueLetters topMargin leftMargin"> {this.props.project?.projectTitle} </h3>
                         <h6 className="bigLeftMargin"> For {this.props.clientsNames[this.state.clientId]} </h6>
@@ -838,6 +884,8 @@ class detailedProject extends Component {
                             <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
                                 <DeleteIcon />
                             </IconButton>
+                            <Button onClick={() => this.handleShow(4)} variant="outline-dark">Edit project</Button>
+                            &nbsp;&nbsp;
                             <Button onClick={this.archiveProject} variant="outline-danger">Archive project</Button>{' '}
                         </div>
                     </div>
