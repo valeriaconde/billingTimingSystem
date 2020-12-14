@@ -525,6 +525,22 @@ export function deleteProject(uid) {
     return function(dispatch) {
         dispatch({ type: LOADING_PROJECT, payload: {} });
         firebase.firestore().collection(PROJECTS).doc(uid).delete().then(() => {
+            // Borrar en cascada
+            const expQuery = firebase.firestore().collection(EXPENSES).where("expenseProject", "==", uid);
+            expQuery.get().then(snapshot => {
+                snapshot.forEach(doc => doc.ref.delete());
+            });
+
+            const timeQuery = firebase.firestore().collection(TIMES).where("timeProject", "==", uid);
+            timeQuery.get().then(snapshot => {
+                snapshot.forEach(doc => doc.ref.delete());
+            });
+
+            const payQuery = firebase.firestore().collection(PAYMENTS).where("paymentProject", "==", uid);
+            payQuery.get().then(snapshot => {
+                snapshot.forEach(doc => doc.ref.delete());
+            });
+
             dispatch({ type: REMOVED_PROJECT, payload: uid });
         }).catch(error => {
             const alert = { type: AlertType.Error, message: error };
