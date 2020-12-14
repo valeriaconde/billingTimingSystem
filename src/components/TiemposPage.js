@@ -49,7 +49,7 @@ const INITIAL_STATE = {
     timeTitle: '',
     timeHours: 0,
     timeMinutes: 0,
-    hourlyRate: 0,
+    hourlyRate: null,
     isModalAdd: true
 };
 
@@ -206,7 +206,7 @@ class tiemposPage extends Component {
         const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
         const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
-        const selectedHourlyRate = hourlyRate || userSelect[idx]?.salary;
+        const selectedHourlyRate = hourlyRate ?? userSelect[idx]?.salary;
 
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
