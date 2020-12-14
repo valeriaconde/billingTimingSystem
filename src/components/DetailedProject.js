@@ -17,7 +17,8 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addTime, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
@@ -638,6 +639,14 @@ class detailedProject extends Component {
         }
     }
 
+    onDelete = event => {
+        if(window.confirm('Are you sure you want to delete this project?')) {
+            this.props.deleteProject(this.props.match.params.projectId);
+            this.props.history.push('/projects');
+            this.props.addAlert(AlertType.Success, "Project successfully deleted.");
+        }
+    }
+
     render() {
         const expenses = this.props.expenses !== null ?
             this.props.expenses.map((e, i) => ({
@@ -666,7 +675,7 @@ class detailedProject extends Component {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
-                    this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
+                    this.props.loadingProject || this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
                     <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects}></BarLoader> :
                     <div>
                         {this.renderModal()}
@@ -826,6 +835,9 @@ class detailedProject extends Component {
                         </div>
                         <br />
                         <div className="rightAlign biggerRightMargin bottomMargin">
+                            <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                <DeleteIcon />
+                            </IconButton>
                             <Button onClick={this.archiveProject} variant="outline-danger">Archive project</Button>{' '}
                         </div>
                     </div>
@@ -852,5 +864,7 @@ export default connect(mapStateToProps, {
     deletePayment,
     addTime,
     addExpense,
-    updateProject
+    updateProject,
+    deleteProject,
+    addAlert
 })(withAuthorization(condition)(detailedProject));

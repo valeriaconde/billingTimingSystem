@@ -4,7 +4,7 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
     ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED, 
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, 
     ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT, 
-    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT } from "../../constants/action-types"; 
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT } from "../../constants/action-types"; 
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -514,6 +514,18 @@ export function deleteClient(uid) {
             const alert = { type: AlertType.Success, message: "Client successfully deleted."};
             dispatch({ type: ADD_ALERT, payload: alert });
             setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }).catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
+    }
+}
+
+export function deleteProject(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECT, payload: {} });
+        firebase.firestore().collection(PROJECTS).doc(uid).delete().then(() => {
+            dispatch({ type: REMOVED_PROJECT, payload: uid });
         }).catch(error => {
             const alert = { type: AlertType.Error, message: error };
             dispatch({ type: ADD_ALERT, payload: alert });
