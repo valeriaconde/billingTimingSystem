@@ -656,7 +656,7 @@ class detailedProject extends Component {
         this.setState({ validated: true });
         const { projectTitle } = this.state;
 
-        if(projectTitle === '') return;
+        if(projectTitle === '' || projectTitle === null) return;
 
         let payload = this.props.project;
         payload.projectTitle = projectTitle;
