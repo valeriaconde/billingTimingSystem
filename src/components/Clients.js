@@ -346,7 +346,7 @@ class Clientes extends Component {
                 value: c.uid,
                 idx: i,
                 ...c
-            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const { edit, currDenomination, currAddress, currAddress2, currRfc, currContact, selectedClientModal,
             currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState, currZipCode } = this.state;
