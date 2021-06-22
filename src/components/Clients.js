@@ -342,7 +342,7 @@ class Clientes extends Component {
     render() {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
-                label: c.denomination,
+                label: c.denomination || '',
                 value: c.uid,
                 idx: i,
                 ...c

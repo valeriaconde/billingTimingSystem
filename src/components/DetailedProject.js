@@ -111,7 +111,7 @@ class detailedProject extends Component {
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
-                label: u.name,
+                label: u.name || '',
                 value: u.uid,
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
@@ -288,21 +288,21 @@ class detailedProject extends Component {
     renderExpenseModal(authUSer, isHidden) {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
-                label: c.denomination,
+                label: c.denomination || '',
                 value: c.uid,
                 ...c
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const projectSelect = this.props.projects !== null ?
             this.props.projects.map((p, i) => ({
-                label: p.projectTitle,
+                label: p.projectTitle || '',
                 value: p.uid,
                 ...p
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u, i) => ({
-                label: u.name,
+                label: u.name || '',
                 value: u.uid,
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
@@ -480,21 +480,21 @@ class detailedProject extends Component {
     renderTimeModal(authUser, isHidden) {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c) => ({
-                label: c.denomination,
+                label: c.denomination || '',
                 value: c.uid,
                 ...c
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const projectSelect = this.props.projects !== null ?
             this.props.projects.map((p) => ({
-                label: p.projectTitle,
+                label: p.projectTitle || '',
                 value: p.uid,
                 ...p
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
-                label: u.name,
+                label: u.name || '',
                 value: u.uid,
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
@@ -656,7 +656,7 @@ class detailedProject extends Component {
         this.setState({ validated: true });
         const { projectTitle } = this.state;
 
-        if(projectTitle === '' || projectTitle === null) return;
+        if(projectTitle === '') return;
 
         let payload = this.props.project;
         payload.projectTitle = projectTitle;

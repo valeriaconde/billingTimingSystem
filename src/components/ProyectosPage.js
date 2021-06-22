@@ -104,14 +104,14 @@ class Proyectos extends Component {
     renderModal(){
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
-                label: c.denomination,
+                label: c.denomination || '',
                 value: c.uid,
                 ...c
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u, i) => ({
-                label: u.name,
+                label: u.name || '',
                 value: u.uid,
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
@@ -176,7 +176,7 @@ class Proyectos extends Component {
     render() {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
-                label: c.denomination,
+                label: c.denomination || '',
                 value: c.uid,
                 ...c
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
