@@ -104,13 +104,13 @@ function rootReducer(state = initialState, action) {
         let tmp = state.users.filter(u => { return u.uid !== action.payload });
         return Object.assign({}, state, {
             loadingUsers: false,
-            users: tmp.sort((a, b) => a.name.localeCompare(b.name))
+            users: tmp.sort((a, b) => a.name?.localeCompare(b.name))
         });
     } else if(action.type === REMOVED_CLIENT) {
         let tmp = state.clients.filter(c => { return c.uid !== action.payload });
         return Object.assign({}, state, {
             loadingClients: false,
-            clients: tmp.sort((a, b) => a.denomination.localeCompare(b.denomination))
+            clients: tmp.sort((a, b) => a.denomination?.localeCompare(b.denomination))
         });
     } else if(action.type === REMOVED_PROJECT) {
         let tmp = state.projects.filter(p => { return p.uid !== action.payload });
@@ -138,7 +138,7 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
-            users: state.users.concat(action.payload).sort((a, b) => a.name.localeCompare(b.name)),
+            users: state.users.concat(action.payload).sort((a, b) => a.name?.localeCompare(b.name)),
             loadingUsers: false
         });
     } else if(action.type === PROJECTS_MAPPING_LOADED) {
@@ -160,7 +160,7 @@ function rootReducer(state = initialState, action) {
             tmp[client.uid] = client.denomination;
         });
         return Object.assign({}, state, {
-            clients: state.clients.concat(action.payload).sort((a, b) => a.denomination.localeCompare(b.denomination)),
+            clients: state.clients.concat(action.payload).sort((a, b) => a.denomination?.localeCompare(b.denomination)),
             loadingClients: false,
             clientsNames: tmp
         });
@@ -203,7 +203,7 @@ function rootReducer(state = initialState, action) {
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingUsers: false,
-            users: tmp.sort((a, b) => a.name.localeCompare(b.name))
+            users: tmp.sort((a, b) => a.name?.localeCompare(b.name))
         });
     } else if(action.type === UPDATED_PROJECT) {
         return Object.assign({}, state, {
@@ -216,7 +216,7 @@ function rootReducer(state = initialState, action) {
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingClients: false,
-            clients: tmp.sort((a, b) => a.denomination.localeCompare(b.denomination))
+            clients: tmp.sort((a, b) => a.denomination?.localeCompare(b.denomination))
         });
     } else if(action.type === UPDATED_EXPENSE) {
         const uid = action.payload.uid;
@@ -237,7 +237,7 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {
             loadingClients: false,
-            clients: state.clients.concat([action.payload]).sort((a, b) => a.denomination.localeCompare(b.denomination))
+            clients: state.clients.concat([action.payload]).sort((a, b) => a.denomination?.localeCompare(b.denomination))
         });
     }
 

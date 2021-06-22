@@ -234,18 +234,18 @@ class billing extends Component {
     render() {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
-                label: c.denomination,
+                label: c.denomination || '',
                 value: c.uid,
                 idx: i,
                 ...c
-            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const projectSelect = this.props.projects !== null ?
             this.props.projects.map((p) => ({
-                label: p.projectTitle,
+                label: p.projectTitle || '',
                 value: p.uid,
                 ...p
-            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const { selectedClient, selectedProjects } = this.state;
 
