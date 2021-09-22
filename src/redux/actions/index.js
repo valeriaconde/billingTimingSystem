@@ -338,33 +338,33 @@ export function getProjectById(uid) {
 }
 
 function batchProcessing(collectionName, fieldPath, opStr, collection) {
-    let batches = [];
-    let arr = collection.slice();
-    while (arr.length) {
-      // firestore limits batches to 10
-      const batch = arr.splice(0, 10);
+    return new Promise((res) => {
+        let batches = [];
+        let arr = collection.slice();
+        while (arr.length) {
+        // firestore limits batches to 10
+        const batch = arr.splice(0, 10);
 
-      // add the batch request to to a queue
-      batches.push(
-        new Promise(response => {
-          firebase.firestore().collection(collectionName)
-            .where(
-              fieldPath,
-              opStr,
-              [...batch]
-            )
-            .get()
-            .then(results => response(results.docs.map(result => ({ ...result.data()}) )))
-        })
-      )
-    }
+        // add the batch request to to a queue
+        batches.push(
+            new Promise(response => {
+            firebase.firestore().collection(collectionName)
+                .where(
+                fieldPath,
+                opStr,
+                [...batch]
+                )
+                .get()
+                .then(results => response(results.docs.map(result => ({ ...result.data()}) )))
+            })
+        )
+        }
 
-    let ans = [];
-    // after all of the data is fetched, return it
-    Promise.all(batches).then(content => {
-        ans = content.flat();
-    })
-    return ans;
+        // after all of the data is fetched, return it
+        Promise.all(batches).then(content => {
+            res(content.flat());
+        });
+    });
 }
 
 export function getReportData(uids) {
@@ -381,8 +381,15 @@ export function getReportData(uids) {
         }
 
         //let payRef = firebase.firestore().collection(PAYMENTS).where("paymentProject", 'in', uids);
-        let paymentsList = batchProcessing(EXPENSES, "paymentProject", 'in', uids);
-        dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+        batchProcessing(PAYMENTS, "paymentProject", 'in', uids)
+            .then(paymentsList => {
+                dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+        //dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
         // payRef
         //     .get()
         //     .then(querySnapshot => {
@@ -396,8 +403,14 @@ export function getReportData(uids) {
         //     });
 
         //let expRef = firebase.firestore().collection(EXPENSES).where("expenseProject", 'in', uids).where("isBilled", '==', false);
-        let expensesList = batchProcessing(EXPENSES, "expenseProject", 'in', uids);
-        dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+        batchProcessing(EXPENSES, "expenseProject", 'in', uids)
+            .then(expensesList => {
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
         // expRef
         //     .get()
         //     .then(querySnapshot => {
@@ -411,8 +424,14 @@ export function getReportData(uids) {
         //     });
 
         //let timeRef = firebase.firestore().collection(TIMES).where("timeProject", 'in', uids).where("isBilled", '==', false);
-        let timesList = batchProcessing(TIMES, "timeProject", 'in', uids);
-        dispatch({ type: TIMES_LOADED, payload: timesList });
+        batchProcessing(TIMES, "timeProject", 'in', uids)
+            .then(timesList => {
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
         // timeRef
         //     .get()
         //     .then(querySnapshot => {
