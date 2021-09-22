@@ -337,6 +337,36 @@ export function getProjectById(uid) {
     }
 }
 
+function batchProcessing(collectionName, fieldPath, opStr, collection) {
+    let batches = [];
+    let arr = collection.slice();
+    while (arr.length) {
+      // firestore limits batches to 10
+      const batch = arr.splice(0, 10);
+
+      // add the batch request to to a queue
+      batches.push(
+        new Promise(response => {
+          firebase.firestore().collection(collectionName)
+            .where(
+              fieldPath,
+              opStr,
+              [...batch]
+            )
+            .get()
+            .then(results => response(results.docs.map(result => ({ ...result.data()}) )))
+        })
+      )
+    }
+
+    let ans = [];
+    // after all of the data is fetched, return it
+    Promise.all(batches).then(content => {
+        ans = content.flat();
+    })
+    return ans;
+}
+
 export function getReportData(uids) {
     return async dispatch => {
         dispatch({ type: LOADING_REPORT, payload: {} });
@@ -350,44 +380,50 @@ export function getReportData(uids) {
             dispatch({ type: INVOICE_LOADED, payload: invDoc.data() });
         }
 
-        let payRef = firebase.firestore().collection(PAYMENTS).where("paymentProject", 'in', uids);
-        payRef
-            .get()
-            .then(querySnapshot => {
-                let paymentsList = [];
-                querySnapshot.forEach(doc => paymentsList.push({ ...doc.data(), uid: doc.id }));
-                dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+        //let payRef = firebase.firestore().collection(PAYMENTS).where("paymentProject", 'in', uids);
+        let paymentsList = batchProcessing(EXPENSES, "paymentProject", 'in', uids);
+        dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+        // payRef
+        //     .get()
+        //     .then(querySnapshot => {
+        //         let paymentsList = [];
+        //         querySnapshot.forEach(doc => paymentsList.push({ ...doc.data(), uid: doc.id }));
+        //         dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+        //     })
+        //     .catch(error => {
+        //         const alert = { type: AlertType.Error, message: error };
+        //         dispatch({ type: ADD_ALERT, payload: alert });
+        //     });
 
-        let expRef = firebase.firestore().collection(EXPENSES).where("expenseProject", 'in', uids).where("isBilled", '==', false);
-        expRef
-            .get()
-            .then(querySnapshot => {
-                let expensesList = [];
-                querySnapshot.forEach(doc => expensesList.push({ ...doc.data(), uid: doc.id }));
-                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+        //let expRef = firebase.firestore().collection(EXPENSES).where("expenseProject", 'in', uids).where("isBilled", '==', false);
+        let expensesList = batchProcessing(EXPENSES, "expenseProject", 'in', uids);
+        dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+        // expRef
+        //     .get()
+        //     .then(querySnapshot => {
+        //         let expensesList = [];
+        //         querySnapshot.forEach(doc => expensesList.push({ ...doc.data(), uid: doc.id }));
+        //         dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+        //     })
+        //     .catch(error => {
+        //         const alert = { type: AlertType.Error, message: error };
+        //         dispatch({ type: ADD_ALERT, payload: alert });
+        //     });
 
-        let timeRef = firebase.firestore().collection(TIMES).where("timeProject", 'in', uids).where("isBilled", '==', false);
-        timeRef
-            .get()
-            .then(querySnapshot => {
-                let timesList = [];
-                querySnapshot.forEach(doc => timesList.push({ ...doc.data(), uid: doc.id }));
-                dispatch({ type: TIMES_LOADED, payload: timesList });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+        //let timeRef = firebase.firestore().collection(TIMES).where("timeProject", 'in', uids).where("isBilled", '==', false);
+        let timesList = batchProcessing(TIMES, "timeProject", 'in', uids);
+        dispatch({ type: TIMES_LOADED, payload: timesList });
+        // timeRef
+        //     .get()
+        //     .then(querySnapshot => {
+        //         let timesList = [];
+        //         querySnapshot.forEach(doc => timesList.push({ ...doc.data(), uid: doc.id }));
+        //         dispatch({ type: TIMES_LOADED, payload: timesList });
+        //     })
+        //     .catch(error => {
+        //         const alert = { type: AlertType.Error, message: error };
+        //         dispatch({ type: ADD_ALERT, payload: alert });
+        //     });
         
         dispatch({ type: REPORT_LOADED, payload: {} });
     }
