@@ -342,11 +342,11 @@ class Clientes extends Component {
     render() {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c, i) => ({
-                label: c.denomination,
+                label: c.denomination || '',
                 value: c.uid,
                 idx: i,
                 ...c
-            })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const { edit, currDenomination, currAddress, currAddress2, currRfc, currContact, selectedClientModal,
             currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState, currZipCode } = this.state;

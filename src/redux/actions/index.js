@@ -256,7 +256,7 @@ export function getProjectByClient(clientUid) {
                 querySnapshot.forEach(doc => {
                     projectsList.push({ ...doc.data(), uid: doc.id });
                 });
-                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle.localeCompare(b.projectTitle)) });
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -276,7 +276,7 @@ export function getProjectsMapping() {
                 querySnapshot.forEach(doc => {
                     projectsList.push({ ...doc.data(), uid: doc.id });
                 });
-                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: projectsList.sort((a, b) => a.projectTitle.localeCompare(b.projectTitle)) });
+                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -295,7 +295,7 @@ export function getClients() {
                     ...doc.data(),
                     uid: doc.id
                 }));
-                dispatch({ type: CLIENTS_LOADED, payload: clientsList.sort((a, b) => a.denomination.localeCompare(b.denomination)) });
+                dispatch({ type: CLIENTS_LOADED, payload: clientsList.sort((a, b) => a.denomination?.localeCompare(b.denomination)) });
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -314,7 +314,7 @@ export function getUsers() {
                 ...response.data[key],
                 uid: key
             }));
-            dispatch({ type: USERS_LOADED, payload: usersList.sort((a, b) => a.name.localeCompare(b.name)) });
+            dispatch({ type: USERS_LOADED, payload: usersList.sort((a, b) => a.name?.localeCompare(b.name)) });
         }
         catch (error) {
             const alert = { type: AlertType.Error, message: error.message };
