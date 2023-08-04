@@ -168,109 +168,84 @@ class Clientes extends Component {
                 <Modal.Body>
                     <Form noValidate validated={this.state.validated} onSubmit={this.handleNewClient}>
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Name
-                            </Form.Label>
+                            <Form.Label column sm="3"> Name </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Address
-                            </Form.Label>
+                            <Form.Label column sm="3"> Address </Form.Label>
                             <Col sm="7">
-                                <Form.Control placeholder="Street Address" name="address" onChange={this.handleOnChange} value={address} as="textarea" rows="1" />
+                                <Form.Control name="address" onChange={this.handleOnChange} value={address} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Address 2
-                            </Form.Label>
+                            <Form.Label column sm="3"> Address 2 </Form.Label>
                             <Col sm="7">
-                                <Form.Control placeholder="Street Address Line 2" name="address2" onChange={this.handleOnChange} value={address2} as="textarea" rows="1" />
+                                <Form.Control name="address2" onChange={this.handleOnChange} value={address2} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Col sm="10">
-                                <Container>
-                                    <Row>
-                                        <Col>
-                                            <Form.Control name="city" onChange={this.handleOnChange} value={city} as="textarea" rows="1" />
-                                        </Col>
-                                        <Col>
-                                            <Form.Control name="state" onChange={this.handleOnChange} value={state} as="textarea" rows="1" />
-                                        </Col>
-                                    </Row>
-                                    <Row>
-                                        <Col><Form.Label>City</Form.Label></Col>
-                                        <Col><Form.Label>State</Form.Label></Col>
-                                    </Row>
-                                </Container>
+                            <Form.Label column sm="3"> City </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="city" onChange={this.handleOnChange} value={city} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Zip Code
-                            </Form.Label>
+                            <Form.Label column sm="3"> State </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="state" onChange={this.handleOnChange} value={state} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3"> Zip Code </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="zipCode" onChange={this.handleOnChange} value={zipCode} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                RFC
-                            </Form.Label>
+                            <Form.Label column sm="3"> RFC </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Contact
-                            </Form.Label>
+                            <Form.Label column sm="3"> Contact </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Email
-                            </Form.Label>
+                            <Form.Label column sm="3"> Email </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Phone
-                            </Form.Label>
+                            <Form.Label column sm="3"> Phone </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="phone" onChange={this.handleOnChange} value={phone} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Website
-                            </Form.Label>
+                            <Form.Label column sm="3"> Website </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="website" onChange={this.handleOnChange} value={website} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
-                            <Form.Label column sm="3">
-                                Client since
-                            </Form.Label>
+                            <Form.Label column sm="3"> Client since </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="yearSince" onChange={this.handleOnChange} value={yearSince} as="textarea" rows="1" />
                             </Col>
@@ -358,15 +333,17 @@ class Clientes extends Component {
                         {this.renderModal()}
                         <Container className="topMargin">
                             <Row>
-                                <Col sm={10}>
-                                    <Button variant="success" size="lg" block onClick={this.handleShowCliente}> New client </Button>
-                                    <Select required value={selectedClientModal} placeholder="Select client..." options={clientSelect} onChange={this.handleChangeClientModal} />
+                                <Col xs={9}>
+                                    <Select required value={selectedClientModal} placeholder="Search..." options={clientSelect} onChange={this.handleChangeClientModal} />
+                                </Col>
+                                <Col>
+                                    <Button variant="success" block onClick={this.handleShowCliente}> New client </Button>
                                 </Col>
                             </Row>
                             <Row><br/></Row>
                             <Row>
                                 { this.state.activeIdx === -1 ? <div/> :
-                                <Col sm={10}>
+                                <Col xs={11}>
                                     <Form onSubmit={this.onSave}>
                                         {
                                             this.state.edit ?
@@ -374,6 +351,8 @@ class Clientes extends Component {
                                                 :
                                                 <h3> { currDenomination || "DENOMINATION" } </h3>
                                         }
+
+                                        <br></br>
         
                                         {/* DOMICILIO */}
                                         <Form.Group as={Row}>
@@ -391,27 +370,22 @@ class Clientes extends Component {
                                         </Form.Group>
 
                                         <Form.Group as={Row}>
-                                            <Col sm="10">
-                                                <Container>
-                                                    <Row>
-                                                        <Col>
-                                                            <Form.Control name="currCity" onChange={this.onChange} value={currCity} readOnly={!edit} />
-                                                        </Col>
-                                                        <Col>
-                                                            <Form.Control name="currState" onChange={this.onChange} value={currState} readOnly={!edit} />
-                                                        </Col>
-                                                    </Row>
-                                                    <Row>
-                                                        <Col><Form.Label>City</Form.Label></Col>
-                                                        <Col><Form.Label>State</Form.Label></Col>
-                                                    </Row>
-                                                </Container>
+                                            <Form.Label column sm="4"> City </Form.Label>
+                                            <Col sm="6">
+                                                <Form.Control name="currCity" onChange={this.onChange} value={currCity} readOnly={!edit} />
+                                            </Col>
+                                        </Form.Group>
+
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="4"> State </Form.Label>
+                                            <Col sm="6">
+                                                <Form.Control name="currState" onChange={this.onChange} value={currState} readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
 
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> ZIP Code </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <Form.Control value={currZipCode} onChange={this.onChange} name="currZipCode" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
@@ -419,7 +393,7 @@ class Clientes extends Component {
                                         {/* RFC */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> RFC </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <Form.Control value={currRfc} onChange={this.onChange} name="currRfc" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
@@ -427,7 +401,7 @@ class Clientes extends Component {
                                         {/* CONTACTO */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Contact </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
@@ -435,7 +409,7 @@ class Clientes extends Component {
                                         {/* CORREO */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Email </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
@@ -443,7 +417,7 @@ class Clientes extends Component {
                                         {/* TELEFONO */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Phone </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
@@ -451,7 +425,7 @@ class Clientes extends Component {
                                         {/* PAGINA WEB */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Website </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <Form.Control value={currWebsite} onChange={this.onChange} name="currWebsite" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
@@ -459,7 +433,7 @@ class Clientes extends Component {
                                         {/* CLIENTE DESDE */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> Client since </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit} />
                                             </Col>
                                         </Form.Group>
@@ -467,7 +441,7 @@ class Clientes extends Component {
                                         {/* IVA */}
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="4"> IVA </Form.Label>
-                                            <Col sm="5">
+                                            <Col sm="6">
                                                 <div>
                                                         {['radio'].map(type => (
                                                             <div key={`inline-${type}`} className="mb-3">
@@ -479,9 +453,9 @@ class Clientes extends Component {
                                             </Col>
                                         </Form.Group>
         
-                                        <Form.Group as={Row}>
+                                        <Form.Group as={Row} >
                                             <Form.Label column sm="4"></Form.Label>
-                                            <Col sm="5">
+                                            <Col md={{ span: 4, offset: 4 }}>
                                                 <>
                                                 {
                                                     this.state.edit ?
