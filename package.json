@@ -17,7 +17,7 @@
     "file-saver": "^2.0.2",
     "firebase": "^7.13.1",
     "jquery": ">=3.4.0",
-    "jszip": "2.X",
+    "jszip": "3.8",
     "jszip-utils": "^0.1.0",
     "pizzip": "^3.0.6",
     "react": "^16.13.0",
