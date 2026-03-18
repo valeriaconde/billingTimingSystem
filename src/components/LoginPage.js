@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Form, Button } from 'react-bootstrap';
 import { withFirebase } from './Firebase';
 import { AlertType } from '../stores/AlertStore';
@@ -75,4 +76,10 @@ class LoginPage extends Component {
         );
     }
 }
+LoginPage.propTypes = {
+    firebase: PropTypes.object,
+    history: PropTypes.object,
+    addAlert: PropTypes.func
+};
+
 export default connect(mapStateToProps, { clearAlert, addAlert })(withFirebase(LoginPage));

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Form, Button } from 'react-bootstrap';
 import { AlertType } from '../stores/AlertStore';
 import { withFirebase } from './Firebase';
@@ -27,7 +28,7 @@ class Passrec extends Component {
 
     onChange(event) {
         this.setState({ [event.target.name]: event.target.value });
-    };
+    }
 
     onSubmit(event) {
         this.setState({ validated: true });
@@ -68,5 +69,11 @@ class Passrec extends Component {
         );
     }
 }
+
+Passrec.propTypes = {
+    firebase: PropTypes.object,
+    history: PropTypes.object,
+    addAlert: PropTypes.func
+};
 
 export default connect(mapStateToProps, { clearAlert, addAlert })(withFirebase(Passrec));

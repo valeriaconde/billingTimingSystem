@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
@@ -162,7 +163,7 @@ class gastos extends Component {
         });
     }
 
-    handleDeleteExpense = event => {
+    handleDeleteExpense = () => {
         if(window.confirm('Are you sure you want to delete this expense?')) {
             this.props.deleteExpense(this.state.selectedExpenseUid);
         }
@@ -171,21 +172,21 @@ class gastos extends Component {
 
     renderModal(authUSer, isHidden) {
         const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c, i) => ({
+            this.props.clients.map((c) => ({
                 label: c.denomination || '',
                 value: c.uid,
                 ...c
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const projectSelect = this.props.projects !== null ?
-            this.props.projects.map((p, i) => ({
+            this.props.projects.map((p) => ({
                 label: p.projectTitle || '',
                 value: p.uid,
                 ...p
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const userSelect = this.props.users !== null ?
-            this.props.users.map((u, i) => ({
+            this.props.users.map((u) => ({
                 label: u.name || '',
                 value: u.uid,
                 ...u
@@ -306,7 +307,7 @@ class gastos extends Component {
 
     render() {
         const expenses = this.props.expenses !== null ?
-            this.props.expenses.map((e, i) => ({
+            this.props.expenses.map((e) => ({
                 ...e
             })) : [];
             
@@ -388,6 +389,30 @@ class gastos extends Component {
         );
     }
 }
+
+gastos.propTypes = {
+    clients: PropTypes.array,
+    loadingClients: PropTypes.bool,
+    users: PropTypes.array,
+    projects: PropTypes.array,
+    loadingUsers: PropTypes.bool,
+    loadingProjects: PropTypes.bool,
+    expenses: PropTypes.array,
+    loadingExpenses: PropTypes.bool,
+    loadedExpenseOnce: PropTypes.bool,
+    clientsNames: PropTypes.object,
+    projectsNames: PropTypes.object,
+    loadingProjectsMapping: PropTypes.bool,
+    getClients: PropTypes.func,
+    getUsers: PropTypes.func,
+    addProject: PropTypes.func,
+    getProjectByClient: PropTypes.func,
+    addExpense: PropTypes.func,
+    getExpenses: PropTypes.func,
+    getProjectsMapping: PropTypes.func,
+    updateExpense: PropTypes.func,
+    deleteExpense: PropTypes.func
+};
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {

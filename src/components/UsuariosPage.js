@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Jumbotron, Container, Row, Col, Form, Button, ListGroup } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { compose } from 'recompose';
@@ -54,14 +55,14 @@ class UsuariosPage extends Component {
         this.setState({ edit: true });
     }
 
-    onDelete(event) {
+    onDelete() {
         if(window.confirm('Are you sure you want to delete this user?')) {
             this.props.deleteUser(this.props.users[this.state.activeIdx].uid);
             this.setState({ activeIdx: -1, edit: false });
         }
     }
 
-    onSave(event) {
+    onSave() {
         const { startYear, job, salary, name, uid, activeIdx, initials } = this.state;
         if(isNaN(startYear) || startYear.length === 0) {
             this.props.addAlert(AlertType.Error, "Start year must be a number.");
@@ -206,13 +207,23 @@ class UsuariosPage extends Component {
     }
 }
 
-const condition = authUser => 
+UsuariosPage.propTypes = {
+    users: PropTypes.array,
+    loadingUsers: PropTypes.bool,
+    getUsers: PropTypes.func,
+    addAlert: PropTypes.func,
+    clearAlert: PropTypes.func,
+    updateUser: PropTypes.func,
+    deleteUser: PropTypes.func
+};
+
+const condition = authUser =>
     authUser && !!authUser.roles[ROLES.ADMIN];
 
-export default connect(mapStateToProps, { 
-    getUsers, 
-    addAlert, 
-    clearAlert, 
+export default connect(mapStateToProps, {
+    getUsers,
+    addAlert,
+    clearAlert,
     updateUser,
     deleteUser
  })(compose(

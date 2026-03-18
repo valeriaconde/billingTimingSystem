@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
@@ -61,14 +62,14 @@ class Clientes extends Component {
         }
     }
 
-    onDelete(event) {
+    onDelete() {
         if(window.confirm('Are you sure you want to delete this client?')) {
             this.props.deleteClient(this.props.clients[this.state.activeIdx].uid);
             this.setState({ activeIdx: -1, edit: false });
         }
     }
 
-    onSave(event) {
+    onSave() {
         const { currDenomination, currAddress, currAddress2, currCity, currState, currZipCode,
              currRfc, currContact, currEmail, currPhone, currWebsite, currYearSince, currIva, currUid } = this.state;
         
@@ -107,7 +108,7 @@ class Clientes extends Component {
         this.setState({ [event.target.name]: event.target.value });
     }
 
-    onChangeRadio(event) {
+    onChangeRadio() {
         this.setState({ currIva: !this.state.currIva });
     }
 
@@ -327,7 +328,7 @@ class Clientes extends Component {
             currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState, currZipCode } = this.state;
         return (
             <AuthUserContext.Consumer>
-                {authUser => (
+                {() => (
                     this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         {this.renderModal()}
@@ -481,6 +482,19 @@ class Clientes extends Component {
         );
     }
 }
+
+Clientes.propTypes = {
+    alerts: PropTypes.array,
+    clients: PropTypes.array,
+    loadingClients: PropTypes.bool,
+    loadingUsers: PropTypes.bool,
+    addAlert: PropTypes.func,
+    clearAlert: PropTypes.func,
+    addClient: PropTypes.func,
+    getClients: PropTypes.func,
+    updateClient: PropTypes.func,
+    deleteClient: PropTypes.func
+};
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import { compose } from 'recompose';
 import AuthUserContext from './authUserContext';
@@ -31,6 +32,10 @@ const withAuthorization = condition => Component => {
             );
         }
     }
+    WithAuthorization.propTypes = {
+        firebase: PropTypes.object,
+        history: PropTypes.object
+    };
     return compose(
         withRouter,
         withFirebase,

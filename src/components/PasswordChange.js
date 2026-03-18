@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Form, Button } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { AlertType } from '../stores/AlertStore';
@@ -67,7 +68,7 @@ class PassChange extends Component {
     render() {
         return (
             <AuthUserContext.Consumer>
-                {authUser =>
+                {() =>
                     <div>
                         <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.onSubmit}>
                             <Form.Text className="bigLetters"> Change password </Form.Text>
@@ -87,6 +88,12 @@ class PassChange extends Component {
         );
     }
 }
+
+PassChange.propTypes = {
+    firebase: PropTypes.object,
+    history: PropTypes.object,
+    addAlert: PropTypes.func
+};
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, { clearAlert, addAlert })(withAuthorization(condition)(PassChange));

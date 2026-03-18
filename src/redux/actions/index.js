@@ -1,3 +1,4 @@
+/* global process */
 import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
     PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS, 
@@ -215,11 +216,11 @@ export function updateTime(uid, payload) {
 }
 
 export function updateInvoice() {
-    return async function(dispatch) {
+    return async function() {
         const docRef = firebase.firestore().collection(MISC).doc(INVOICE);
         await docRef.update({
             current: firebase.firestore.FieldValue.increment(1)
-        }).then(response => {
+        }).then(() => {
             window.location.reload();
         });
     }

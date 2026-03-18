@@ -101,4 +101,11 @@ class App extends Component {
     }
 }
 
+import PropTypes from 'prop-types';
+
+App.propTypes = {
+    alerts: PropTypes.array,
+    clearAlert: PropTypes.func
+};
+
 export default connect(mapStateToProps, mapDispatchToProps)(withAuthentication(App));

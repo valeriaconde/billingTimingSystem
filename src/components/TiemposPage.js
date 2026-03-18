@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Row, Col, OverlayTrigger, Tooltip, Container, Button, Form, Modal, Jumbotron } from 'react-bootstrap';
 import BarLoader from "react-spinners/BarLoader";
@@ -174,7 +175,7 @@ class tiemposPage extends Component {
         });
     }
 
-    handleDeleteTime = event => {
+    handleDeleteTime = () => {
         if(window.confirm('Are you sure you want to delete this time?')) {
             this.props.deleteTime(this.state.selectedTimeUid);
         }
@@ -423,6 +424,30 @@ class tiemposPage extends Component {
         );
     }
 }
+
+tiemposPage.propTypes = {
+    clients: PropTypes.array,
+    loadingClients: PropTypes.bool,
+    users: PropTypes.array,
+    projects: PropTypes.array,
+    loadingUsers: PropTypes.bool,
+    loadingProjects: PropTypes.bool,
+    times: PropTypes.array,
+    loadingTimes: PropTypes.bool,
+    loadedTimesOnce: PropTypes.bool,
+    clientsNames: PropTypes.object,
+    projectsNames: PropTypes.object,
+    loadingProjectsMapping: PropTypes.bool,
+    getClients: PropTypes.func,
+    getUsers: PropTypes.func,
+    addProject: PropTypes.func,
+    getProjectByClient: PropTypes.func,
+    getProjectsMapping: PropTypes.func,
+    addTime: PropTypes.func,
+    getTimes: PropTypes.func,
+    updateTime: PropTypes.func,
+    deleteTime: PropTypes.func
+};
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {

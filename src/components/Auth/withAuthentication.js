@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import AuthUserContext from './authUserContext';
 import { withFirebase } from '../Firebase';
 
@@ -35,6 +36,9 @@ const withAuthentication = Component => {
             );
         }
     }
+    WithAuthentication.propTypes = {
+        firebase: PropTypes.object
+    };
     return withFirebase(WithAuthentication);
 };
 export default withAuthentication;

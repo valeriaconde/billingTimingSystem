@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
@@ -202,11 +203,7 @@ class billing extends Component {
             var doc = new Docxtemplater().loadZip(zip);
 
             doc.setData(data);
-            try {
-                doc.render();
-            } catch(error) {
-                throw error;
-            }
+            doc.render();
 
             var blob = doc.getZip().generate({
                                                 type: "blob",
@@ -224,7 +221,7 @@ class billing extends Component {
     }
 
     handleChangeProject = option => {
-        this.setState(state => {
+        this.setState(() => {
             return {
                 selectedProjects: option
             };
@@ -251,7 +248,7 @@ class billing extends Component {
 
         return (
             <AuthUserContext.Consumer>
-                {authUser =>
+                {() =>
                     this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         <h4 className="blueLetters topMargin leftMargin"> New notice </h4>
@@ -293,6 +290,28 @@ class billing extends Component {
         );
     }
 }
+
+billing.propTypes = {
+    loadingClients: PropTypes.bool,
+    loadingProjects: PropTypes.bool,
+    loadingUsers: PropTypes.bool,
+    loadingReport: PropTypes.bool,
+    clients: PropTypes.array,
+    projects: PropTypes.array,
+    users: PropTypes.array,
+    expenses: PropTypes.array,
+    times: PropTypes.array,
+    payments: PropTypes.array,
+    projectsNames: PropTypes.object,
+    reportReady: PropTypes.bool,
+    invoice: PropTypes.object,
+    getClients: PropTypes.func,
+    getUsers: PropTypes.func,
+    getProjectsMapping: PropTypes.func,
+    getProjectByClient: PropTypes.func,
+    getReportData: PropTypes.func,
+    updateInvoice: PropTypes.func
+};
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {

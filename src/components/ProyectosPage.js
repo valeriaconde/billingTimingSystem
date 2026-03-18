@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
@@ -103,14 +104,14 @@ class Proyectos extends Component {
 
     renderModal(){
         const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c, i) => ({
+            this.props.clients.map((c) => ({
                 label: c.denomination || '',
                 value: c.uid,
                 ...c
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const userSelect = this.props.users !== null ?
-            this.props.users.map((u, i) => ({
+            this.props.users.map((u) => ({
                 label: u.name || '',
                 value: u.uid,
                 ...u
@@ -175,7 +176,7 @@ class Proyectos extends Component {
 
     render() {
         const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c, i) => ({
+            this.props.clients.map((c) => ({
                 label: c.denomination || '',
                 value: c.uid,
                 ...c
@@ -185,7 +186,7 @@ class Proyectos extends Component {
 
         return (
             <AuthUserContext.Consumer>
-                {authUser =>
+                {() =>
                     this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                     <div>
                         {/* MODAL */}
@@ -235,6 +236,22 @@ class Proyectos extends Component {
         );
     }
 }
+
+Proyectos.propTypes = {
+    alerts: PropTypes.array,
+    clients: PropTypes.array,
+    loadingClients: PropTypes.bool,
+    users: PropTypes.array,
+    projects: PropTypes.array,
+    loadingUsers: PropTypes.bool,
+    loadingProjects: PropTypes.bool,
+    addAlert: PropTypes.func,
+    clearAlert: PropTypes.func,
+    getClients: PropTypes.func,
+    getUsers: PropTypes.func,
+    addProject: PropTypes.func,
+    getProjectByClient: PropTypes.func
+};
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {

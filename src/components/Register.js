@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Form, Button } from 'react-bootstrap';
 import { withFirebase } from './Firebase';
 import { AuthUserContext, withAuthorization } from './Auth';
@@ -76,7 +77,7 @@ class Registeruser extends Component {
 
         return (
             <AuthUserContext.Consumer>
-            { authUser =>
+            { () =>
                 <div>
                     <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.handleSubmit}>
                         <Form.Text className="bigLetters"> New user </Form.Text>
@@ -108,6 +109,11 @@ class Registeruser extends Component {
 
 const condition = authUser => 
     authUser && !!authUser.roles[ROLES.ADMIN];
+
+Registeruser.propTypes = {
+    firebase: PropTypes.object,
+    addAlert: PropTypes.func
+};
 
 export default connect(mapStateToProps, { clearAlert, addAlert })(compose(
     withAuthorization(condition),
