@@ -11,7 +11,7 @@ import { getProjectByClient,addTime, addExpense, deletePayment, updateTime, dele
 import FileSaver from "file-saver";
 import Docxtemplater from 'docxtemplater';
 import JSZipUtils from 'jszip-utils';
-import JSZip from 'jszip';
+import PizZip from 'pizzip';
 import BarLoader from "react-spinners/BarLoader";
 
 const mapStateToProps = state => {
@@ -199,7 +199,7 @@ class billing extends Component {
         this.loadFile("/template.docx", (error, content) => {
             if(error) throw error;
 
-            var zip = new JSZip(content);
+            var zip = new PizZip(content);
             var doc = new Docxtemplater().loadZip(zip);
 
             doc.setData(data);
