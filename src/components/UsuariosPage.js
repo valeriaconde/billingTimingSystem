@@ -42,9 +42,6 @@ class UsuariosPage extends Component {
     }
 
     componentDidMount() {
-        if(this.props.users.length === 0){
-            this.props.getUsers();
-        }
     }
 
     onChange(event) {

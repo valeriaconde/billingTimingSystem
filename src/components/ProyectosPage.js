@@ -46,13 +46,6 @@ class Proyectos extends Component {
     }
 
     componentDidMount() {
-        if(this.props.clients.length === 0) {
-            this.props.getClients();
-        }
-
-        if(this.props.users.length === 0){
-            this.props.getUsers();
-        }
     }
 
     isFloat(n) {
@@ -77,7 +70,6 @@ class Proyectos extends Component {
             isOpen: true
         };
         this.props.addProject(payload);
-        this.props.getProjectByClient(selectedClientModal.value);
         this.setState({ ...INITIAL_STATE, selectedOption: selectedClientModal });
     }
 

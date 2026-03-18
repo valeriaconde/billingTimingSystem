@@ -28,16 +28,10 @@ export function addClient(payload) {
         db.collection(CLIENTS)
             .add(payload)
             .then(docRef => {
-                docRef.get()
-                    .then(doc => {
-                        if (doc.exists) {
-                            const client = { ...doc.data(), uid: doc.id };
-                            dispatch({ type: ADD_CLIENT, payload: client });
-                            const alert = { type: AlertType.Success, message: "Client successfully registered."};
-                            dispatch({ type: ADD_ALERT, payload: alert });
-                            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-                        }
-                    });
+                dispatch({ type: ADD_CLIENT, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Client successfully registered."};
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
             })
             .catch(function(error) {
                 const alert = { type: AlertType.Error, message: error };
@@ -49,8 +43,8 @@ export function addClient(payload) {
 export function addProject(payload) {
     return function(dispatch) {
         firebase.firestore().collection(PROJECTS).add(payload)
-            .then(() => {
-                dispatch({ type: ADD_PROJECT, payload: {} });
+            .then(docRef => {
+                dispatch({ type: ADD_PROJECT, payload: { ...payload, uid: docRef.id } });
                 const alert = { type: AlertType.Success, message: "Project successfully created." };
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
@@ -68,16 +62,10 @@ export function addExpense(payload) {
         const db = firebase.firestore();
         db.collection(EXPENSES).add(payload)
             .then(docRef => {
-                docRef.get()
-                    .then(doc => {
-                        if(doc.exists) {
-                            const expense = { ...doc.data(), uid: doc.id };
-                            dispatch({ type: ADD_EXPENSE, payload: expense });
-                            const alert = { type: AlertType.Success, message: "Expense successfully created." };
-                            dispatch({ type: ADD_ALERT, payload: alert });
-                            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-                        }
-                    });
+                dispatch({ type: ADD_EXPENSE, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Expense successfully created." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -92,16 +80,10 @@ export function addTime(payload) {
         const db = firebase.firestore();
         db.collection(TIMES).add(payload)
             .then(docRef => {
-                docRef.get()
-                    .then(doc => {
-                        if(doc.exists) {
-                            const time = { ...doc.data(), uid: doc.id };
-                            dispatch({ type: ADD_TIME, payload: time });
-                            const alert = { type: AlertType.Success, message: "Time successfully registered." };
-                            dispatch({ type: ADD_ALERT, payload: alert });
-                            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-                        }
-                    });
+                dispatch({ type: ADD_TIME, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Time successfully registered." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -116,16 +98,10 @@ export function addDownPayment(payload) {
         const db = firebase.firestore();
         db.collection(PAYMENTS).add(payload)
             .then(docRef => {
-                docRef.get()
-                    .then(doc => {
-                        if(doc.exists) {
-                            const payment = { ...doc.data(), uid: doc.id };
-                            dispatch({ type: ADD_PAYMENT, payload: payment });
-                            const alert = { type: AlertType.Success, message: "Down payment successfully registered." };
-                            dispatch({ type: ADD_ALERT, payload: alert });
-                            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-                        }
-                    })
+                dispatch({ type: ADD_PAYMENT, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Down payment successfully registered." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -449,7 +425,8 @@ export function getReportData(uids) {
 }
 
 export function getExpenses(uid, byAttorney) {
-    return dispatch => {
+    return (dispatch, getState) => {
+        if (getState().loadedExpenseOnce) return;
         dispatch({ type: LOADING_EXPENSES, payload: {} });
         let docRef = firebase.firestore().collection(EXPENSES).where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid);
         if(!byAttorney) docRef.where("isBilled", "==", false);
@@ -471,7 +448,8 @@ export function getExpenses(uid, byAttorney) {
 }
 
 export function getTimes(uid, byAttorney) {
-    return dispatch => {
+    return (dispatch, getState) => {
+        if (getState().loadedTimesOnce) return;
         dispatch({ type: LOADING_TIMES, payload: {} });
         let docRef = firebase.firestore().collection(TIMES).where(byAttorney ? "timeAttorney" : "timeProject", "==", uid);
         if(!byAttorney) docRef.where("isBilled", "==", false);
@@ -493,7 +471,8 @@ export function getTimes(uid, byAttorney) {
 }
 
 export function getPayments(uid) {
-    return function(dispatch) {
+    return function(dispatch, getState) {
+        if (getState().loadedPaymentsOnce) return;
         dispatch({ type: LOADING_PAYMENT, payload: {} });
         let docRef = firebase.firestore().collection(PAYMENTS).where("paymentProject", "==", uid);
         
