@@ -79,23 +79,9 @@ class detailedProject extends Component {
 
     componentDidMount() {
         this.props.getProjectById(this.props.match.params.projectId);
-
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
-
-        if (this.props.users.length === 0) {
-            this.props.getUsers();
-        }
-
-        if (Object.keys(this.props.projectsNames).length === 0) {
-            this.props.getProjectsMapping();
-        }
-
-        let self = this;
-        self.props.getTimes(this.props.match.params.projectId, false);
-        self.props.getExpenses(this.props.match.params.projectId, false);
-        self.props.getPayments(this.props.match.params.projectId);
+        this.props.getTimes(this.props.match.params.projectId, false);
+        this.props.getExpenses(this.props.match.params.projectId, false);
+        this.props.getPayments(this.props.match.params.projectId);
     }
 
     isFloat(n) {

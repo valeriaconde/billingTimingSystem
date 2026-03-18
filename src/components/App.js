@@ -22,24 +22,40 @@ import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
 import { connect } from "react-redux";
-import { clearAlert } from "../redux/actions/index";
+import { clearAlert, getClients, getUsers, getProjectsMapping } from "../redux/actions/index";
 
 // REACT VERSION: 16.13.0
 
 const mapStateToProps = state => {
-    return { alerts: state.alerts };
+    return {
+        alerts: state.alerts,
+        clients: state.clients,
+        users: state.users,
+        projectsNames: state.projectsNames
+    };
 };
 
 function mapDispatchToProps(dispatch) {
     return {
-        clearAlert: alert => dispatch(clearAlert(alert))
+        clearAlert: alert => dispatch(clearAlert(alert)),
+        getClients: () => dispatch(getClients()),
+        getUsers: () => dispatch(getUsers()),
+        getProjectsMapping: () => dispatch(getProjectsMapping())
     };
 }
 
 class App extends Component {
-    // constructor(props) {
-    //     super(props);
-    // }
+    componentDidMount() {
+        if (this.props.clients.length === 0) {
+            this.props.getClients();
+        }
+        if (this.props.users.length === 0) {
+            this.props.getUsers();
+        }
+        if (Object.keys(this.props.projectsNames).length === 0) {
+            this.props.getProjectsMapping();
+        }
+    }
 
     getAlertColor(type) {
         switch (type) {
@@ -105,7 +121,13 @@ import PropTypes from 'prop-types';
 
 App.propTypes = {
     alerts: PropTypes.array,
-    clearAlert: PropTypes.func
+    clients: PropTypes.array,
+    users: PropTypes.array,
+    projectsNames: PropTypes.object,
+    clearAlert: PropTypes.func,
+    getClients: PropTypes.func,
+    getUsers: PropTypes.func,
+    getProjectsMapping: PropTypes.func
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withAuthentication(App));

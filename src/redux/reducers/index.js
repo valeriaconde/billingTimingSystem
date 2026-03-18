@@ -43,7 +43,8 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === ADD_PROJECT) {
         return Object.assign({}, state, {
-            loadingProjects: false
+            loadingProjects: false,
+            projects: state.projects.concat([action.payload]).sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle))
         });
     } else if(action.type === ADD_EXPENSE) {
         return Object.assign({}, state, {

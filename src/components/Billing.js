@@ -67,17 +67,6 @@ class billing extends Component {
     }
 
     componentDidMount() {
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
-
-        if (this.props.users.length === 0) {
-            this.props.getUsers();
-        }
-
-        if (Object.keys(this.props.projectsNames).length === 0) {
-            this.props.getProjectsMapping();
-        }
     }
 
     loadFile = (url, callback) => {
