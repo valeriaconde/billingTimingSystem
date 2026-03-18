@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { toDate } from '../utils/dateUtils';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Form, Row, Col, Button } from 'react-bootstrap';
@@ -113,7 +114,7 @@ class billing extends Component {
                     description: e.expenseTitle,
                     initials: attorney.initials,
                     project: project.projectTitle,
-                    dateFull: e.expenseDate?.toDate().toDateString().split(' ').slice(1).join(' ')
+                    dateFull: toDate(e.expenseDate)?.toDateString().split(' ').slice(1).join(' ')
                 });
             });
 
@@ -131,7 +132,7 @@ class billing extends Component {
                     hrs: `${t.timeHours}:${t.timeMinutes > 0 ? t.timeMinutes : '00'}`,
                     rate: parseFloat(t.hourlyRate).toFixed(2),
                     totalT: parseFloat(t.timeTotal).toFixed(2),
-                    dateFull: t.timeDate?.toDate().toDateString().split(' ').slice(1).join(' '),
+                    dateFull: toDate(t.timeDate)?.toDateString().split(' ').slice(1).join(' '),
                     description: t.timeTitle,
                     initials: attorney.initials,
                     attorney: attorney.name

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { toDate } from '../utils/dateUtils';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
@@ -144,7 +145,7 @@ class gastos extends Component {
             selectedProjectModal: { value: expense.expenseProject, label: this.props.projectsNames[expense.expenseProject], uid: expense.expenseProject },
             expenseTitle: expense.expenseTitle,
             expenseTotal: expense.expenseTotal,
-            selectedDate: expense.expenseDate.toDate(),
+            selectedDate: toDate(expense.expenseDate),
             selectedExpenseModal: expenseClasses.find(obj => obj.value === expense.expenseClass),
             showModal: true,
             isModalAdd: false,
@@ -346,7 +347,7 @@ class gastos extends Component {
                                                     <TableCell>
                                                         <OverlayTrigger overlay={
                                                             <Tooltip>
-                                                                {row.expenseDate?.toDate().toDateString()}
+                                                                {toDate(row.expenseDate)?.toDateString()}
                                                                 <br/>
                                                                 {expenseClasses.find(obj => {
                                                                     return obj.value === row.expenseClass;

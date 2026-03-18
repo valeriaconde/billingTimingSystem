@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { toDate } from '../utils/dateUtils';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Row, Col, OverlayTrigger, Tooltip, Container, Button, Form, Modal, Jumbotron } from 'react-bootstrap';
@@ -155,7 +156,7 @@ class tiemposPage extends Component {
             selectedClientModal: { value: time.timeClient, label: this.props.clientsNames[time.timeClient], uid: time.timeClient },
             selectedProjectModal: { value: time.timeProject, label: this.props.projectsNames[time.timeProject], uid: time.timeProject },
             timeTitle: time.timeTitle,
-            selectedDate: time.timeDate.toDate(),
+            selectedDate: toDate(time.timeDate),
             timeHours: time.timeHours,
             timeMinutes: time.timeMinutes,
             showModal: true,
@@ -384,7 +385,7 @@ class tiemposPage extends Component {
                                                 <TableCell>
                                                     <OverlayTrigger overlay={
                                                         <Tooltip>
-                                                            {row.timeDate?.toDate().toDateString()}
+                                                            {toDate(row.timeDate)?.toDateString()}
                                                         </Tooltip>
                                                     }>
                                                         <span className="d-inline-block">

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { toDate } from '../utils/dateUtils';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Container, Row, Col, Card, Button, Form, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
@@ -248,7 +249,7 @@ class detailedProject extends Component {
             selectedAttorneyModal: { value: expense.expenseAttorney, label: this.props.users.find(u => u.uid === expense.expenseAttorney)?.name},
             expenseTitle: expense.expenseTitle,
             expenseTotal: expense.expenseTotal,
-            selectedDate: expense.expenseDate.toDate(),
+            selectedDate: toDate(expense.expenseDate),
             selectedExpenseModal: expenseClasses.find(obj => obj.value === expense.expenseClass),
             showExpenseModal: true,
             isModalAdd: false,
@@ -448,7 +449,7 @@ class detailedProject extends Component {
             selectedProjectModal: { value: time.timeProject, label: this.props.projectsNames[time.timeProject], uid: time.timeProject },
             selectedAttorneyModal: { value: time.timeAttorney, label: this.props.users.find(u => u.uid === time.timeAttorney)?.name},
             timeTitle: time.timeTitle,
-            selectedDate: time.timeDate.toDate(),
+            selectedDate: toDate(time.timeDate),
             timeHours: time.timeHours,
             timeMinutes: time.timeMinutes,
             showTimeModal: true,
@@ -743,7 +744,7 @@ class detailedProject extends Component {
                                                     <TableBody>
                                                         {payments.map((row) => (
                                                             <TableRow key={row.uid}>
-                                                                <TableCell>{row.paymentDate?.toDate().toDateString()}</TableCell>
+                                                                <TableCell>{toDate(row.paymentDate)?.toDateString()}</TableCell>
                                                                 <TableCell className="centerText">${row.paymentTotal}</TableCell>
                                                                 <TableCell>
                                                                     <IconButton onClick={() => this.handleDeletePayment(row)} color="secondary" aria-label="delete">
@@ -793,7 +794,7 @@ class detailedProject extends Component {
                                                 <TableCell>
                                                     <OverlayTrigger overlay={
                                                         <Tooltip>
-                                                            {row.expenseDate?.toDate().toDateString()}
+                                                            {toDate(row.expenseDate)?.toDateString()}
                                                             <br/>
                                                             {expenseClasses.find(obj => {
                                                                 return obj.value === row.expenseClass;
@@ -840,7 +841,7 @@ class detailedProject extends Component {
                                             <TableCell>
                                                 <OverlayTrigger overlay={
                                                     <Tooltip>
-                                                        {row.timeDate?.toDate().toDateString()}
+                                                        {toDate(row.timeDate)?.toDateString()}
                                                     </Tooltip>
                                                 }>
                                                     <span className="d-inline-block">
