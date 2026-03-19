@@ -76,13 +76,12 @@ class gastos extends Component {
     }
 
     isFloat(n) {
-        n = n.toString();
-        return n.length > 0 && !isNaN(n) && n > 0;
+        n = n?.toString();
+        return n?.length > 0 && !isNaN(n) && n > 0;
     }
 
     handleShow = () => {
-        this.setState(INITIAL_STATE);
-        this.setState({ showModal: true });
+        this.setState({ ...INITIAL_STATE, showModal: true });
     }
 
     handleClose() {
@@ -168,7 +167,7 @@ class gastos extends Component {
         this.setState(INITIAL_STATE);
     }
 
-    renderModal(authUSer, isHidden) {
+    renderModal(authUser, isHidden) {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c) => ({
                 label: c.denomination || '',
@@ -190,10 +189,8 @@ class gastos extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
-
         const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
-        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
+        const selectedAttorney = selectedAttorneyModal || userSelect.find(u => u.value === authUser.uid);
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>

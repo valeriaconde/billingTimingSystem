@@ -78,13 +78,12 @@ class tiemposPage extends Component {
     }
 
     isFloat(n) {
-        n = n.toString();
-        return n.length > 0 && !isNaN(n) && n >= 0;
+        n = n?.toString();
+        return n?.length > 0 && !isNaN(n) && n >= 0;
     }
 
     handleShow() {
-        this.setState(INITIAL_STATE);
-        this.setState({ showModal: true });
+        this.setState({ ...INITIAL_STATE, showModal: true });
     }
 
     handleClose() {
@@ -106,15 +105,7 @@ class tiemposPage extends Component {
 
     handleAttorneyModal = selectedAttorneyModal => {
         this.setState({ selectedAttorneyModal });
-
-        const userSelect = this.props.users !== null ?
-            this.props.users.map((u) => ({
-                label: u.name || '',
-                value: u.uid,
-                ...u
-            })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(selectedAttorneyModal.uid);
-        const selectedHourlyRate = userSelect[idx]?.salary;
+        const selectedHourlyRate = selectedAttorneyModal?.salary;
         this.setState({ hourlyRate: selectedHourlyRate });
     }
 
@@ -202,10 +193,10 @@ class tiemposPage extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
         const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
-        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
-        const selectedHourlyRate = hourlyRate ?? userSelect[idx]?.salary;
+        const defaultAttorney = userSelect.find(u => u.value === authUser.uid);
+        const selectedAttorney = selectedAttorneyModal || defaultAttorney;
+        const selectedHourlyRate = hourlyRate ?? defaultAttorney?.salary;
 
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -395,7 +386,7 @@ class tiemposPage extends Component {
                                                         </span>
                                                     </OverlayTrigger>
                                                 </TableCell>
-                                                <TableCell className="rightAlign">{`${row.timeHours}:${row.timeMinutes > 0 ? row.timeMinutes : '00'} hrs`}</TableCell>
+                                                <TableCell className="rightAlign">{`${row.timeHours}:${String(row.timeMinutes).padStart(2, '0')} hrs`}</TableCell>
                                                 <TableCell>{`$${row.timeTotal.toFixed(2)}`}</TableCell>
                                                 <TableCell>
                                                     <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" />

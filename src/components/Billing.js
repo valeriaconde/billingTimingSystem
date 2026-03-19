@@ -115,7 +115,7 @@ class billing extends Component {
                     uid: e.uid,
                     totalE: parseFloat(e.expenseTotal).toFixed(2),
                     description: e.expenseTitle,
-                    initials: attorney.initials,
+                    initials: attorney?.initials ?? '',
                     project: project.projectTitle,
                     dateFull: toDate(e.expenseDate)?.toDateString().split(' ').slice(1).join(' ')
                 });
@@ -132,13 +132,13 @@ class billing extends Component {
                 const attorney = this.props.users.find(u => u.uid === t.timeAttorney);
                 times.push({
                     uid: t.uid,
-                    hrs: `${t.timeHours}:${t.timeMinutes > 0 ? t.timeMinutes : '00'}`,
+                    hrs: `${t.timeHours}:${String(t.timeMinutes).padStart(2, '0')}`,
                     rate: parseFloat(t.hourlyRate).toFixed(2),
                     totalT: parseFloat(t.timeTotal).toFixed(2),
                     dateFull: toDate(t.timeDate)?.toDateString().split(' ').slice(1).join(' '),
                     description: t.timeTitle,
-                    initials: attorney.initials,
-                    attorney: attorney.name
+                    initials: attorney?.initials ?? '',
+                    attorney: attorney?.name ?? ''
                 });
             });
             amount += totalProjectTaxable;
@@ -186,7 +186,7 @@ class billing extends Component {
             amount_discount: parseFloat(amount_discount).toFixed(2),
             grandTotal: parseFloat(grandTotal).toFixed(2),
             totalTimes: totalTimes,
-            totalHrs: `${totalHours + Math.floor(totalMinutes / 60)}:${totalMinutes % 60 > 0 ? totalMinutes % 60 : '00'}`
+            totalHrs: `${totalHours + Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, '0')}`
         };
 
         this.loadFile("/template.docx", (error, content) => {

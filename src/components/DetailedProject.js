@@ -100,14 +100,7 @@ class detailedProject extends Component {
     handleAttorneyModal = selectedAttorneyModal => {
         this.setState({ selectedAttorneyModal });
 
-        const userSelect = this.props.users !== null ?
-            this.props.users.map((u) => ({
-                label: u.name || '',
-                value: u.uid,
-                ...u
-            })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(selectedAttorneyModal.uid);
-        const selectedHourlyRate = userSelect[idx]?.salary;
+        const selectedHourlyRate = selectedAttorneyModal?.salary;
         this.setState({ hourlyRate: selectedHourlyRate });
     }
 
@@ -276,7 +269,7 @@ class detailedProject extends Component {
         this.setState(INITIAL_STATE);
     }
 
-    renderExpenseModal(authUSer, isHidden) {
+    renderExpenseModal(authUser, isHidden) {
         const clientSelect = this.props.clients !== null ?
             this.props.clients.map((c) => ({
                 label: c.denomination || '',
@@ -298,10 +291,8 @@ class detailedProject extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
-
         const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
-        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
+        const selectedAttorney = selectedAttorneyModal || userSelect.find(u => u.value === authUser.uid);
         return (
             <Modal show={this.state.showExpenseModal} onHide={() => this.handleClose(2)}>
                 <Modal.Header closeButton>
@@ -490,10 +481,10 @@ class detailedProject extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
         const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
-        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
-        const selectedHourlyRate = hourlyRate || userSelect[idx]?.salary;
+        const defaultAttorney = userSelect.find(u => u.value === authUser.uid);
+        const selectedAttorney = selectedAttorneyModal || defaultAttorney;
+        const selectedHourlyRate = hourlyRate || defaultAttorney?.salary;
 
         return (
             <Modal show={this.state.showTimeModal} onHide={() => this.handleClose(3)}>
@@ -626,11 +617,8 @@ class detailedProject extends Component {
     }
 
     archiveProject = () => {
-        let payload = this.props.project;
-        payload.isOpen = false;
-
         if(window.confirm('Are you sure you want to archive this project?')) {
-            this.props.updateProject(this.props.match.params.projectId, payload);
+            this.props.updateProject(this.props.match.params.projectId, { ...this.props.project, isOpen: false });
         }
     }
 
@@ -649,8 +637,7 @@ class detailedProject extends Component {
 
         if(projectTitle === '') return;
 
-        let payload = this.props.project;
-        payload.projectTitle = projectTitle;
+        const payload = { ...this.props.project, projectTitle: projectTitle };
 
         this.props.updateProject(this.props.match.params.projectId, payload);
         this.setState({ ...INITIAL_STATE });
@@ -689,14 +676,6 @@ class detailedProject extends Component {
                 ...e
             })) : [];
 
-        // eslint-disable-next-line no-extend-native
-        Array.prototype.sum = function (prop) {
-            var total = 0
-            for ( var i = 0, _len = this.length; i < _len; i++ ) {
-                total += this[i][prop]
-            }
-            return total
-        }
 
         const times = this.props.times !== null ?
             this.props.times.map(t => ({
@@ -824,7 +803,7 @@ class detailedProject extends Component {
                                         }
                                         <TableRow>
                                             <TableCell>Total</TableCell>
-                                            <TableCell className="rightAlign">${expenses.sum("expenseTotal")}</TableCell>
+                                            <TableCell className="rightAlign">${expenses.reduce((acc, e) => acc + e.expenseTotal, 0)}</TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
                                         </TableRow>
@@ -862,7 +841,7 @@ class detailedProject extends Component {
                                         }
                                         <TableRow>
                                             <TableCell>Total </TableCell>
-                                            <TableCell className="rightAlign">${times.sum("timeTotal")}</TableCell>
+                                            <TableCell className="rightAlign">${times.reduce((acc, t) => acc + t.timeTotal, 0)}</TableCell>
                                             <TableCell></TableCell>
                                             <TableCell></TableCell>
                                         </TableRow>

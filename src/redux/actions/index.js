@@ -208,13 +208,15 @@ export function updateTime(uid, payload) {
 }
 
 export function updateInvoice() {
-    return async function() {
+    return async function(dispatch) {
         const docRef = doc(db, MISC, INVOICE);
-        await updateDoc(docRef, {
-            current: increment(1)
-        }).then(() => {
+        try {
+            await updateDoc(docRef, { current: increment(1) });
             window.location.reload();
-        });
+        } catch(error) {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        }
     }
 }
 
@@ -377,7 +379,7 @@ function batchProcessing(collectionName, fieldPath, opStr, collection_arr) {
                         collection(db, collectionName),
                         where(fieldPath, opStr, [...batch])
                     ))
-                        .then(results => response(results.docs.map(d => ({ ...d.data() }))))
+                        .then(results => response(results.docs.map(d => ({ ...d.data(), uid: d.id }))))
                 })
             );
         }
@@ -401,34 +403,20 @@ export function getReportData(uids) {
             dispatch({ type: INVOICE_LOADED, payload: invDoc.data() });
         }
 
-        batchProcessing(PAYMENTS, "paymentProject", 'in', uids)
-            .then(paymentsList => {
-                dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
-
-        batchProcessing(EXPENSES, "expenseProject", 'in', uids)
-            .then(expensesList => {
-                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
-
-        batchProcessing(TIMES, "timeProject", 'in', uids)
-            .then(timesList => {
-                dispatch({ type: TIMES_LOADED, payload: timesList });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
-
-        dispatch({ type: REPORT_LOADED, payload: {} });
+        try {
+            const [paymentsList, expensesList, timesList] = await Promise.all([
+                batchProcessing(PAYMENTS, "paymentProject", 'in', uids),
+                batchProcessing(EXPENSES, "expenseProject", 'in', uids),
+                batchProcessing(TIMES, "timeProject", 'in', uids),
+            ]);
+            dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+            dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            dispatch({ type: TIMES_LOADED, payload: timesList });
+            dispatch({ type: REPORT_LOADED, payload: {} });
+        } catch(error) {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        }
     }
 }
 
@@ -574,16 +562,17 @@ export function deleteProject(uid) {
             updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: deleteField() });
 
             // Cascade delete
-            getDocs(query(collection(db, EXPENSES), where("expenseProject", "==", uid))).then(snapshot => {
-                snapshot.forEach(d => deleteDoc(d.ref));
-            });
-
-            getDocs(query(collection(db, TIMES), where("timeProject", "==", uid))).then(snapshot => {
-                snapshot.forEach(d => deleteDoc(d.ref));
-            });
-
-            getDocs(query(collection(db, PAYMENTS), where("paymentProject", "==", uid))).then(snapshot => {
-                snapshot.forEach(d => deleteDoc(d.ref));
+            Promise.all([
+                getDocs(query(collection(db, EXPENSES), where("expenseProject", "==", uid))),
+                getDocs(query(collection(db, TIMES), where("timeProject", "==", uid))),
+                getDocs(query(collection(db, PAYMENTS), where("paymentProject", "==", uid))),
+            ]).then(([expenseSnap, timesSnap, paymentsSnap]) => {
+                expenseSnap.forEach(d => deleteDoc(d.ref));
+                timesSnap.forEach(d => deleteDoc(d.ref));
+                paymentsSnap.forEach(d => deleteDoc(d.ref));
+            }).catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
             });
 
             dispatch({ type: REMOVED_PROJECT, payload: uid });
