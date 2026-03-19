@@ -26,12 +26,18 @@ import { clearAlert, getClientsMapping, getUsers, getProjectsMapping } from "../
 
 // REACT VERSION: 16.13.0
 
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const isStale = ts => !ts || Date.now() - ts > CACHE_TTL;
+
 const mapStateToProps = state => {
     return {
         alerts: state.alerts,
         clients: state.clients,
         users: state.users,
-        projectsNames: state.projectsNames
+        projectsNames: state.projectsNames,
+        lastFetchedClients: state.lastFetchedClients,
+        lastFetchedUsers: state.lastFetchedUsers,
+        lastFetchedProjectsNames: state.lastFetchedProjectsNames,
     };
 };
 
@@ -47,13 +53,13 @@ function mapDispatchToProps(dispatch) {
 class App extends Component {
     componentDidUpdate(prevProps) {
         if (!prevProps.authUser && this.props.authUser) {
-            if (this.props.clients.length === 0) {
+            if (isStale(this.props.lastFetchedClients)) {
                 this.props.getClients();
             }
-            if (this.props.users.length === 0) {
+            if (isStale(this.props.lastFetchedUsers)) {
                 this.props.getUsers();
             }
-            if (Object.keys(this.props.projectsNames).length === 0) {
+            if (isStale(this.props.lastFetchedProjectsNames)) {
                 this.props.getProjectsMapping();
             }
         }
@@ -127,8 +133,11 @@ App.propTypes = {
     clients: PropTypes.array,
     users: PropTypes.array,
     projectsNames: PropTypes.object,
+    lastFetchedClients: PropTypes.number,
+    lastFetchedUsers: PropTypes.number,
+    lastFetchedProjectsNames: PropTypes.number,
     clearAlert: PropTypes.func,
-    getClients: PropTypes.func, // calls getClientsMapping
+    getClients: PropTypes.func,
     getUsers: PropTypes.func,
     getProjectsMapping: PropTypes.func
 };

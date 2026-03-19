@@ -1,7 +1,7 @@
-import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
+import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, 
-    LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, 
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED,
+    LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED,
     UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME,
     PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
 
@@ -22,16 +22,16 @@ const initialState = {
     loadingProject: false,
     loadingProjects: false,
     loadingExpenses: false,
-    loadedExpenseOnce: false,
-    loadedTimesOnce: false,
     loadingPayments: false,
-    loadedPaymentsOnce: false,
     loadingProjectsMapping: false,
     loadingReport: false,
     reportReady: false,
-    invoice: 0
+    invoice: 0,
+    lastFetchedClients: null,
+    lastFetchedUsers: null,
+    lastFetchedProjectsNames: null,
 };
-  
+
 function rootReducer(state = initialState, action) {
     if(action.type === ADD_USER) {
         return Object.assign({}, state, {
@@ -139,13 +139,15 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
-            users: state.users.concat(action.payload).sort((a, b) => a.name?.localeCompare(b.name)),
-            loadingUsers: false
+            users: action.payload.sort((a, b) => a.name?.localeCompare(b.name)),
+            loadingUsers: false,
+            lastFetchedUsers: Date.now(),
         });
     } else if(action.type === PROJECTS_MAPPING_LOADED) {
         return Object.assign({}, state, {
             loadingProjectsMapping: false,
-            projectsNames: action.payload
+            projectsNames: action.payload,
+            lastFetchedProjectsNames: Date.now(),
         });
     } else if(action.type === INVOICE_LOADED) {
         return Object.assign({}, state, {
@@ -157,9 +159,10 @@ function rootReducer(state = initialState, action) {
             tmp[client.uid] = client.denomination;
         });
         return Object.assign({}, state, {
-            clients: state.clients.concat(action.payload).sort((a, b) => a.denomination?.localeCompare(b.denomination)),
+            clients: action.payload.sort((a, b) => a.denomination?.localeCompare(b.denomination)),
             loadingClients: false,
-            clientsNames: tmp
+            clientsNames: tmp,
+            lastFetchedClients: Date.now(),
         });
     } else if(action.type === REPORT_LOADED) {
         return Object.assign({}, state, {
@@ -180,19 +183,16 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             expenses: action.payload.sort((a, b) => b.expenseDate - a.expenseDate),
             loadingExpenses: false,
-            loadedExpenseOnce: true
         });
     } else if(action.type === PAYMENTS_LOADED) {
         return Object.assign({}, state, {
             payments: action.payload.sort((a, b) => b.paymentDate - a.paymentDate),
             loadingPayments: false,
-            loadedPaymentsOnce: true
         });
     } else if(action.type === TIMES_LOADED) {
         return Object.assign({}, state, {
             times: action.payload.sort((a, b) => b.timeDate - a.timeDate),
             loadingTimes: false,
-            loadedTimesOnce: true
         });
     } else if(action.type === UPDATED_USER) {
         const email = action.payload.email;
@@ -239,7 +239,8 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === CLIENTS_MAPPING_LOADED) {
         return Object.assign({}, state, {
             loadingClients: false,
-            clientsNames: action.payload
+            clientsNames: action.payload,
+            lastFetchedClients: Date.now(),
         });
     }
 

@@ -34,7 +34,6 @@ const mapStateToProps = state => {
         loadingProjects: state.loadingProjects,
         times: state.times,
         loadingTimes: state.loadingTimes,
-        loadedTimesOnce: state.loadedTimesOnce,
         clientsNames: state.clientsNames,
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping
@@ -66,9 +65,15 @@ class tiemposPage extends Component {
         this.handleShow = this.handleShow.bind(this);
     }
 
+    static contextType = AuthUserContext;
+
     componentDidMount() {
         if (this.props.clients.length === 0) {
             this.props.getClients();
+        }
+        const authUser = this.context;
+        if (authUser) {
+            this.props.getTimes(authUser.uid, true);
         }
     }
 
@@ -325,13 +330,6 @@ class tiemposPage extends Component {
         )
     }
 
-    getTimes = authUser => {
-        let self = this;
-        if(!self.props.loadedTimesOnce) {
-            self.props.getTimes(authUser.uid, true);
-        }
-        return null;
-    }
 
     render() {
         const times = this.props.times !== null ?
@@ -350,7 +348,6 @@ class tiemposPage extends Component {
 
                         {this.renderModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
-                        {this.getTimes(authUser)}
                         {
                             times.length === 0 ?
                             <Jumbotron fluid>
@@ -427,7 +424,6 @@ tiemposPage.propTypes = {
     loadingProjects: PropTypes.bool,
     times: PropTypes.array,
     loadingTimes: PropTypes.bool,
-    loadedTimesOnce: PropTypes.bool,
     clientsNames: PropTypes.object,
     projectsNames: PropTypes.object,
     loadingProjectsMapping: PropTypes.bool,

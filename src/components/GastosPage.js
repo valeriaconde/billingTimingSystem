@@ -35,7 +35,6 @@ const mapStateToProps = state => {
         loadingProjects: state.loadingProjects,
         expenses: state.expenses,
         loadingExpenses: state.loadingExpenses,
-        loadedExpenseOnce: state.loadedExpenseOnce,
         clientsNames: state.clientsNames,
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping
@@ -64,9 +63,15 @@ class gastos extends Component {
         this.handleClose = this.handleClose.bind(this);
     }
 
+    static contextType = AuthUserContext;
+
     componentDidMount() {
         if (this.props.clients.length === 0) {
             this.props.getClients();
+        }
+        const authUser = this.context;
+        if (authUser) {
+            this.props.getExpenses(authUser.uid, true);
         }
     }
 
@@ -290,13 +295,6 @@ class gastos extends Component {
         );
     }
 
-    getExpenses = authUser => {
-        let self = this;
-        if(!self.props.loadedExpenseOnce) {
-            self.props.getExpenses(authUser.uid, true);
-        }
-        return null;
-    };
 
     render() {
         const expenses = this.props.expenses !== null ?
@@ -316,8 +314,6 @@ class gastos extends Component {
 
                         {this.renderModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
-                        {/* EXPENSES */}
-                        {this.getExpenses(authUser)}
                         {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
                         {
                             expenses.length === 0 ? 
@@ -392,7 +388,6 @@ gastos.propTypes = {
     loadingProjects: PropTypes.bool,
     expenses: PropTypes.array,
     loadingExpenses: PropTypes.bool,
-    loadedExpenseOnce: PropTypes.bool,
     clientsNames: PropTypes.object,
     projectsNames: PropTypes.object,
     loadingProjectsMapping: PropTypes.bool,

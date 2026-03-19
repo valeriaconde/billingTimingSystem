@@ -434,15 +434,17 @@ export function getReportData(uids) {
 }
 
 export function getExpenses(uid, byAttorney) {
-    return (dispatch, getState) => {
-        if (getState().loadedExpenseOnce) return;
+    return dispatch => {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
-        let docRef = query(
+        let q = query(
             collection(db, EXPENSES),
             where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
         );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
 
-        getDocs(docRef)
+        getDocs(q)
             .then(querySnapshot => {
                 let expensesList = [];
                 querySnapshot.forEach(d => {
@@ -458,15 +460,17 @@ export function getExpenses(uid, byAttorney) {
 }
 
 export function getTimes(uid, byAttorney) {
-    return (dispatch, getState) => {
-        if (getState().loadedTimesOnce) return;
+    return dispatch => {
         dispatch({ type: LOADING_TIMES, payload: {} });
-        let docRef = query(
+        let q = query(
             collection(db, TIMES),
             where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
         );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
 
-        getDocs(docRef)
+        getDocs(q)
             .then(querySnapshot => {
                 let timesList = [];
                 querySnapshot.forEach(d => {
@@ -482,8 +486,7 @@ export function getTimes(uid, byAttorney) {
 }
 
 export function getPayments(uid) {
-    return function(dispatch, getState) {
-        if (getState().loadedPaymentsOnce) return;
+    return function(dispatch) {
         dispatch({ type: LOADING_PAYMENT, payload: {} });
 
         getDocs(query(collection(db, PAYMENTS), where("paymentProject", "==", uid)))
