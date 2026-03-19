@@ -1,4 +1,5 @@
-import firebase from 'firebase';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 
 const config = {
     apiKey: process.env.REACT_APP_API_KEY,
@@ -8,5 +9,6 @@ const config = {
     storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
     messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
 };
-firebase.initializeApp(config, "firestone");
-export default firebase;
+
+const app = getApps().length === 0 ? initializeApp(config) : getApp();
+export const db = getFirestore(app, process.env.REACT_APP_FIRESTORE_DATABASE);
