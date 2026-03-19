@@ -83,6 +83,9 @@ class detailedProject extends Component {
         this.props.getTimes(this.props.match.params.projectId, false);
         this.props.getExpenses(this.props.match.params.projectId, false);
         this.props.getPayments(this.props.match.params.projectId);
+        if (this.props.clients.length === 0) {
+            this.props.getClients();
+        }
     }
 
     isFloat(n) {
