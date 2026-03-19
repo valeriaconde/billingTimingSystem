@@ -5,6 +5,13 @@ import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME,
     PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
 
+const toMillis = (d) => {
+    if (!d) return 0;
+    if (typeof d.toMillis === 'function') return d.toMillis();
+    if (d instanceof Date) return d.getTime();
+    return Number(d);
+};
+
 const initialState = {
     users: [],
     alerts: [],
@@ -49,17 +56,17 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === ADD_EXPENSE) {
         return Object.assign({}, state, {
             loadingExpenses: false,
-            expenses: state.expenses.concat([action.payload]).sort((a, b) => b.expenseDate - a.expenseDate)
+            expenses: state.expenses.concat([action.payload]).sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate))
         });
     } else if(action.type === ADD_TIME) {
         return Object.assign({}, state, {
             loadingTimes: false,
-            times: state.times.concat([action.payload]).sort((a, b) => b.timeDate - a.timeDate)
+            times: state.times.concat([action.payload]).sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate))
         });
     } else if(action.type === ADD_PAYMENT) {
         return Object.assign({}, state, {
             loadingPayments: false,
-            payments: state.payments.concat([action.payload]).sort((a, b) => b.paymentDate - a.paymentDate)
+            payments: state.payments.concat([action.payload]).sort((a, b) => toMillis(b.paymentDate) - toMillis(a.paymentDate))
         })
     } else if(action.type === CLEAR_ALERT) {
         return Object.assign({}, state, {
@@ -123,19 +130,19 @@ function rootReducer(state = initialState, action) {
         let tmp = state.expenses.filter(e => e.uid !== action.payload);
         return Object.assign({}, state, {
             loadingExpenses: false,
-            expenses: tmp.sort((a, b) => b.expenseDate - a.expenseDate)
+            expenses: tmp.sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate))
         });
     } else if(action.type === REMOVED_TIME) {
         let tmp = state.times.filter(t => t.uid !== action.payload);
         return Object.assign({}, state, {
             loadingTimes: false,
-            times: tmp.sort((a, b) => b.timeDate - a.timeDate)
+            times: tmp.sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate))
         });
     } else if(action.type === REMOVED_PAYMENT) {
         let tmp = state.payments.filter(p => p.uid !== action.payload);
         return Object.assign({}, state, {
             loadingPayments: false,
-            payments: tmp.sort((a, b) => b.paymentDate - a.paymentDate)
+            payments: tmp.sort((a, b) => toMillis(b.paymentDate) - toMillis(a.paymentDate))
         });
     } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
@@ -181,17 +188,17 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === EXPENSES_LOADED) {
         return Object.assign({}, state, {
-            expenses: action.payload.sort((a, b) => b.expenseDate - a.expenseDate),
+            expenses: action.payload.sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate)),
             loadingExpenses: false,
         });
     } else if(action.type === PAYMENTS_LOADED) {
         return Object.assign({}, state, {
-            payments: action.payload.sort((a, b) => b.paymentDate - a.paymentDate),
+            payments: action.payload.sort((a, b) => toMillis(b.paymentDate) - toMillis(a.paymentDate)),
             loadingPayments: false,
         });
     } else if(action.type === TIMES_LOADED) {
         return Object.assign({}, state, {
-            times: action.payload.sort((a, b) => b.timeDate - a.timeDate),
+            times: action.payload.sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate)),
             loadingTimes: false,
         });
     } else if(action.type === UPDATED_USER) {
@@ -221,7 +228,7 @@ function rootReducer(state = initialState, action) {
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingExpenses: false,
-            expenses: tmp.sort((a, b) => b.expenseDate - a.expenseDate)
+            expenses: tmp.sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate))
         })
     } else if(action.type === UPDATED_TIME) {
         const uid = action.payload.uid;
@@ -229,7 +236,7 @@ function rootReducer(state = initialState, action) {
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingTimes: false,
-            times: tmp.sort((a, b) => b.timeDate - a.timeDate)
+            times: tmp.sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate))
         });
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {
