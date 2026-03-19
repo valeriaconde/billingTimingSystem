@@ -340,7 +340,7 @@ class tiemposPage extends Component {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
-                    this.props.loadingProjectsMapping ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
+                    (this.props.loadingProjectsMapping && Object.keys(this.props.projectsNames).length === 0) ? <BarLoader css={{width: "100%"}} loading={this.props.loadingProjectsMapping}></BarLoader> :
                     <div>
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
                             Register time

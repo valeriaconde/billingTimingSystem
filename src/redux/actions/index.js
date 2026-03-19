@@ -306,7 +306,6 @@ export function getClients() {
 
 export function getClientsMapping() {
     return async function(dispatch) {
-        dispatch({ type: LOADING_CLIENTS, payload: {} });
         const indexRef = doc(db, MISC, CLIENTS_INDEX);
         const indexDoc = await getDoc(indexRef);
 
