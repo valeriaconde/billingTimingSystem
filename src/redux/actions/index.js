@@ -1,11 +1,11 @@
-import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,  ADD_PAYMENT,
+import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, ADD_PAYMENT,
     LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
     PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS,
     ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED,
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES,
     ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
-    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT } from "../../constants/action-types";
-import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE } from '../../constants/collections';
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
+import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 import { db } from "../../components/firestone";
@@ -15,8 +15,10 @@ import {
     addDoc,
     getDoc,
     getDocs,
+    setDoc,
     updateDoc,
     deleteDoc,
+    deleteField,
     query,
     where,
     increment,
@@ -38,6 +40,7 @@ export function addClient(payload) {
     return function(dispatch) {
         addDoc(collection(db, CLIENTS), payload)
             .then(docRef => {
+                updateDoc(doc(db, MISC, CLIENTS_INDEX), { [docRef.id]: payload.denomination });
                 dispatch({ type: ADD_CLIENT, payload: { ...payload, uid: docRef.id } });
                 const alert = { type: AlertType.Success, message: "Client successfully registered."};
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -54,6 +57,7 @@ export function addProject(payload) {
     return function(dispatch) {
         addDoc(collection(db, PROJECTS), payload)
             .then(docRef => {
+                updateDoc(doc(db, MISC, PROJECTS_INDEX), { [docRef.id]: payload.projectTitle });
                 dispatch({ type: ADD_PROJECT, payload: { ...payload, uid: docRef.id } });
                 const alert = { type: AlertType.Success, message: "Project successfully created." };
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -123,6 +127,9 @@ export function updateClient(uid, payload) {
         const docRef = doc(db, CLIENTS, uid);
         updateDoc(docRef, payload)
             .then(() => {
+                if (payload.denomination) {
+                    updateDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: payload.denomination });
+                }
                 getDoc(docRef).then(snapshot => {
                     dispatch({ type: UPDATED_CLIENT, payload: snapshot.data() });
                     const alert = { type: AlertType.Success, message: "Client successfully updated." };
@@ -143,6 +150,9 @@ export function updateProject(uid, payload) {
         const docRef = doc(db, PROJECTS, uid);
         updateDoc(docRef, payload)
             .then(() => {
+                if (payload.projectTitle) {
+                    updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: payload.projectTitle });
+                }
                 getDoc(docRef).then(snapshot => {
                     dispatch({ type: UPDATED_PROJECT, payload: { uid: uid, ...snapshot.data() } });
                     const alert = { type: AlertType.Success, message: "Project successfully updated." };
@@ -250,20 +260,29 @@ export function getProjectByClient(clientUid) {
 }
 
 export function getProjectsMapping() {
-    return function(dispatch) {
+    return async function(dispatch) {
         dispatch({ type: LOADING_PROJECTS_MAPPING, payload: {} });
-        getDocs(query(collection(db, PROJECTS), where("isOpen", "==", true)))
-            .then(querySnapshot => {
-                let projectsList = [];
-                querySnapshot.forEach(d => {
-                    projectsList.push({ ...d.data(), uid: d.id });
+        const indexRef = doc(db, MISC, PROJECTS_INDEX);
+        const indexDoc = await getDoc(indexRef);
+
+        if (indexDoc.exists()) {
+            dispatch({ type: PROJECTS_MAPPING_LOADED, payload: indexDoc.data() });
+        } else {
+            // Index doesn't exist yet — build it from the full collection and save it
+            getDocs(query(collection(db, PROJECTS), where("isOpen", "==", true)))
+                .then(async querySnapshot => {
+                    let mapping = {};
+                    querySnapshot.forEach(d => {
+                        mapping[d.id] = d.data().projectTitle;
+                    });
+                    await setDoc(indexRef, mapping);
+                    dispatch({ type: PROJECTS_MAPPING_LOADED, payload: mapping });
+                })
+                .catch(error => {
+                    const alert = { type: AlertType.Error, message: error };
+                    dispatch({ type: ADD_ALERT, payload: alert });
                 });
-                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
-            })
-            .catch(error => {
-                const alert = { type: AlertType.Error, message: error };
-                dispatch({ type: ADD_ALERT, payload: alert });
-            });
+        }
     }
 }
 
@@ -282,6 +301,33 @@ export function getClients() {
                 const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
+    }
+}
+
+export function getClientsMapping() {
+    return async function(dispatch) {
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        const indexRef = doc(db, MISC, CLIENTS_INDEX);
+        const indexDoc = await getDoc(indexRef);
+
+        if (indexDoc.exists()) {
+            dispatch({ type: CLIENTS_MAPPING_LOADED, payload: indexDoc.data() });
+        } else {
+            // Index doesn't exist yet — build it from the full collection and save it
+            getDocs(collection(db, CLIENTS))
+                .then(async snapshot => {
+                    let mapping = {};
+                    snapshot.forEach(d => {
+                        mapping[d.id] = d.data().denomination;
+                    });
+                    await setDoc(doc(db, MISC, CLIENTS_INDEX), mapping);
+                    dispatch({ type: CLIENTS_MAPPING_LOADED, payload: mapping });
+                })
+                .catch(error => {
+                    const alert = { type: AlertType.Error, message: error };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                });
+        }
     }
 }
 
@@ -507,6 +553,7 @@ export function deleteClient(uid) {
     return function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
         deleteDoc(doc(db, CLIENTS, uid)).then(() => {
+            updateDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: deleteField() });
             dispatch({ type: REMOVED_CLIENT, payload: uid });
             const alert = { type: AlertType.Success, message: "Client successfully deleted."};
             dispatch({ type: ADD_ALERT, payload: alert });
@@ -522,6 +569,8 @@ export function deleteProject(uid) {
     return function(dispatch) {
         dispatch({ type: LOADING_PROJECT, payload: {} });
         deleteDoc(doc(db, PROJECTS, uid)).then(() => {
+            updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: deleteField() });
+
             // Cascade delete
             getDocs(query(collection(db, EXPENSES), where("expenseProject", "==", uid))).then(snapshot => {
                 snapshot.forEach(d => deleteDoc(d.ref));

@@ -22,7 +22,7 @@ import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
 import { connect } from "react-redux";
-import { clearAlert, getClients, getUsers, getProjectsMapping } from "../redux/actions/index";
+import { clearAlert, getClientsMapping, getUsers, getProjectsMapping } from "../redux/actions/index";
 
 // REACT VERSION: 16.13.0
 
@@ -38,7 +38,7 @@ const mapStateToProps = state => {
 function mapDispatchToProps(dispatch) {
     return {
         clearAlert: alert => dispatch(clearAlert(alert)),
-        getClients: () => dispatch(getClients()),
+        getClients: () => dispatch(getClientsMapping()),
         getUsers: () => dispatch(getUsers()),
         getProjectsMapping: () => dispatch(getProjectsMapping())
     };
@@ -128,7 +128,7 @@ App.propTypes = {
     users: PropTypes.array,
     projectsNames: PropTypes.object,
     clearAlert: PropTypes.func,
-    getClients: PropTypes.func,
+    getClients: PropTypes.func, // calls getClientsMapping
     getUsers: PropTypes.func,
     getProjectsMapping: PropTypes.func
 };

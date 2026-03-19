@@ -2,8 +2,8 @@ import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
     REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, 
     LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, 
-    UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, 
-    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT } from "../../constants/action-types";
+    UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME,
+    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
 
 const initialState = {
     users: [],
@@ -143,13 +143,9 @@ function rootReducer(state = initialState, action) {
             loadingUsers: false
         });
     } else if(action.type === PROJECTS_MAPPING_LOADED) {
-        let tmp = {};
-        action.payload.forEach(project => {
-            tmp[project.uid] = project.projectTitle;
-        });
         return Object.assign({}, state, {
             loadingProjectsMapping: false,
-            projectsNames: tmp
+            projectsNames: action.payload
         });
     } else if(action.type === INVOICE_LOADED) {
         return Object.assign({}, state, {
@@ -239,6 +235,11 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingClients: false,
             clients: state.clients.concat([action.payload]).sort((a, b) => a.denomination?.localeCompare(b.denomination))
+        });
+    } else if(action.type === CLIENTS_MAPPING_LOADED) {
+        return Object.assign({}, state, {
+            loadingClients: false,
+            clientsNames: action.payload
         });
     }
 

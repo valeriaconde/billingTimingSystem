@@ -46,6 +46,9 @@ class Proyectos extends Component {
     }
 
     componentDidMount() {
+        if (this.props.clients.length === 0) {
+            this.props.getClients();
+        }
     }
 
     isFloat(n) {
