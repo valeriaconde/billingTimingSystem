@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { updateExpense, deleteExpense, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
+import { updateExpense, deleteExpense, getProjectsMapping, getClients, getUsers, addProject, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -30,9 +30,8 @@ const mapStateToProps = state => {
         clients: state.clients,
         loadingClients: state.loadingClients,
         users: state.users,
-        projects: state.projects,
+        projectsByClient: state.projectsByClient,
         loadingUsers: state.loadingUsers,
-        loadingProjects: state.loadingProjects,
         expenses: state.expenses,
         loadingExpenses: state.loadingExpenses,
         clientsNames: state.clientsNames,
@@ -90,7 +89,6 @@ class gastos extends Component {
 
     handleChangeClient = selectedClientModal => {
         this.setState({ selectedClientModal, selectedProjectModal: null });
-        this.props.getProjectByClient(selectedClientModal.value);
     }
 
     handleChangeProject = selectedProjectModal => {
@@ -168,19 +166,21 @@ class gastos extends Component {
     }
 
     renderModal(authUser, isHidden) {
-        const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c) => ({
+        const clientSelect = this.props.clients?.length > 0
+            ? this.props.clients.map((c) => ({
                 label: c.denomination || '',
                 value: c.uid,
                 ...c
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label))
+            : Object.entries(this.props.clientsNames).map(([uid, name]) => ({
+                label: name || '',
+                value: uid,
+                uid
+            })).sort((a, b) => a.label?.localeCompare(b.label));
 
-        const projectSelect = this.props.projects !== null ?
-            this.props.projects.map((p) => ({
-                label: p.projectTitle || '',
-                value: p.uid,
-                ...p
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+        const projectSelect = (this.props.projectsByClient[selectedClientModal?.value] || [])
+            .map(p => ({ label: p.title || '', value: p.uid, uid: p.uid }))
+            .sort((a, b) => a.label?.localeCompare(b.label));
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
@@ -209,8 +209,7 @@ class gastos extends Component {
 
                         {
                             selectedClientModal == null ? null :
-                                (this.props.loadingProjects ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingUsers}></BarLoader> :
-                                    <>
+                                <>
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">
                                                 Project
@@ -269,8 +268,7 @@ class gastos extends Component {
                                                 <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
                                             </Col>
                                         </Form.Group>
-                                    </>
-                                )
+                                </>
                         }
                     </Form>
                 </Modal.Body>
@@ -380,9 +378,8 @@ gastos.propTypes = {
     clients: PropTypes.array,
     loadingClients: PropTypes.bool,
     users: PropTypes.array,
-    projects: PropTypes.array,
+    projectsByClient: PropTypes.object,
     loadingUsers: PropTypes.bool,
-    loadingProjects: PropTypes.bool,
     expenses: PropTypes.array,
     loadingExpenses: PropTypes.bool,
     clientsNames: PropTypes.object,
@@ -391,7 +388,6 @@ gastos.propTypes = {
     getClients: PropTypes.func,
     getUsers: PropTypes.func,
     addProject: PropTypes.func,
-    getProjectByClient: PropTypes.func,
     addExpense: PropTypes.func,
     getExpenses: PropTypes.func,
     getProjectsMapping: PropTypes.func,
@@ -404,7 +400,6 @@ export default connect(mapStateToProps, {
     getClients,
     getUsers,
     addProject,
-    getProjectByClient,
     addExpense,
     getExpenses,
     getProjectsMapping,

@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { deleteTime, updateTime, getTimes, addTime, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
+import { deleteTime, updateTime, getTimes, addTime, getProjectsMapping, getClients, getUsers, addProject } from "../redux/actions/index";
 import { connect } from "react-redux";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -29,9 +29,8 @@ const mapStateToProps = state => {
         clients: state.clients,
         loadingClients: state.loadingClients,
         users: state.users,
-        projects: state.projects,
+        projectsByClient: state.projectsByClient,
         loadingUsers: state.loadingUsers,
-        loadingProjects: state.loadingProjects,
         times: state.times,
         loadingTimes: state.loadingTimes,
         clientsNames: state.clientsNames,
@@ -92,7 +91,6 @@ class tiemposPage extends Component {
 
     handleChangeClient = selectedClientModal => {
         this.setState({ selectedClientModal, selectedProjectModal: null });
-        this.props.getProjectByClient(selectedClientModal.value);
     }
 
     handleChangeProject = selectedProjectModal => {
@@ -172,19 +170,21 @@ class tiemposPage extends Component {
     }
 
     renderModal(authUser, isHidden) {
-        const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c) => ({
+        const clientSelect = this.props.clients?.length > 0
+            ? this.props.clients.map((c) => ({
                 label: c.denomination || '',
                 value: c.uid,
                 ...c
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label))
+            : Object.entries(this.props.clientsNames).map(([uid, name]) => ({
+                label: name || '',
+                value: uid,
+                uid
+            })).sort((a, b) => a.label?.localeCompare(b.label));
 
-        const projectSelect = this.props.projects !== null ?
-            this.props.projects.map((p) => ({
-                label: p.projectTitle || '',
-                value: p.uid,
-                ...p
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+        const projectSelect = (this.props.projectsByClient[selectedClientModal?.value] || [])
+            .map(p => ({ label: p.title || '', value: p.uid, uid: p.uid }))
+            .sort((a, b) => a.label?.localeCompare(b.label));
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
@@ -216,7 +216,6 @@ class tiemposPage extends Component {
 
                         {
                             selectedClientModal == null ? null :
-                            (this.props.loadingProjects ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingUsers}></BarLoader> :
                             <>
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">
@@ -299,7 +298,6 @@ class tiemposPage extends Component {
                                     </Col>
                                 </Form.Group>
                             </>
-                            )
                         }
                     </Form>
                 </Modal.Body>
@@ -410,9 +408,8 @@ tiemposPage.propTypes = {
     clients: PropTypes.array,
     loadingClients: PropTypes.bool,
     users: PropTypes.array,
-    projects: PropTypes.array,
+    projectsByClient: PropTypes.object,
     loadingUsers: PropTypes.bool,
-    loadingProjects: PropTypes.bool,
     times: PropTypes.array,
     loadingTimes: PropTypes.bool,
     clientsNames: PropTypes.object,
@@ -421,7 +418,6 @@ tiemposPage.propTypes = {
     getClients: PropTypes.func,
     getUsers: PropTypes.func,
     addProject: PropTypes.func,
-    getProjectByClient: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     addTime: PropTypes.func,
     getTimes: PropTypes.func,
@@ -434,7 +430,6 @@ export default connect(mapStateToProps, {
     getClients,
     getUsers,
     addProject,
-    getProjectByClient,
     getProjectsMapping,
     addTime,
     getTimes,

@@ -57,7 +57,7 @@ export function addProject(payload) {
     return function(dispatch) {
         addDoc(collection(db, PROJECTS), payload)
             .then(docRef => {
-                updateDoc(doc(db, MISC, PROJECTS_INDEX), { [docRef.id]: payload.projectTitle });
+                updateDoc(doc(db, MISC, PROJECTS_INDEX), { [docRef.id]: { title: payload.projectTitle, clientUid: payload.projectClient } });
                 dispatch({ type: ADD_PROJECT, payload: { ...payload, uid: docRef.id } });
                 const alert = { type: AlertType.Success, message: "Project successfully created." };
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -154,7 +154,11 @@ export function updateProject(uid, payload) {
                     updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: payload.projectTitle });
                 }
                 getDoc(docRef).then(snapshot => {
-                    dispatch({ type: UPDATED_PROJECT, payload: { uid: uid, ...snapshot.data() } });
+                    const projectData = snapshot.data();
+                    dispatch({ type: UPDATED_PROJECT, payload: { uid: uid, ...projectData } });
+                    if (payload.projectTitle || payload.projectClient) {
+                        updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: { title: projectData.projectTitle, clientUid: projectData.projectClient } });
+                    }
                     const alert = { type: AlertType.Success, message: "Project successfully updated." };
                     dispatch({ type: ADD_ALERT, payload: alert });
                     setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
@@ -261,6 +265,21 @@ export function getProjectByClient(clientUid) {
     }
 }
 
+async function buildProjectsIndex(indexRef, dispatch) {
+    try {
+        const querySnapshot = await getDocs(query(collection(db, PROJECTS), where("isOpen", "==", true)));
+        let mapping = {};
+        querySnapshot.forEach(d => {
+            mapping[d.id] = { title: d.data().projectTitle, clientUid: d.data().projectClient };
+        });
+        await setDoc(indexRef, mapping);
+        dispatch({ type: PROJECTS_MAPPING_LOADED, payload: mapping });
+    } catch(error) {
+        const alert = { type: AlertType.Error, message: error };
+        dispatch({ type: ADD_ALERT, payload: alert });
+    }
+}
+
 export function getProjectsMapping() {
     return async function(dispatch) {
         dispatch({ type: LOADING_PROJECTS_MAPPING, payload: {} });
@@ -268,22 +287,17 @@ export function getProjectsMapping() {
         const indexDoc = await getDoc(indexRef);
 
         if (indexDoc.exists()) {
-            dispatch({ type: PROJECTS_MAPPING_LOADED, payload: indexDoc.data() });
+            const data = indexDoc.data();
+            const firstValue = Object.values(data)[0];
+            if (firstValue !== undefined && typeof firstValue === 'string') {
+                // Old format (title strings) — dispatch immediately for backward compat, then rebuild
+                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+                buildProjectsIndex(indexRef, dispatch).catch(() => {}); // silently fails for non-admins
+            } else {
+                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+            }
         } else {
-            // Index doesn't exist yet — build it from the full collection and save it
-            getDocs(query(collection(db, PROJECTS), where("isOpen", "==", true)))
-                .then(async querySnapshot => {
-                    let mapping = {};
-                    querySnapshot.forEach(d => {
-                        mapping[d.id] = d.data().projectTitle;
-                    });
-                    await setDoc(indexRef, mapping);
-                    dispatch({ type: PROJECTS_MAPPING_LOADED, payload: mapping });
-                })
-                .catch(error => {
-                    const alert = { type: AlertType.Error, message: error };
-                    dispatch({ type: ADD_ALERT, payload: alert });
-                });
+            buildProjectsIndex(indexRef, dispatch);
         }
     }
 }

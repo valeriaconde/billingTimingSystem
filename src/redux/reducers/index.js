@@ -18,6 +18,7 @@ const initialState = {
     clients: [],
     clientsNames: {},
     projectsNames: {},
+    projectsByClient: {},
     projects: [],
     project: {},
     expenses: [],
@@ -151,9 +152,21 @@ function rootReducer(state = initialState, action) {
             lastFetchedUsers: Date.now(),
         });
     } else if(action.type === PROJECTS_MAPPING_LOADED) {
+        const projectsNames = {};
+        const projectsByClient = {};
+        Object.entries(action.payload).forEach(([uid, val]) => {
+            const title = typeof val === 'string' ? val : val.title;
+            const clientUid = typeof val === 'object' && val !== null ? val.clientUid : null;
+            projectsNames[uid] = title;
+            if (clientUid) {
+                if (!projectsByClient[clientUid]) projectsByClient[clientUid] = [];
+                projectsByClient[clientUid].push({ uid, title });
+            }
+        });
         return Object.assign({}, state, {
             loadingProjectsMapping: false,
-            projectsNames: action.payload,
+            projectsNames,
+            projectsByClient,
             lastFetchedProjectsNames: Date.now(),
         });
     } else if(action.type === INVOICE_LOADED) {
