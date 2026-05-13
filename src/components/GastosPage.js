@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { updateExpense, deleteExpense, getProjectsMapping, getClients, getUsers, addProject, addExpense, getExpenses } from "../redux/actions/index";
+import { updateExpense, deleteExpense, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -31,6 +31,7 @@ const mapStateToProps = state => {
         loadingClients: state.loadingClients,
         users: state.users,
         projectsByClient: state.projectsByClient,
+        projects: state.projects,
         loadingUsers: state.loadingUsers,
         expenses: state.expenses,
         loadingExpenses: state.loadingExpenses,
@@ -89,6 +90,9 @@ class gastos extends Component {
 
     handleChangeClient = selectedClientModal => {
         this.setState({ selectedClientModal, selectedProjectModal: null });
+        if (!this.props.projectsByClient[selectedClientModal.value]) {
+            this.props.getProjectByClient(selectedClientModal.value);
+        }
     }
 
     handleChangeProject = selectedProjectModal => {
@@ -180,9 +184,13 @@ class gastos extends Component {
                 uid
             })).sort((a, b) => a.label?.localeCompare(b.label));
 
-        const projectSelect = (this.props.projectsByClient[selectedClientModal?.value] || [])
-            .map(p => ({ label: p.title || '', value: p.uid, uid: p.uid }))
-            .sort((a, b) => a.label?.localeCompare(b.label));
+        const projectSelect = this.props.projectsByClient[selectedClientModal?.value]
+            ? this.props.projectsByClient[selectedClientModal.value]
+                .map(p => ({ label: p.title || '', value: p.uid, uid: p.uid }))
+                .sort((a, b) => a.label?.localeCompare(b.label))
+            : (this.props.projects || [])
+                .map(p => ({ label: p.projectTitle || '', value: p.uid, uid: p.uid }))
+                .sort((a, b) => a.label?.localeCompare(b.label));
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
@@ -380,6 +388,7 @@ gastos.propTypes = {
     loadingClients: PropTypes.bool,
     users: PropTypes.array,
     projectsByClient: PropTypes.object,
+    projects: PropTypes.array,
     loadingUsers: PropTypes.bool,
     expenses: PropTypes.array,
     loadingExpenses: PropTypes.bool,
@@ -389,6 +398,7 @@ gastos.propTypes = {
     getClients: PropTypes.func,
     getUsers: PropTypes.func,
     addProject: PropTypes.func,
+    getProjectByClient: PropTypes.func,
     addExpense: PropTypes.func,
     getExpenses: PropTypes.func,
     getProjectsMapping: PropTypes.func,
@@ -401,6 +411,7 @@ export default connect(mapStateToProps, {
     getClients,
     getUsers,
     addProject,
+    getProjectByClient,
     addExpense,
     getExpenses,
     getProjectsMapping,
