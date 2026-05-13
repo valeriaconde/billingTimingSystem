@@ -163,11 +163,12 @@ function rootReducer(state = initialState, action) {
                 projectsByClient[clientUid].push({ uid, title });
             }
         });
+        const isNewFormat = Object.values(action.payload).some(v => typeof v === 'object' && v !== null);
         return Object.assign({}, state, {
             loadingProjectsMapping: false,
             projectsNames,
             projectsByClient,
-            lastFetchedProjectsNames: Date.now(),
+            lastFetchedProjectsNames: isNewFormat ? Date.now() : null,
         });
     } else if(action.type === INVOICE_LOADED) {
         return Object.assign({}, state, {
