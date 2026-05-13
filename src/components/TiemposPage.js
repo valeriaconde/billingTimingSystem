@@ -170,6 +170,8 @@ class tiemposPage extends Component {
     }
 
     renderModal(authUser, isHidden) {
+        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
+
         const clientSelect = this.props.clients?.length > 0
             ? this.props.clients.map((c) => ({
                 label: c.denomination || '',
@@ -193,7 +195,6 @@ class tiemposPage extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
         const defaultAttorney = userSelect.find(u => u.value === authUser.uid);
         const selectedAttorney = selectedAttorneyModal || defaultAttorney;
         const selectedHourlyRate = hourlyRate ?? defaultAttorney?.salary;

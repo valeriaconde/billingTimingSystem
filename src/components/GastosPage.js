@@ -166,6 +166,8 @@ class gastos extends Component {
     }
 
     renderModal(authUser, isHidden) {
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
+
         const clientSelect = this.props.clients?.length > 0
             ? this.props.clients.map((c) => ({
                 label: c.denomination || '',
@@ -189,7 +191,6 @@ class gastos extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect.find(u => u.value === authUser.uid);
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
