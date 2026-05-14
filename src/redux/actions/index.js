@@ -1,264 +1,617 @@
-import {
-  ADD_ALERT,
-  CLEAR_ALERT,
-  ADD_CLIENT,
-  ADD_PROJECT,
-  CLIENTS_MAPPING_LOADED,
-  LOADING_CLIENTS,
-  LOADING_PROJECTS_MAPPING,
-  PROJECTS_MAPPING_LOADED,
-  REMOVED_CLIENT,
-  REMOVED_PROJECT,
-} from "../../constants/action-types";
-import {
-  CLIENTS,
-  PROJECTS,
-  MISC,
-  CLIENTS_INDEX,
-  PROJECTS_INDEX,
-} from "../../constants/collections";
-import { AlertType } from "../../stores/AlertStore";
+import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, ADD_PAYMENT,
+    LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
+    PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS,
+    ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED,
+    LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES,
+    ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
+import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX } from '../../constants/collections';
+import axios from 'axios';
+import { AlertType } from '../../stores/AlertStore';
 import { db } from "../../components/firestone";
 import {
-  addDoc,
-  collection,
-  deleteDoc,
-  deleteField,
-  doc,
-  getDoc,
-  getDocFromServer,
-  getDocs,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from "firebase/firestore";
-
-const successAlert = (dispatch, message) => {
-  const alert = { type: AlertType.Success, message };
-  dispatch({ type: ADD_ALERT, payload: alert });
-  setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-};
-
-const errorAlert = (dispatch, error) => {
-  dispatch({
-    type: ADD_ALERT,
-    payload: { type: AlertType.Error, message: error.message || error },
-  });
-};
-
-const getFreshIndexDoc = async (indexRef) => {
-  try {
-    return await getDocFromServer(indexRef);
-  } catch (error) {
-    return getDoc(indexRef);
-  }
-};
-
-const loadClientIndex = async (dispatch) => {
-  const indexRef = doc(db, MISC, CLIENTS_INDEX);
-  const indexDoc = await getFreshIndexDoc(indexRef);
-
-  if (indexDoc.exists()) {
-    dispatch({ type: CLIENTS_MAPPING_LOADED, payload: indexDoc.data() });
-    return indexDoc.data();
-  }
-
-  const snapshot = await getDocs(collection(db, CLIENTS));
-  const mapping = {};
-  snapshot.forEach((clientDoc) => {
-    mapping[clientDoc.id] = clientDoc.data().denomination;
-  });
-
-  await setDoc(indexRef, mapping);
-  dispatch({ type: CLIENTS_MAPPING_LOADED, payload: mapping });
-  return mapping;
-};
-
-const loadProjectIndex = async (dispatch) => {
-  const indexRef = doc(db, MISC, PROJECTS_INDEX);
-  const indexDoc = await getFreshIndexDoc(indexRef);
-
-  if (indexDoc.exists()) {
-    const data = indexDoc.data();
-    const firstValue = Object.values(data)[0];
-
-    if (firstValue !== undefined && typeof firstValue === "string") {
-      dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
-      buildProjectsIndex(indexRef, dispatch).catch(() => {});
-      return data;
-    }
-
-    dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
-    return data;
-  }
-
-  return buildProjectsIndex(indexRef, dispatch);
-};
-
-const upsertClientIndexEntry = async (dispatch, uid, denomination) => {
-  const indexRef = doc(db, MISC, CLIENTS_INDEX);
-  await setDoc(indexRef, { [uid]: denomination }, { merge: true });
-  const mapping = await loadClientIndex(dispatch);
-  dispatch({ type: CLIENTS_MAPPING_LOADED, payload: { ...mapping, [uid]: denomination } });
-};
-
-const upsertProjectIndexEntry = async (dispatch, uid, project) => {
-  const payload = {
-    [uid]: {
-      title: project.projectTitle,
-      clientUid: project.projectClient,
-    },
-  };
-  const indexRef = doc(db, MISC, PROJECTS_INDEX);
-  await setDoc(indexRef, payload, { merge: true });
-  const mapping = await loadProjectIndex(dispatch);
-  dispatch({ type: PROJECTS_MAPPING_LOADED, payload: { ...mapping, ...payload } });
-};
-
-async function buildProjectsIndex(indexRef, dispatch) {
-  const querySnapshot = await getDocs(
-    query(collection(db, PROJECTS), where("isOpen", "==", true)),
-  );
-  const mapping = {};
-
-  querySnapshot.forEach((projectDoc) => {
-    mapping[projectDoc.id] = {
-      title: projectDoc.data().projectTitle,
-      clientUid: projectDoc.data().projectClient,
-    };
-  });
-
-  await setDoc(indexRef, mapping);
-  dispatch({ type: PROJECTS_MAPPING_LOADED, payload: mapping });
-  return mapping;
-}
+    collection,
+    doc,
+    addDoc,
+    getDoc,
+    getDocs,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    deleteField,
+    query,
+    where,
+    increment,
+} from 'firebase/firestore';
 
 export function addAlert(type, message) {
-  const payload = { type, message };
+    const payload = { type: type, message: message };
+    return function(dispatch) {
+        dispatch({ type: ADD_ALERT, payload });
+        setTimeout(() => dispatch({ type: CLEAR_ALERT, payload }), 7000);
+    }
+}
 
-  return function(dispatch) {
-    dispatch({ type: ADD_ALERT, payload });
-    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload }), 7000);
-  };
+export function clearAlert(payload) {
+    return { type: CLEAR_ALERT, payload };
 }
 
 export function addClient(payload) {
-  return async function(dispatch) {
-    dispatch({ type: LOADING_CLIENTS, payload: {} });
-
-    try {
-      const docRef = await addDoc(collection(db, CLIENTS), payload);
-      const client = { ...payload, uid: docRef.id };
-
-      await upsertClientIndexEntry(dispatch, docRef.id, payload.denomination);
-      dispatch({ type: ADD_CLIENT, payload: client });
-      successAlert(dispatch, "Client successfully registered.");
-    } catch (error) {
-      errorAlert(dispatch, error);
+    return function(dispatch) {
+        addDoc(collection(db, CLIENTS), payload)
+            .then(docRef => {
+                updateDoc(doc(db, MISC, CLIENTS_INDEX), { [docRef.id]: payload.denomination });
+                dispatch({ type: ADD_CLIENT, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Client successfully registered."};
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(function(error) {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
     }
-  };
 }
 
 export function addProject(payload) {
-  return async function(dispatch) {
-    try {
-      const docRef = await addDoc(collection(db, PROJECTS), payload);
-      const project = { ...payload, uid: docRef.id };
-
-      await upsertProjectIndexEntry(dispatch, docRef.id, payload);
-      dispatch({ type: ADD_PROJECT, payload: project });
-      successAlert(dispatch, "Project successfully created.");
-    } catch (error) {
-      errorAlert(dispatch, error);
+    return function(dispatch) {
+        addDoc(collection(db, PROJECTS), payload)
+            .then(docRef => {
+                updateDoc(doc(db, MISC, PROJECTS_INDEX), { [docRef.id]: { title: payload.projectTitle, clientUid: payload.projectClient } });
+                dispatch({ type: ADD_PROJECT, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Project successfully created." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(function(error) {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
     }
-  };
+}
+
+export function addExpense(payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        addDoc(collection(db, EXPENSES), payload)
+            .then(docRef => {
+                dispatch({ type: ADD_EXPENSE, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Expense successfully created." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function addTime(payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        addDoc(collection(db, TIMES), payload)
+            .then(docRef => {
+                dispatch({ type: ADD_TIME, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Time successfully registered." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function addDownPayment(payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PAYMENT, payload: {} });
+        addDoc(collection(db, PAYMENTS), payload)
+            .then(docRef => {
+                dispatch({ type: ADD_PAYMENT, payload: { ...payload, uid: docRef.id } });
+                const alert = { type: AlertType.Success, message: "Down payment successfully registered." };
+                dispatch({ type: ADD_ALERT, payload: alert });
+                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
 }
 
 export function updateClient(uid, payload) {
-  return async function(dispatch) {
-    dispatch({ type: LOADING_CLIENTS, payload: {} });
-
-    try {
-      const docRef = doc(db, CLIENTS, uid);
-      await updateDoc(docRef, payload);
-
-      if (payload.denomination) {
-        await upsertClientIndexEntry(dispatch, uid, payload.denomination);
-      }
-
-      successAlert(dispatch, "Client successfully updated.");
-    } catch (error) {
-      errorAlert(dispatch, error);
+    return function(dispatch) {
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        const docRef = doc(db, CLIENTS, uid);
+        updateDoc(docRef, payload)
+            .then(() => {
+                if (payload.denomination) {
+                    updateDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: payload.denomination });
+                }
+                getDoc(docRef).then(snapshot => {
+                    dispatch({ type: UPDATED_CLIENT, payload: snapshot.data() });
+                    const alert = { type: AlertType.Success, message: "Client successfully updated." };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
     }
-  };
 }
 
 export function updateProject(uid, payload) {
-  return async function(dispatch) {
-    try {
-      const docRef = doc(db, PROJECTS, uid);
-      await updateDoc(docRef, payload);
-
-      if (payload.projectTitle || payload.projectClient) {
-        const snapshot = await getFreshIndexDoc(docRef);
-        await upsertProjectIndexEntry(dispatch, uid, snapshot.data());
-      }
-
-      successAlert(dispatch, "Project successfully updated.");
-    } catch (error) {
-      errorAlert(dispatch, error);
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECT, payload: {} });
+        const docRef = doc(db, PROJECTS, uid);
+        updateDoc(docRef, payload)
+            .then(() => {
+                if (payload.projectTitle) {
+                    updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: payload.projectTitle });
+                }
+                getDoc(docRef).then(snapshot => {
+                    const projectData = snapshot.data();
+                    dispatch({ type: UPDATED_PROJECT, payload: { uid: uid, ...projectData } });
+                    if (payload.projectTitle || payload.projectClient) {
+                        updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: { title: projectData.projectTitle, clientUid: projectData.projectClient } });
+                    }
+                    const alert = { type: AlertType.Success, message: "Project successfully updated." };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                })
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
     }
-  };
 }
 
-export function getClientsMapping() {
-  return async function(dispatch) {
-    try {
-      await loadClientIndex(dispatch);
-    } catch (error) {
-      errorAlert(dispatch, error);
+export function updateExpense(uid, payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        const docRef = doc(db, EXPENSES, uid);
+        updateDoc(docRef, payload)
+            .then(() => {
+                getDoc(docRef).then(snapshot => {
+                    dispatch({ type: UPDATED_EXPENSE, payload: { uid: uid, ...snapshot.data() } });
+                    const alert = { type: AlertType.Success, message: "Expense successfully updated." };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
     }
-  };
+}
+
+export function updateTime(uid, payload) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        const docRef = doc(db, TIMES, uid);
+        updateDoc(docRef, payload)
+            .then(() => {
+                getDoc(docRef).then(snapshot => {
+                    dispatch({ type: UPDATED_TIME, payload: { uid: uid, ...snapshot.data() } });
+                    const alert = { type: AlertType.Success, message: "Time successfully updated." };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                    setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                })
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error.message };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function updateInvoice() {
+    return async function(dispatch) {
+        const docRef = doc(db, MISC, INVOICE);
+        try {
+            await updateDoc(docRef, { current: increment(1) });
+            window.location.reload();
+        } catch(error) {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        }
+    }
+}
+
+export function updateUser(uid, payload) {
+    return async function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
+        dispatch({ type: LOADING_USERS, payload: {} });
+        try {
+            const response = await axios.put(url, payload);
+            dispatch({ type: UPDATED_USER, payload: response.data });
+
+            const alert = { type: AlertType.Success, message: "User successfully updated." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }
+        catch (error) {
+            const alert_1 = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert_1 });
+        }
+    };
+}
+
+export function getProjectByClient(clientUid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        getDocs(query(
+            collection(db, PROJECTS),
+            where("projectClient", "==", clientUid),
+            where("isOpen", "==", true)
+        ))
+            .then(querySnapshot => {
+                let projectsList = [];
+                querySnapshot.forEach(d => {
+                    projectsList.push({ ...d.data(), uid: d.id });
+                });
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+async function buildProjectsIndex(indexRef, dispatch) {
+    try {
+        const querySnapshot = await getDocs(query(collection(db, PROJECTS), where("isOpen", "==", true)));
+        let mapping = {};
+        querySnapshot.forEach(d => {
+            mapping[d.id] = { title: d.data().projectTitle, clientUid: d.data().projectClient };
+        });
+        await setDoc(indexRef, mapping);
+        dispatch({ type: PROJECTS_MAPPING_LOADED, payload: mapping });
+    } catch(error) {
+        const alert = { type: AlertType.Error, message: error };
+        dispatch({ type: ADD_ALERT, payload: alert });
+    }
 }
 
 export function getProjectsMapping() {
-  return async function(dispatch) {
-    dispatch({ type: LOADING_PROJECTS_MAPPING, payload: {} });
+    return async function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS_MAPPING, payload: {} });
+        const indexRef = doc(db, MISC, PROJECTS_INDEX);
+        const indexDoc = await getDoc(indexRef);
 
-    try {
-      await loadProjectIndex(dispatch);
-    } catch (error) {
-      errorAlert(dispatch, error);
+        if (indexDoc.exists()) {
+            const data = indexDoc.data();
+            const firstValue = Object.values(data)[0];
+            if (firstValue !== undefined && typeof firstValue === 'string') {
+                // Old format (title strings) — dispatch immediately for backward compat, then rebuild
+                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+                buildProjectsIndex(indexRef, dispatch).catch(() => {}); // silently fails for non-admins
+            } else {
+                dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+            }
+        } else {
+            buildProjectsIndex(indexRef, dispatch);
+        }
     }
-  };
+}
+
+export function getClients() {
+    return async function(dispatch) {
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        await getDocs(collection(db, CLIENTS))
+            .then(snapshot => {
+                const clientsList = snapshot.docs.map(d => ({
+                    ...d.data(),
+                    uid: d.id
+                }));
+                dispatch({ type: CLIENTS_LOADED, payload: clientsList.sort((a, b) => a.denomination?.localeCompare(b.denomination)) });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function getClientsMapping() {
+    return async function(dispatch) {
+        const indexRef = doc(db, MISC, CLIENTS_INDEX);
+        const indexDoc = await getDoc(indexRef);
+
+        if (indexDoc.exists()) {
+            dispatch({ type: CLIENTS_MAPPING_LOADED, payload: indexDoc.data() });
+        } else {
+            // Index doesn't exist yet — build it from the full collection and save it
+            getDocs(collection(db, CLIENTS))
+                .then(async snapshot => {
+                    let mapping = {};
+                    snapshot.forEach(d => {
+                        mapping[d.id] = d.data().denomination;
+                    });
+                    await setDoc(doc(db, MISC, CLIENTS_INDEX), mapping);
+                    dispatch({ type: CLIENTS_MAPPING_LOADED, payload: mapping });
+                })
+                .catch(error => {
+                    const alert = { type: AlertType.Error, message: error };
+                    dispatch({ type: ADD_ALERT, payload: alert });
+                });
+        }
+    }
+}
+
+export function getUsers() {
+    return async function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/users.json`;
+        dispatch({ type: LOADING_USERS, payload: {} });
+        try {
+            const response = await axios.get(url);
+            const usersList = Object.keys(response.data).map(key => ({
+                ...response.data[key],
+                uid: key
+            }));
+            dispatch({ type: USERS_LOADED, payload: usersList.sort((a, b) => a.name?.localeCompare(b.name)) });
+        }
+        catch (error) {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        }
+    };
+}
+
+export function getProjectById(uid) {
+    return async function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        const docRef = doc(db, PROJECTS, uid);
+        const d = await getDoc(docRef);
+        if (!d.exists()) {
+            const alert = { type: AlertType.Error, message: "Project not found" };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        } else {
+            dispatch({ type: PROJECT_LOADED, payload: d.data() });
+        }
+    }
+}
+
+function batchProcessing(collectionName, fieldPath, opStr, collection_arr) {
+    return new Promise((res) => {
+        let batches = [];
+        let arr = collection_arr.slice();
+        while (arr.length) {
+            // firestore limits batches to 10
+            const batch = arr.splice(0, 10);
+
+            batches.push(
+                new Promise(response => {
+                    getDocs(query(
+                        collection(db, collectionName),
+                        where(fieldPath, opStr, [...batch])
+                    ))
+                        .then(results => response(results.docs.map(d => ({ ...d.data(), uid: d.id }))))
+                })
+            );
+        }
+
+        Promise.all(batches).then(content => {
+            res(content.flat());
+        });
+    });
+}
+
+export function getReportData(uids) {
+    return async dispatch => {
+        dispatch({ type: LOADING_REPORT, payload: {} });
+
+        const invRef = doc(db, MISC, INVOICE);
+        const invDoc = await getDoc(invRef);
+        if (!invDoc.exists()) {
+            const alert = { type: AlertType.Error, message: "Invoice number not found" };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        } else {
+            dispatch({ type: INVOICE_LOADED, payload: invDoc.data() });
+        }
+
+        try {
+            const [paymentsList, expensesList, timesList] = await Promise.all([
+                batchProcessing(PAYMENTS, "paymentProject", 'in', uids),
+                batchProcessing(EXPENSES, "expenseProject", 'in', uids),
+                batchProcessing(TIMES, "timeProject", 'in', uids),
+            ]);
+            dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+            dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            dispatch({ type: TIMES_LOADED, payload: timesList });
+            dispatch({ type: REPORT_LOADED, payload: {} });
+        } catch(error) {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        }
+    }
+}
+
+export function getExpenses(uid, byAttorney) {
+    return dispatch => {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        let q = query(
+            collection(db, EXPENSES),
+            where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
+        );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
+
+        getDocs(q)
+            .then(querySnapshot => {
+                let expensesList = [];
+                querySnapshot.forEach(d => {
+                    expensesList.push({ ...d.data(), uid: d.id });
+                });
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    };
+}
+
+export function getTimes(uid, byAttorney) {
+    return dispatch => {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        let q = query(
+            collection(db, TIMES),
+            where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
+        );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
+
+        getDocs(q)
+            .then(querySnapshot => {
+                let timesList = [];
+                querySnapshot.forEach(d => {
+                    timesList.push({ ...d.data(), uid: d.id });
+                });
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function getPayments(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PAYMENT, payload: {} });
+
+        getDocs(query(collection(db, PAYMENTS), where("paymentProject", "==", uid)))
+            .then(querySnapshot => {
+                let paymentsList = [];
+                querySnapshot.forEach(d => {
+                    paymentsList.push({ ...d.data(), uid: d.id });
+                });
+                dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+            })
+            .catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+    }
+}
+
+export function deleteExpense(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        deleteDoc(doc(db, EXPENSES, uid)).then(() => {
+            dispatch({ type: REMOVED_EXPENSE, payload: uid });
+            const alert = { type: AlertType.Success, message: "Expense successfully deleted." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        })
+        .catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
+    }
+}
+
+export function deleteTime(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        deleteDoc(doc(db, TIMES, uid)).then(() => {
+            dispatch({ type: REMOVED_TIME, payload: uid });
+            const alert = { type: AlertType.Success, message: "Time successfully deleted." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        })
+        .catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
+    }
+}
+
+export function deletePayment(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PAYMENT, payload: {} });
+        deleteDoc(doc(db, PAYMENTS, uid)).then(() => {
+            dispatch({ type: REMOVED_PAYMENT, payload: uid });
+            const alert = { type: AlertType.Success, message: "Down payment successfully deleted." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        })
+        .catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
+    }
 }
 
 export function deleteClient(uid) {
-  return async function(dispatch) {
-    dispatch({ type: LOADING_CLIENTS, payload: {} });
-
-    try {
-      await deleteDoc(doc(db, CLIENTS, uid));
-      await setDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: deleteField() }, { merge: true });
-      dispatch({ type: REMOVED_CLIENT, payload: uid });
-      await loadClientIndex(dispatch);
-      successAlert(dispatch, "Client successfully deleted.");
-    } catch (error) {
-      errorAlert(dispatch, error);
+    return function(dispatch) {
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        deleteDoc(doc(db, CLIENTS, uid)).then(() => {
+            updateDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: deleteField() });
+            dispatch({ type: REMOVED_CLIENT, payload: uid });
+            const alert = { type: AlertType.Success, message: "Client successfully deleted."};
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }).catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
     }
-  };
 }
 
 export function deleteProject(uid) {
-  return async function(dispatch) {
-    try {
-      await deleteDoc(doc(db, PROJECTS, uid));
-      await setDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: deleteField() }, { merge: true });
-      dispatch({ type: REMOVED_PROJECT, payload: uid });
-      await loadProjectIndex(dispatch);
-    } catch (error) {
-      errorAlert(dispatch, error);
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECT, payload: {} });
+        deleteDoc(doc(db, PROJECTS, uid)).then(() => {
+            updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: deleteField() });
+
+            // Cascade delete
+            Promise.all([
+                getDocs(query(collection(db, EXPENSES), where("expenseProject", "==", uid))),
+                getDocs(query(collection(db, TIMES), where("timeProject", "==", uid))),
+                getDocs(query(collection(db, PAYMENTS), where("paymentProject", "==", uid))),
+            ]).then(([expenseSnap, timesSnap, paymentsSnap]) => {
+                expenseSnap.forEach(d => deleteDoc(d.ref));
+                timesSnap.forEach(d => deleteDoc(d.ref));
+                paymentsSnap.forEach(d => deleteDoc(d.ref));
+            }).catch(error => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            });
+
+            dispatch({ type: REMOVED_PROJECT, payload: uid });
+        }).catch(error => {
+            const alert = { type: AlertType.Error, message: error };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        });
     }
-  };
+}
+
+export function deleteUser(uid) {
+    return async function(dispatch) {
+        const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
+        dispatch({ type: LOADING_USERS, payload: {} });
+        try {
+            await axios.delete(url);
+            dispatch({ type: REMOVED_USER, payload: uid });
+
+            const alert = { type: AlertType.Success, message: "User successfully deleted." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        }
+        catch (error) {
+            const alert_1 = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert_1 });
+        }
+    }
 }
