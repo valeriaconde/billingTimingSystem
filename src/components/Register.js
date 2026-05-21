@@ -8,6 +8,7 @@ import { AlertType } from '../stores/AlertStore';
 import { compose } from 'recompose';
 import { connect } from "react-redux";
 import { addAlert, clearAlert } from "../redux/actions/index";
+import { trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return { alerts: state.alerts };
@@ -35,9 +36,11 @@ class Registeruser extends Component {
         event.preventDefault();
         this.setState({ validated: true });
         const { email, email2, isAdmin } = this.state;
+        const trimmedEmail = trimString(email);
+        const trimmedEmail2 = trimString(email2);
         const form = event.currentTarget;
 
-        if(email !== email2) {
+        if(trimmedEmail !== trimmedEmail2) {
             this.props.addAlert(AlertType.Error, 'Emails do not match');
             return;
         }
@@ -55,16 +58,17 @@ class Registeruser extends Component {
         }
 
         this.props.firebase
-            .doCreateUserWithEmailAndPassword(email, email, roles);
+            .doCreateUserWithEmailAndPassword(trimmedEmail, trimmedEmail, roles);
 
 
-        this.props.addAlert(AlertType.Success, `${email} successfully registered`);
+        this.props.addAlert(AlertType.Success, `${trimmedEmail} successfully registered`);
 
         this.setState(INITIAL_STATE);
     }
 
     onChange(event) {
-        this.setState({ [event.target.name]: (event.target.type === "checkbox" ? event.target.checked : event.target.value) });
+        const value = event.target.type === "checkbox" ? event.target.checked : trimString(event.target.value);
+        this.setState({ [event.target.name]: value });
     }
 
     render() {
@@ -79,18 +83,18 @@ class Registeruser extends Component {
             <AuthUserContext.Consumer>
             { () =>
                 <div>
-                    <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.handleSubmit}>
+                    <Form noValidate className="loginForm" onSubmit={this.handleSubmit}>
                         <Form.Text className="bigLetters"> New user </Form.Text>
                         <Form.Group controlId="formBasicEmail">
                             <Form.Label className="formLabels">Email</Form.Label>
-                            <Form.Control onChange={this.onChange} name="email" value={email} type="email" size="sm" placeholder="user@legem.mx" />
+                            <Form.Control isInvalid={this.state.validated && trimString(email).length === 0} onChange={this.onChange} name="email" value={email} type="email" size="sm" placeholder="user@legem.mx" required />
                             <Form.Text className="text-muted">This is the email they will use to login to the system.</Form.Text>
-                            <Form.Control.Feedback type="invalid">Invalid email</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid">Email cannot be empty.</Form.Control.Feedback>
                         </Form.Group>
                         <Form.Group controlId="formBasicEmail">
                             <Form.Label className="formLabels">Confirm email</Form.Label>
-                            <Form.Control onChange={this.onChange} name="email2" value={email2} type="email" size="sm" placeholder="user@legem.mx" />
-                            <Form.Control.Feedback type="invalid">Emails do not match.</Form.Control.Feedback>
+                            <Form.Control isInvalid={this.state.validated && (trimString(email2).length === 0 || trimString(email) !== trimString(email2))} onChange={this.onChange} name="email2" value={email2} type="email" size="sm" placeholder="user@legem.mx" required />
+                            <Form.Control.Feedback type="invalid">Emails must match.</Form.Control.Feedback>
                         </Form.Group>
 
                         <Form.Group controlId="formBasicCheckbox">

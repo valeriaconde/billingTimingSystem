@@ -70,15 +70,17 @@ class PassChange extends Component {
             <AuthUserContext.Consumer>
                 {() =>
                     <div>
-                        <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.onSubmit}>
+                        <Form noValidate className="loginForm" onSubmit={this.onSubmit}>
                             <Form.Text className="bigLetters"> Change password </Form.Text>
                             <Form.Group controlId="formBasicPassword">
                                 <Form.Label className="formLabels">New password</Form.Label>
-                                <Form.Control onChange={this.onChange} value={this.state.password} name="password" type="password" size="sm" required />
+                                <Form.Control isInvalid={this.state.validated && this.state.password.length === 0} onChange={this.onChange} value={this.state.password} name="password" type="password" size="sm" required />
+                                <Form.Control.Feedback type="invalid">Password cannot be empty.</Form.Control.Feedback>
                             </Form.Group>
                             <Form.Group controlId="formBasicPassword">
                                 <Form.Label className="formLabels">Confirm password</Form.Label>
-                                <Form.Control onChange={this.onChange} value={this.state.password2} name="password2" type="password" size="sm" required />
+                                <Form.Control isInvalid={this.state.validated && (this.state.password2.length === 0 || this.state.password !== this.state.password2)} onChange={this.onChange} value={this.state.password2} name="password2" type="password" size="sm" required />
+                                <Form.Control.Feedback type="invalid">Passwords must match.</Form.Control.Feedback>
                             </Form.Group>
                             <Button variant="primary" type="submit" className="legem-primary"> Change </Button>
                         </Form>

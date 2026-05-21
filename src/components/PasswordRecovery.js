@@ -5,6 +5,7 @@ import { AlertType } from '../stores/AlertStore';
 import { withFirebase } from './Firebase';
 import { connect } from "react-redux";
 import { addAlert, clearAlert } from "../redux/actions/index";
+import { trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return { alerts: state.alerts };
@@ -27,16 +28,23 @@ class Passrec extends Component {
     }
 
     onChange(event) {
-        this.setState({ [event.target.name]: event.target.value });
+        this.setState({ [event.target.name]: trimString(event.target.value) });
     }
 
     onSubmit(event) {
         this.setState({ validated: true });
         event.preventDefault();
         const { email } = this.state;
+        const trimmedEmail = trimString(email);
+        const form = event.currentTarget;
+
+        if (trimmedEmail.length === 0 || !form.checkValidity()) {
+            event.stopPropagation();
+            return;
+        }
 
         this.props.firebase
-            .doPasswordReset(email)
+            .doPasswordReset(trimmedEmail)
             .then(() => {
                 this.setState({ ...INITIAL_STATE });
 
@@ -53,15 +61,17 @@ class Passrec extends Component {
     }
 
     render() {
+        const { email } = this.state;
+
         return (
             <div>
-                <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.onSubmit}>
+                <Form noValidate className="loginForm" onSubmit={this.onSubmit}>
                     <Form.Text className="bigLetters"> Recover password </Form.Text>
                     <Form.Group controlId="formBasicEmail">
                         <Form.Label className="formLabels">Email</Form.Label>
-                        <Form.Control name="email" onChange={this.onChange} type="email" size="sm" placeholder="usuario@legem.mx" />
+                        <Form.Control isInvalid={this.state.validated && trimString(email).length === 0} name="email" value={email} onChange={this.onChange} type="email" size="sm" placeholder="usuario@legem.mx" required />
                         <Form.Text className="text-muted"> You will receive an email to recover your password. </Form.Text>
-                        <Form.Control.Feedback type="invalid">Invalid email</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">Email cannot be empty.</Form.Control.Feedback>
                     </Form.Group>
                     <Button variant="primary" type="submit" className="legem-primary">Recover</Button>
                 </Form>

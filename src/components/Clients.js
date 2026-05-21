@@ -9,6 +9,7 @@ import { addAlert, clearAlert, addClient, getClients, updateClient, deleteClient
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Select from 'react-select';
+import { trimFields, trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return { 
@@ -69,32 +70,39 @@ class Clientes extends Component {
     onSave() {
         const { currDenomination, currAddress, currAddress2, currCity, currState, currZipCode,
              currRfc, currContact, currEmail, currPhone, currWebsite, currYearSince, currIva, currUid } = this.state;
+        const trimmedClient = trimFields({
+            currDenomination, currAddress, currAddress2, currCity, currState, currZipCode,
+            currRfc, currContact, currEmail, currPhone, currWebsite, currYearSince
+        }, [
+            'currDenomination', 'currAddress', 'currAddress2', 'currCity', 'currState', 'currZipCode',
+            'currRfc', 'currContact', 'currEmail', 'currPhone', 'currWebsite', 'currYearSince'
+        ]);
         
-        if(currDenomination.length === 0) {
+        if(trimmedClient.currDenomination.length === 0) {
             this.props.addAlert(AlertType.Error, "Business name cannot be empty.");
             return;
         }
 
-        if(currRfc.length === 0) {
+        if(trimmedClient.currRfc.length === 0) {
             this.props.addAlert(AlertType.Error, "RFC cannot be empty.");
             return;
         }
 
-        if(currContact.length === 0) {
+        if(trimmedClient.currContact.length === 0) {
             this.props.addAlert(AlertType.Error, "Contact cannot be empty.");
             return;
         }
 
-        if(currEmail.length === 0) {
+        if(trimmedClient.currEmail.length === 0) {
             this.props.addAlert(AlertType.Error, "Email cannot be empty.");
             return;
         }
 
         const payload = {
-            address: currAddress, address2: currAddress2, city: currCity, state: currState,
-            zipCode: currZipCode, contact: currContact, denomination: currDenomination,
-            email: currEmail, iva: currIva, phone: currPhone, rfc: currRfc,
-            website: currWebsite, yearSince: currYearSince, uid: currUid
+            address: trimmedClient.currAddress, address2: trimmedClient.currAddress2, city: trimmedClient.currCity, state: trimmedClient.currState,
+            zipCode: trimmedClient.currZipCode, contact: trimmedClient.currContact, denomination: trimmedClient.currDenomination,
+            email: trimmedClient.currEmail, iva: currIva, phone: trimmedClient.currPhone, rfc: trimmedClient.currRfc,
+            website: trimmedClient.currWebsite, yearSince: trimmedClient.currYearSince, uid: currUid
         };
         this.props.updateClient(currUid, payload);
         
@@ -119,23 +127,30 @@ class Clientes extends Component {
 
         const { denomination, address, address2, city, state, zipCode,
              rfc, contact, email, phone, website, yearSince } = this.state;
+        const trimmedClient = trimFields({
+            denomination, address, address2, city, state, zipCode,
+            rfc, contact, email, phone, website, yearSince
+        }, [
+            'denomination', 'address', 'address2', 'city', 'state', 'zipCode',
+            'rfc', 'contact', 'email', 'phone', 'website', 'yearSince'
+        ]);
         const iva = document.getElementById("yesIVA").checked;
 
-        if(denomination === "" || rfc === "" || contact === "" || email === "") return;
+        if(trimmedClient.denomination === "" || trimmedClient.rfc === "" || trimmedClient.contact === "" || trimmedClient.email === "") return;
 
         const payload = {
-            denomination: denomination,
-            address: address,
-            address2: address2,
-            city: city,
-            state: state,
-            zipCode: zipCode,
-            rfc: rfc,
-            contact: contact,
-            email: email,
-            phone: phone,
-            website: website,
-            yearSince: yearSince,
+            denomination: trimmedClient.denomination,
+            address: trimmedClient.address,
+            address2: trimmedClient.address2,
+            city: trimmedClient.city,
+            state: trimmedClient.state,
+            zipCode: trimmedClient.zipCode,
+            rfc: trimmedClient.rfc,
+            contact: trimmedClient.contact,
+            email: trimmedClient.email,
+            phone: trimmedClient.phone,
+            website: trimmedClient.website,
+            yearSince: trimmedClient.yearSince,
             iva: iva
         };
         this.props.addClient(payload);
@@ -157,18 +172,19 @@ class Clientes extends Component {
 
     renderModal() {
         const { denomination, address, address2, rfc, contact, email,
-                phone, website, yearSince, city, state, zipCode } = this.state;
+                phone, website, yearSince, city, state, zipCode, validated } = this.state;
         return(
             <Modal show={this.state.showModalCliente} onHide={this.handleCloseCliente}>
                 <Modal.Header closeButton>
                     <Modal.Title>New client</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form noValidate validated={this.state.validated} onSubmit={this.handleNewClient}>
+                    <Form noValidate onSubmit={this.handleNewClient}>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> Name </Form.Label>
                             <Col sm="7">
-                                <Form.Control name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" required />
+                                <Form.Control isInvalid={validated && trimString(denomination).length === 0} name="denomination" onChange={this.handleOnChange} value={denomination} as="textarea" rows="1" required />
+                                <Form.Control.Feedback type="invalid">Name cannot be empty.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
 
@@ -210,21 +226,24 @@ class Clientes extends Component {
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> RFC </Form.Label>
                             <Col sm="7">
-                                <Form.Control name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" required />
+                                <Form.Control isInvalid={validated && trimString(rfc).length === 0} name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" required />
+                                <Form.Control.Feedback type="invalid">RFC cannot be empty.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> Contact </Form.Label>
                             <Col sm="7">
-                                <Form.Control name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" required />
+                                <Form.Control isInvalid={validated && trimString(contact).length === 0} name="contact" onChange={this.handleOnChange} value={contact} as="textarea" rows="1" required />
+                                <Form.Control.Feedback type="invalid">Contact cannot be empty.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> Email </Form.Label>
                             <Col sm="7">
-                                <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
+                                <Form.Control isInvalid={validated && trimString(email).length === 0} name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
+                                <Form.Control.Feedback type="invalid">Email cannot be empty.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
 

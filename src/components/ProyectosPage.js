@@ -12,6 +12,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import BarLoader from "react-spinners/BarLoader";
 import TableBody from '@material-ui/core/TableBody';
+import { trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return { 
@@ -56,13 +57,14 @@ class Proyectos extends Component {
         event.preventDefault();
         this.setState({ validated: true });
         const { selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
+        const trimmedProjectTitle = trimString(projectTitle);
 
         if(projectFixedFee === 'true' && !this.isFloat(projectFee)) return;
 
-        if(projectTitle === '' || selectedClientModal == null || selectedAppointed == null) return;
+        if(trimmedProjectTitle === '' || selectedClientModal == null || selectedAppointed == null) return;
 
         const payload = {
-            projectTitle: projectTitle,
+            projectTitle: trimmedProjectTitle,
             projectClient: selectedClientModal.uid,
             appointedIds: selectedAppointed.value,
             projectFixedFee: projectFixedFee === 'true',
@@ -109,7 +111,7 @@ class Proyectos extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const { showModal, selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee } = this.state;
+        const { showModal, selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee, validated } = this.state;
 
         return(
             <Modal show={showModal} onHide={this.handleClose}>
@@ -122,13 +124,15 @@ class Proyectos extends Component {
                             <Form.Label column sm="3">Client</Form.Label>
                             <Col sm="7">
                                 <Select required value={selectedClientModal} placeholder="Select client..." options={clientSelect} onChange={this.handleChangeClientModal} />
+                                {validated && selectedClientModal == null ? <Form.Text className="text-danger">Client is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
 
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Title</Form.Label>
                             <Col sm="7">
-                                <Form.Control isInvalid={projectTitle.length === 0} name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
+                                <Form.Control isInvalid={validated && trimString(projectTitle).length === 0} name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
+                                <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
 
@@ -137,6 +141,7 @@ class Proyectos extends Component {
                             <Col sm="7">
                                 {/* USERS */}
                                 <Select value={selectedAppointed} placeholder="Select appointed..." onChange={this.handleChangeMulti} options={userSelect} />
+                                {validated && selectedAppointed == null ? <Form.Text className="text-danger">Attorney is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
 
@@ -153,7 +158,8 @@ class Proyectos extends Component {
                         <Form.Group as={Row} hidden={projectFixedFee === 'false'}>
                             <Form.Label column sm="3"> Fee </Form.Label>
                             <Col sm="7">
-                                <Form.Control isInvalid={!this.isFloat(projectFee)} name="projectFee" value={projectFee} onChange={this.onChange} required />
+                                <Form.Control isInvalid={validated && !this.isFloat(projectFee)} name="projectFee" value={projectFee} onChange={this.onChange} required />
+                                <Form.Control.Feedback type="invalid">Fee must be greater than zero.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
                     </Form>

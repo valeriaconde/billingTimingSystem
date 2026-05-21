@@ -23,6 +23,7 @@ import { deleteTime, updateTime, getTimes, addTime, getProjectsMapping, getClien
 import { connect } from "react-redux";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return {
@@ -120,6 +121,7 @@ class tiemposPage extends Component {
 
     handleNewTime = event => {
         event.preventDefault();
+        this.setState({ validated: true });
 
         const form = event.currentTarget;
         if (form.checkValidity() === false) {
@@ -128,13 +130,14 @@ class tiemposPage extends Component {
         }
 
         const { selectedTimeUid, timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
+        const trimmedTimeTitle = trimString(timeTitle);
         if (!this.isFloat(timeHours)) return;
-        if (selectedDate == null || timeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
+        if (selectedDate == null || trimmedTimeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
         var hr = hourlyRate || this.hour.current.value;
         const timeTotal = +hr * (+timeHours + timeMinutes / 60.0);
         const payload = {
-            timeTitle: timeTitle,
+            timeTitle: trimmedTimeTitle,
             timeDate: selectedDate,
             timeClient: selectedClientModal.uid,
             timeProject: selectedProjectModal.uid,
@@ -195,7 +198,7 @@ class tiemposPage extends Component {
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
         const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
-        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
+        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate, validated } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
         const selectedHourlyRate = hourlyRate ?? userSelect[idx]?.salary;
 
@@ -212,6 +215,7 @@ class tiemposPage extends Component {
                             </Form.Label>
                             <Col sm="7">
                                 <Select isDisabled={!isModalAdd} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                                {validated && selectedClientModal == null ? <Form.Text className="text-danger">Client is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
 
@@ -225,13 +229,15 @@ class tiemposPage extends Component {
                                     </Form.Label>
                                     <Col sm="7">
                                         <Select isDisabled={!isModalAdd} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                        {validated && selectedProjectModal == null ? <Form.Text className="text-danger">Project is required.</Form.Text> : null}
                                     </Col>
                                 </Form.Group>
 
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Title</Form.Label>
                                     <Col sm="7">
-                                        <Form.Control isInvalid={timeTitle.length === 0} name="timeTitle" value={timeTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                        <Form.Control isInvalid={validated && trimString(timeTitle).length === 0} name="timeTitle" value={timeTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                        <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
                                     </Col>
                                 </Form.Group>
 
@@ -267,7 +273,8 @@ class tiemposPage extends Component {
                                         <Container>
                                             <Row>
                                                 <Col>
-                                                    <Form.Control isInvalid={timeHours < 0 || timeHours > 100} value={timeHours} name="timeHours" onChange={this.onChange} type="number" min="0" max="100" required />
+                                                    <Form.Control isInvalid={validated && (timeHours < 0 || timeHours > 100)} value={timeHours} name="timeHours" onChange={this.onChange} type="number" min="0" max="100" required />
+                                                    <Form.Control.Feedback type="invalid">Hours must be between 0 and 100.</Form.Control.Feedback>
                                                 </Col>
                                                 <Col>
                                                     <Form.Control name="timeMinutes" value={timeMinutes} onChange={this.onChange} as="select" required >
@@ -296,7 +303,8 @@ class tiemposPage extends Component {
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Hourly Rate</Form.Label>
                                     <Col sm="7">
-                                        <Form.Control ref={this.hour} isInvalid={selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
+                                        <Form.Control ref={this.hour} isInvalid={validated && selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
+                                        <Form.Control.Feedback type="invalid">Hourly rate must be greater than zero.</Form.Control.Feedback>
                                     </Col>
                                 </Form.Group>
                             </>

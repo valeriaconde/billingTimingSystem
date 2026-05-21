@@ -24,6 +24,7 @@ import * as ROLES from '../constants/roles';
 import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return {
@@ -108,6 +109,7 @@ class gastos extends Component {
 
     handleNewExpense = event => {
         event.preventDefault();
+        this.setState({ validated: true });
 
         const form = event.currentTarget;
         if (form.checkValidity() === false) {
@@ -116,14 +118,15 @@ class gastos extends Component {
         }
 
         const { selectedExpenseUid, isModalAdd, selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
+        const trimmedExpenseTitle = trimString(expenseTitle);
 
         if (!this.isFloat(expenseTotal)) return;
-        if (selectedDate == null || expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
+        if (selectedDate == null || trimmedExpenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
 
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
 
         const payload = {
-            expenseTitle: expenseTitle,
+            expenseTitle: trimmedExpenseTitle,
             expenseTotal: Number(expenseTotal),
             expenseDate: selectedDate,
             expenseClient: selectedClientModal.uid,
@@ -184,7 +187,7 @@ class gastos extends Component {
 
         const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd, validated } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -199,6 +202,7 @@ class gastos extends Component {
                         </Form.Label>
                             <Col sm="7">
                                 <Select isDisabled={!isModalAdd} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                                {validated && selectedClientModal == null ? <Form.Text className="text-danger">Client is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
 
@@ -212,20 +216,23 @@ class gastos extends Component {
                                             </Form.Label>
                                             <Col sm="7">
                                                 <Select isDisabled={!isModalAdd} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                                {validated && selectedProjectModal == null ? <Form.Text className="text-danger">Project is required.</Form.Text> : null}
                                             </Col>
                                         </Form.Group>
 
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">Title</Form.Label>
                                             <Col sm="7">
-                                                <Form.Control isInvalid={expenseTitle.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                                <Form.Control isInvalid={validated && trimString(expenseTitle).length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                                <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
                                             </Col>
                                         </Form.Group>
 
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">Amount</Form.Label>
                                             <Col sm="7">
-                                                <Form.Control isInvalid={!this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
+                                                <Form.Control isInvalid={validated && !this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
+                                                <Form.Control.Feedback type="invalid">Amount must be greater than zero.</Form.Control.Feedback>
                                             </Col>
                                         </Form.Group>
 
@@ -255,6 +262,7 @@ class gastos extends Component {
                                             <Form.Label column sm="3">Type</Form.Label>
                                             <Col sm="7">
                                                 <Select placeholder="Select class..." options={expenseClasses} value={selectedExpenseModal} onChange={this.handleChangeExpense} />
+                                                {validated && selectedExpenseModal == null ? <Form.Text className="text-danger">Type is required.</Form.Text> : null}
                                             </Col>
                                         </Form.Group>
 

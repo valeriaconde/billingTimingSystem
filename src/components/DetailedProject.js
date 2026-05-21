@@ -26,6 +26,7 @@ import { expenseClasses } from "../constants/enums";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
+import { trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return {
@@ -132,6 +133,7 @@ class detailedProject extends Component {
 
     handleNewPayment = event => {
         event.preventDefault();
+        this.setState({ validated: true });
 
         const form = event.currentTarget;
         if (form.checkValidity() === false) {
@@ -156,7 +158,7 @@ class detailedProject extends Component {
     }
 
     renderModal() {
-        const { selectedDate, paymentTotal } = this.state;
+        const { selectedDate, paymentTotal, validated } = this.state;
 
         return (
             <Modal show={this.state.showModal} onHide={() => this.handleClose(1)}>
@@ -191,7 +193,8 @@ class detailedProject extends Component {
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Amount</Form.Label>
                             <Col sm="7">
-                                <Form.Control isInvalid={!this.isFloat(paymentTotal)} name="paymentTotal" value={paymentTotal} onChange={this.onChange} required />
+                                <Form.Control isInvalid={validated && !this.isFloat(paymentTotal)} name="paymentTotal" value={paymentTotal} onChange={this.onChange} required />
+                                <Form.Control.Feedback type="invalid">Amount must be zero or greater.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
                     </Form>
@@ -211,6 +214,7 @@ class detailedProject extends Component {
 
     handleNewExpense = event => {
         event.preventDefault();
+        this.setState({ validated: true });
 
         const form = event.currentTarget;
         if (form.checkValidity() === false) {
@@ -219,14 +223,15 @@ class detailedProject extends Component {
         }
 
         const { selectedExpenseUid, isModalAdd, selectedClientModal, selectedAttorneyModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal } = this.state;
+        const trimmedExpenseTitle = trimString(expenseTitle);
 
         if (!this.isFloat(expenseTotal)) return;
-        if (selectedDate == null || expenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
+        if (selectedDate == null || trimmedExpenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
 
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
 
         const payload = {
-            expenseTitle: expenseTitle,
+            expenseTitle: trimmedExpenseTitle,
             expenseTotal: Number(expenseTotal),
             expenseDate: selectedDate,
             expenseClient: selectedClientModal.uid,
@@ -297,7 +302,7 @@ class detailedProject extends Component {
 
         const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
 
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd } = this.state;
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd, validated } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
         return (
             <Modal show={this.state.showExpenseModal} onHide={() => this.handleClose(2)}>
@@ -312,6 +317,7 @@ class detailedProject extends Component {
                         </Form.Label>
                             <Col sm="7">
                                 <Select isDisabled={true} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                                {validated && selectedClientModal == null ? <Form.Text className="text-danger">Client is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
 
@@ -325,20 +331,23 @@ class detailedProject extends Component {
                                             </Form.Label>
                                             <Col sm="7">
                                                 <Select isDisabled={true} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                                {validated && selectedProjectModal == null ? <Form.Text className="text-danger">Project is required.</Form.Text> : null}
                                             </Col>
                                         </Form.Group>
 
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">Title</Form.Label>
                                             <Col sm="7">
-                                                <Form.Control isInvalid={expenseTitle?.length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                                <Form.Control isInvalid={validated && trimString(expenseTitle).length === 0} name="expenseTitle" value={expenseTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                                <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
                                             </Col>
                                         </Form.Group>
 
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">Amount</Form.Label>
                                             <Col sm="7">
-                                                <Form.Control isInvalid={!this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
+                                                <Form.Control isInvalid={validated && !this.isFloat(expenseTotal)} name="expenseTotal" value={expenseTotal} onChange={this.onChange} required />
+                                                <Form.Control.Feedback type="invalid">Amount must be zero or greater.</Form.Control.Feedback>
                                             </Col>
                                         </Form.Group>
 
@@ -368,6 +377,7 @@ class detailedProject extends Component {
                                             <Form.Label column sm="3">Type</Form.Label>
                                             <Col sm="7">
                                                 <Select placeholder="Select class..." options={expenseClasses} value={selectedExpenseModal} onChange={this.handleChangeExpense} />
+                                                {validated && selectedExpenseModal == null ? <Form.Text className="text-danger">Type is required.</Form.Text> : null}
                                             </Col>
                                         </Form.Group>
 
@@ -411,6 +421,7 @@ class detailedProject extends Component {
 
     handleNewTime = event => {
         event.preventDefault();
+        this.setState({ validated: true });
 
         const form = event.currentTarget;
         if (form.checkValidity() === false) {
@@ -419,14 +430,15 @@ class detailedProject extends Component {
         }
 
         const { selectedTimeUid, timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
+        const trimmedTimeTitle = trimString(timeTitle);
         
         if (!this.isFloat(timeHours)) return;
-        if (selectedDate == null || timeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
+        if (selectedDate == null || trimmedTimeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
         var att = selectedAttorneyModal?.value || this.attorney?.current.props.value.value;
         var hr = hourlyRate || this.hour.current.value;
         const timeTotal = +hr * (+timeHours + timeMinutes / 60.0);
         const payload = {
-            timeTitle: timeTitle,
+            timeTitle: trimmedTimeTitle,
             timeDate: selectedDate,
             timeClient: selectedClientModal.uid,
             timeProject: selectedProjectModal.uid,
@@ -488,7 +500,7 @@ class detailedProject extends Component {
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
         const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
-        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate } = this.state;
+        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate, validated } = this.state;
         const selectedAttorney = selectedAttorneyModal || userSelect[idx];
         const selectedHourlyRate = hourlyRate || userSelect[idx]?.salary;
 
@@ -505,6 +517,7 @@ class detailedProject extends Component {
                             </Form.Label>
                             <Col sm="7">
                                 <Select isDisabled={true} placeholder="Select client..." options={clientSelect} value={selectedClientModal} onChange={this.handleChangeClient} />
+                                {validated && selectedClientModal == null ? <Form.Text className="text-danger">Client is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
 
@@ -518,13 +531,15 @@ class detailedProject extends Component {
                                     </Form.Label>
                                     <Col sm="7">
                                         <Select isDisabled={true} placeholder="Select project..." options={projectSelect} value={selectedProjectModal} onChange={this.handleChangeProject} />
+                                        {validated && selectedProjectModal == null ? <Form.Text className="text-danger">Project is required.</Form.Text> : null}
                                     </Col>
                                 </Form.Group>
 
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Title</Form.Label>
                                     <Col sm="7">
-                                        <Form.Control isInvalid={timeTitle?.length === 0} name="timeTitle" value={timeTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                        <Form.Control isInvalid={validated && trimString(timeTitle).length === 0} name="timeTitle" value={timeTitle} onChange={this.onChange} as="textarea" rows="2" required />
+                                        <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
                                     </Col>
                                 </Form.Group>
 
@@ -560,7 +575,8 @@ class detailedProject extends Component {
                                         <Container>
                                             <Row>
                                                 <Col>
-                                                    <Form.Control isInvalid={timeHours < 0 || timeHours > 100} value={timeHours} name="timeHours" onChange={this.onChange} type="number" min="0" max="100" required />
+                                                    <Form.Control isInvalid={validated && (timeHours < 0 || timeHours > 100)} value={timeHours} name="timeHours" onChange={this.onChange} type="number" min="0" max="100" required />
+                                                    <Form.Control.Feedback type="invalid">Hours must be between 0 and 100.</Form.Control.Feedback>
                                                 </Col>
                                                 <Col>
                                                     <Form.Control name="timeMinutes" value={timeMinutes} onChange={this.onChange} as="select" required >
@@ -589,7 +605,8 @@ class detailedProject extends Component {
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">Hourly Rate</Form.Label>
                                     <Col sm="7">
-                                        <Form.Control ref={this.hour} isInvalid={selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
+                                        <Form.Control ref={this.hour} isInvalid={validated && selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
+                                        <Form.Control.Feedback type="invalid">Hourly rate must be greater than zero.</Form.Control.Feedback>
                                     </Col>
                                 </Form.Group>
                             </>
@@ -642,32 +659,34 @@ class detailedProject extends Component {
     handleEditProject = event => {
         event.preventDefault();
         this.setState({ validated: true });
-        const { projectTitle } = this.state;
+        const projectTitle = this.state.projectTitle ?? this.props.project?.projectTitle ?? '';
+        const trimmedProjectTitle = trimString(projectTitle);
 
-        if(projectTitle === '') return;
+        if(trimmedProjectTitle === '') return;
 
-        let payload = this.props.project;
-        payload.projectTitle = projectTitle;
+        let payload = { ...this.props.project };
+        payload.projectTitle = trimmedProjectTitle;
 
         this.props.updateProject(this.props.match.params.projectId, payload);
         this.setState({ ...INITIAL_STATE });
     }
 
     renderEditModal(){
-        const { showEditModal } = this.state;
-        const projectTitle = this.state.projectTitle ?? this.props.project?.projectTitle;
+        const { showEditModal, validated } = this.state;
+        const projectTitle = this.state.projectTitle ?? this.props.project?.projectTitle ?? '';
 
         return(
             <Modal show={showEditModal} onHide={() => this.handleClose(4)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>New project</Modal.Title>
+                    <Modal.Title>Edit project</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form onSubmit={this.handleNewProject}>
+                    <Form onSubmit={this.handleEditProject}>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Title</Form.Label>
                             <Col sm="9">
-                                <Form.Control isInvalid={projectTitle?.length === 0} name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
+                                <Form.Control isInvalid={validated && trimString(projectTitle).length === 0} name="projectTitle" value={projectTitle} onChange={this.onChange} as="textarea" rows="2" required/>
+                                <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
                     </Form>

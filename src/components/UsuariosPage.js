@@ -11,6 +11,7 @@ import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { trimFields } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return { 
@@ -61,29 +62,33 @@ class UsuariosPage extends Component {
 
     onSave() {
         const { startYear, job, salary, name, uid, activeIdx, initials } = this.state;
-        if(isNaN(startYear) || startYear.length === 0) {
+        const trimmedUser = trimFields({ startYear, job, salary, name, initials }, [
+            'startYear', 'job', 'salary', 'name', 'initials'
+        ]);
+
+        if(isNaN(trimmedUser.startYear) || trimmedUser.startYear.length === 0) {
             this.props.addAlert(AlertType.Error, "Start year must be a number.");
             return;
         }
 
-        if(isNaN(salary) || salary.length === 0) {
+        if(isNaN(trimmedUser.salary) || trimmedUser.salary.length === 0) {
             this.props.addAlert(AlertType.Error, "Salary must be a number.");
             return;
         }
 
-        if(job.length === 0) {
+        if(trimmedUser.job.length === 0) {
             this.props.addAlert(AlertType.Error, "Role cannot be empty.");
             return;
         }
 
         const payload = {
-            name: name,
-            job: job,
-            salary: salary,
-            startYear: startYear,
+            name: trimmedUser.name,
+            job: trimmedUser.job,
+            salary: trimmedUser.salary,
+            startYear: trimmedUser.startYear,
             email: this.props.users[activeIdx].email,
             roles: this.props.users[activeIdx].roles,
-            initials: initials
+            initials: trimmedUser.initials
         };
         this.props.updateUser(uid, payload);
 

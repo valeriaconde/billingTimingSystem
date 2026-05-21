@@ -5,6 +5,7 @@ import { withFirebase } from './Firebase';
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { addAlert, clearAlert } from "../redux/actions/index";
+import { trimString } from '../utils/inputUtils';
 
 const mapStateToProps = state => {
     return { alerts: state.alerts };
@@ -27,12 +28,14 @@ class LoginPage extends Component {
     }
 
     onChange(event) {
-        this.setState({ [event.target.name]: event.target.value });
+        const value = event.target.name === 'email' ? trimString(event.target.value) : event.target.value;
+        this.setState({ [event.target.name]: value });
     }
 
     handleSubmit(event) {
         event.preventDefault();
         const { email, password } = this.state;
+        const trimmedEmail = trimString(email);
         this.setState({ validated: true });
         const form = event.currentTarget;
         if (!form.checkValidity()) {
@@ -41,7 +44,7 @@ class LoginPage extends Component {
             return;
         }
         this.props.firebase
-            .doSignInWithEmailAndPassword(email, password)
+            .doSignInWithEmailAndPassword(trimmedEmail, password)
             .then(() => { // log in success
                 this.props.history.push('/home');
             })
@@ -57,17 +60,17 @@ class LoginPage extends Component {
         const { email, password } = this.state;
         return (
             <div>
-                <Form noValidate validated={this.state.validated} className="loginForm" onSubmit={this.handleSubmit}>
+                <Form noValidate className="loginForm" onSubmit={this.handleSubmit}>
                     <Form.Text className="bigLetters"> Login </Form.Text>
                     <Form.Group controlId="formBasicEmail">
                         <Form.Label className="formLabels">Email</Form.Label>
-                        <Form.Control name="email" type="email" size="sm" placeholder="usuario@legem.mx" value={email} onChange={this.onChange} required />
-                        <Form.Control.Feedback type="invalid">Invalid email </Form.Control.Feedback>
+                        <Form.Control isInvalid={this.state.validated && trimString(email).length === 0} name="email" type="email" size="sm" placeholder="usuario@legem.mx" value={email} onChange={this.onChange} required />
+                        <Form.Control.Feedback type="invalid">Email cannot be empty.</Form.Control.Feedback>
                     </Form.Group>
                     <Form.Group controlId="formBasicPassword">
                         <Form.Label className="formLabels">Password</Form.Label>
-                        <Form.Control name="password" type="password" size="sm" value={password} onChange={this.onChange} required />
-                        <Form.Control.Feedback type="invalid" >Invalid password</Form.Control.Feedback>
+                        <Form.Control isInvalid={this.state.validated && password.length === 0} name="password" type="password" size="sm" value={password} onChange={this.onChange} required />
+                        <Form.Control.Feedback type="invalid" >Password cannot be empty.</Form.Control.Feedback>
                         <Form.Text><a href="/password-recovery" className="text-muted" > I forgot my password</a></Form.Text>
                     </Form.Group>
                     <Button variant="primary" type="submit" className="legem-primary" >Login</Button>
