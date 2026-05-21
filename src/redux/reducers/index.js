@@ -1,9 +1,16 @@
-import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS, 
+import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     USERS_LOADED, CLIENTS_LOADED, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT,
-    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED, 
-    LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED, 
-    UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, 
-    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT } from "../../constants/action-types";
+    REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED,
+    LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED,
+    UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME,
+    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
+
+const toMillis = (d) => {
+    if (!d) return 0;
+    if (typeof d.toMillis === 'function') return d.toMillis();
+    if (d instanceof Date) return d.getTime();
+    return Number(d);
+};
 
 const initialState = {
     users: [],
@@ -11,6 +18,7 @@ const initialState = {
     clients: [],
     clientsNames: {},
     projectsNames: {},
+    projectsByClient: {},
     projects: [],
     project: {},
     expenses: [],
@@ -22,16 +30,16 @@ const initialState = {
     loadingProject: false,
     loadingProjects: false,
     loadingExpenses: false,
-    loadedExpenseOnce: false,
-    loadedTimesOnce: false,
     loadingPayments: false,
-    loadedPaymentsOnce: false,
     loadingProjectsMapping: false,
     loadingReport: false,
     reportReady: false,
-    invoice: 0
+    invoice: 0,
+    lastFetchedClients: null,
+    lastFetchedUsers: null,
+    lastFetchedProjectsNames: null,
 };
-  
+
 function rootReducer(state = initialState, action) {
     if(action.type === ADD_USER) {
         return Object.assign({}, state, {
@@ -49,17 +57,17 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === ADD_EXPENSE) {
         return Object.assign({}, state, {
             loadingExpenses: false,
-            expenses: state.expenses.concat([action.payload]).sort((a, b) => b.expenseDate - a.expenseDate)
+            expenses: state.expenses.concat([action.payload]).sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate))
         });
     } else if(action.type === ADD_TIME) {
         return Object.assign({}, state, {
             loadingTimes: false,
-            times: state.times.concat([action.payload]).sort((a, b) => b.timeDate - a.timeDate)
+            times: state.times.concat([action.payload]).sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate))
         });
     } else if(action.type === ADD_PAYMENT) {
         return Object.assign({}, state, {
             loadingPayments: false,
-            payments: state.payments.concat([action.payload]).sort((a, b) => b.paymentDate - a.paymentDate)
+            payments: state.payments.concat([action.payload]).sort((a, b) => toMillis(b.paymentDate) - toMillis(a.paymentDate))
         })
     } else if(action.type === CLEAR_ALERT) {
         return Object.assign({}, state, {
@@ -123,33 +131,44 @@ function rootReducer(state = initialState, action) {
         let tmp = state.expenses.filter(e => e.uid !== action.payload);
         return Object.assign({}, state, {
             loadingExpenses: false,
-            expenses: tmp.sort((a, b) => b.expenseDate - a.expenseDate)
+            expenses: tmp.sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate))
         });
     } else if(action.type === REMOVED_TIME) {
         let tmp = state.times.filter(t => t.uid !== action.payload);
         return Object.assign({}, state, {
             loadingTimes: false,
-            times: tmp.sort((a, b) => b.timeDate - a.timeDate)
+            times: tmp.sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate))
         });
     } else if(action.type === REMOVED_PAYMENT) {
         let tmp = state.payments.filter(p => p.uid !== action.payload);
         return Object.assign({}, state, {
             loadingPayments: false,
-            payments: tmp.sort((a, b) => b.paymentDate - a.paymentDate)
+            payments: tmp.sort((a, b) => toMillis(b.paymentDate) - toMillis(a.paymentDate))
         });
     } else if(action.type === USERS_LOADED) {
         return Object.assign({}, state, {
-            users: state.users.concat(action.payload).sort((a, b) => a.name?.localeCompare(b.name)),
-            loadingUsers: false
+            users: action.payload.sort((a, b) => a.name?.localeCompare(b.name)),
+            loadingUsers: false,
+            lastFetchedUsers: Date.now(),
         });
     } else if(action.type === PROJECTS_MAPPING_LOADED) {
-        let tmp = {};
-        action.payload.forEach(project => {
-            tmp[project.uid] = project.projectTitle;
+        const projectsNames = {};
+        const projectsByClient = {};
+        Object.entries(action.payload).forEach(([uid, val]) => {
+            const title = typeof val === 'string' ? val : val.title;
+            const clientUid = typeof val === 'object' && val !== null ? val.clientUid : null;
+            projectsNames[uid] = title;
+            if (clientUid) {
+                if (!projectsByClient[clientUid]) projectsByClient[clientUid] = [];
+                projectsByClient[clientUid].push({ uid, title });
+            }
         });
+        const isNewFormat = Object.values(action.payload).some(v => typeof v === 'object' && v !== null);
         return Object.assign({}, state, {
             loadingProjectsMapping: false,
-            projectsNames: tmp
+            projectsNames,
+            projectsByClient,
+            lastFetchedProjectsNames: isNewFormat ? Date.now() : null,
         });
     } else if(action.type === INVOICE_LOADED) {
         return Object.assign({}, state, {
@@ -161,9 +180,10 @@ function rootReducer(state = initialState, action) {
             tmp[client.uid] = client.denomination;
         });
         return Object.assign({}, state, {
-            clients: state.clients.concat(action.payload).sort((a, b) => a.denomination?.localeCompare(b.denomination)),
+            clients: action.payload.sort((a, b) => a.denomination?.localeCompare(b.denomination)),
             loadingClients: false,
-            clientsNames: tmp
+            clientsNames: tmp,
+            lastFetchedClients: Date.now(),
         });
     } else if(action.type === REPORT_LOADED) {
         return Object.assign({}, state, {
@@ -182,21 +202,18 @@ function rootReducer(state = initialState, action) {
         });
     } else if(action.type === EXPENSES_LOADED) {
         return Object.assign({}, state, {
-            expenses: action.payload.sort((a, b) => b.expenseDate - a.expenseDate),
+            expenses: action.payload.sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate)),
             loadingExpenses: false,
-            loadedExpenseOnce: true
         });
     } else if(action.type === PAYMENTS_LOADED) {
         return Object.assign({}, state, {
-            payments: action.payload.sort((a, b) => b.paymentDate - a.paymentDate),
+            payments: action.payload.sort((a, b) => toMillis(b.paymentDate) - toMillis(a.paymentDate)),
             loadingPayments: false,
-            loadedPaymentsOnce: true
         });
     } else if(action.type === TIMES_LOADED) {
         return Object.assign({}, state, {
-            times: action.payload.sort((a, b) => b.timeDate - a.timeDate),
+            times: action.payload.sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate)),
             loadingTimes: false,
-            loadedTimesOnce: true
         });
     } else if(action.type === UPDATED_USER) {
         const email = action.payload.email;
@@ -225,7 +242,7 @@ function rootReducer(state = initialState, action) {
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingExpenses: false,
-            expenses: tmp.sort((a, b) => b.expenseDate - a.expenseDate)
+            expenses: tmp.sort((a, b) => toMillis(b.expenseDate) - toMillis(a.expenseDate))
         })
     } else if(action.type === UPDATED_TIME) {
         const uid = action.payload.uid;
@@ -233,12 +250,18 @@ function rootReducer(state = initialState, action) {
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingTimes: false,
-            times: tmp.sort((a, b) => b.timeDate - a.timeDate)
+            times: tmp.sort((a, b) => toMillis(b.timeDate) - toMillis(a.timeDate))
         });
     } else if(action.type === ADD_CLIENT) {
         return Object.assign({}, state, {
             loadingClients: false,
             clients: state.clients.concat([action.payload]).sort((a, b) => a.denomination?.localeCompare(b.denomination))
+        });
+    } else if(action.type === CLIENTS_MAPPING_LOADED) {
+        return Object.assign({}, state, {
+            loadingClients: false,
+            clientsNames: action.payload,
+            lastFetchedClients: Date.now(),
         });
     }
 

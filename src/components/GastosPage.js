@@ -31,12 +31,11 @@ const mapStateToProps = state => {
         clients: state.clients,
         loadingClients: state.loadingClients,
         users: state.users,
+        projectsByClient: state.projectsByClient,
         projects: state.projects,
         loadingUsers: state.loadingUsers,
-        loadingProjects: state.loadingProjects,
         expenses: state.expenses,
         loadingExpenses: state.loadingExpenses,
-        loadedExpenseOnce: state.loadedExpenseOnce,
         clientsNames: state.clientsNames,
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping
@@ -65,17 +64,25 @@ class gastos extends Component {
         this.handleClose = this.handleClose.bind(this);
     }
 
+    static contextType = AuthUserContext;
+
     componentDidMount() {
+        if (this.props.clients.length === 0) {
+            this.props.getClients();
+        }
+        const authUser = this.context;
+        if (authUser) {
+            this.props.getExpenses(authUser.uid, true);
+        }
     }
 
     isFloat(n) {
-        n = n.toString();
-        return n.length > 0 && !isNaN(n) && n > 0;
+        n = n?.toString();
+        return n?.length > 0 && !isNaN(n) && n > 0;
     }
 
     handleShow = () => {
-        this.setState(INITIAL_STATE);
-        this.setState({ showModal: true });
+        this.setState({ ...INITIAL_STATE, showModal: true });
     }
 
     handleClose() {
@@ -84,7 +91,9 @@ class gastos extends Component {
 
     handleChangeClient = selectedClientModal => {
         this.setState({ selectedClientModal, selectedProjectModal: null });
-        this.props.getProjectByClient(selectedClientModal.value);
+        if (!this.props.projectsByClient[selectedClientModal.value]) {
+            this.props.getProjectByClient(selectedClientModal.value);
+        }
     }
 
     handleChangeProject = selectedProjectModal => {
@@ -163,20 +172,28 @@ class gastos extends Component {
         this.setState(INITIAL_STATE);
     }
 
-    renderModal(authUSer, isHidden) {
-        const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c) => ({
+    renderModal(authUser, isHidden) {
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd, validated } = this.state;
+
+        const clientSelect = this.props.clients?.length > 0
+            ? this.props.clients.map((c) => ({
                 label: c.denomination || '',
                 value: c.uid,
                 ...c
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label))
+            : Object.entries(this.props.clientsNames).map(([uid, name]) => ({
+                label: name || '',
+                value: uid,
+                uid
+            })).sort((a, b) => a.label?.localeCompare(b.label));
 
-        const projectSelect = this.props.projects !== null ?
-            this.props.projects.map((p) => ({
-                label: p.projectTitle || '',
-                value: p.uid,
-                ...p
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+        const projectSelect = this.props.projectsByClient[selectedClientModal?.value]
+            ? this.props.projectsByClient[selectedClientModal.value]
+                .map(p => ({ label: p.title || '', value: p.uid, uid: p.uid }))
+                .sort((a, b) => a.label?.localeCompare(b.label))
+            : (this.props.projects || [])
+                .map(p => ({ label: p.projectTitle || '', value: p.uid, uid: p.uid }))
+                .sort((a, b) => a.label?.localeCompare(b.label));
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
@@ -185,10 +202,7 @@ class gastos extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUSer.uid);
-
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd, validated } = this.state;
-        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
+        const selectedAttorney = selectedAttorneyModal || userSelect.find(u => u.value === authUser.uid);
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
                 <Modal.Header closeButton>
@@ -208,8 +222,7 @@ class gastos extends Component {
 
                         {
                             selectedClientModal == null ? null :
-                                (this.props.loadingProjects ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingUsers}></BarLoader> :
-                                    <>
+                                <>
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">
                                                 Project
@@ -272,8 +285,7 @@ class gastos extends Component {
                                                 <Select ref={this.attorney} placeholder="Select attorney..." isDisabled={isHidden} isHidden={isHidden} options={userSelect} value={selectedAttorney} onChange={this.handleAttorneyModal} />
                                             </Col>
                                         </Form.Group>
-                                    </>
-                                )
+                                </>
                         }
                     </Form>
                 </Modal.Body>
@@ -295,13 +307,6 @@ class gastos extends Component {
         );
     }
 
-    getExpenses = authUser => {
-        let self = this;
-        if(!self.props.loadedExpenseOnce) {
-            self.props.getExpenses(authUser.uid, true);
-        }
-        return null;
-    };
 
     render() {
         const expenses = this.props.expenses !== null ?
@@ -312,7 +317,7 @@ class gastos extends Component {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
-                    this.props.loadingProjectsMapping ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
+                    (this.props.loadingProjectsMapping && Object.keys(this.props.projectsNames).length === 0) ? <BarLoader css={{width: "100%"}} loading={this.props.loadingProjectsMapping}></BarLoader> :
                     <div>
                         {/* MODAL */}
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
@@ -321,8 +326,6 @@ class gastos extends Component {
 
                         {this.renderModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
-                        {/* EXPENSES */}
-                        {this.getExpenses(authUser)}
                         {/* JUMBOTRON SHOWS IF USER HAS NO REGISTERED EXPENSES*/}
                         {
                             expenses.length === 0 ? 
@@ -392,12 +395,11 @@ gastos.propTypes = {
     clients: PropTypes.array,
     loadingClients: PropTypes.bool,
     users: PropTypes.array,
+    projectsByClient: PropTypes.object,
     projects: PropTypes.array,
     loadingUsers: PropTypes.bool,
-    loadingProjects: PropTypes.bool,
     expenses: PropTypes.array,
     loadingExpenses: PropTypes.bool,
-    loadedExpenseOnce: PropTypes.bool,
     clientsNames: PropTypes.object,
     projectsNames: PropTypes.object,
     loadingProjectsMapping: PropTypes.bool,

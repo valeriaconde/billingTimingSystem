@@ -30,12 +30,11 @@ const mapStateToProps = state => {
         clients: state.clients,
         loadingClients: state.loadingClients,
         users: state.users,
+        projectsByClient: state.projectsByClient,
         projects: state.projects,
         loadingUsers: state.loadingUsers,
-        loadingProjects: state.loadingProjects,
         times: state.times,
         loadingTimes: state.loadingTimes,
-        loadedTimesOnce: state.loadedTimesOnce,
         clientsNames: state.clientsNames,
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping
@@ -67,17 +66,25 @@ class tiemposPage extends Component {
         this.handleShow = this.handleShow.bind(this);
     }
 
+    static contextType = AuthUserContext;
+
     componentDidMount() {
+        if (this.props.clients.length === 0) {
+            this.props.getClients();
+        }
+        const authUser = this.context;
+        if (authUser) {
+            this.props.getTimes(authUser.uid, true);
+        }
     }
 
     isFloat(n) {
-        n = n.toString();
-        return n.length > 0 && !isNaN(n) && n >= 0;
+        n = n?.toString();
+        return n?.length > 0 && !isNaN(n) && n >= 0;
     }
 
     handleShow() {
-        this.setState(INITIAL_STATE);
-        this.setState({ showModal: true });
+        this.setState({ ...INITIAL_STATE, showModal: true });
     }
 
     handleClose() {
@@ -86,7 +93,9 @@ class tiemposPage extends Component {
 
     handleChangeClient = selectedClientModal => {
         this.setState({ selectedClientModal, selectedProjectModal: null });
-        this.props.getProjectByClient(selectedClientModal.value);
+        if (!this.props.projectsByClient[selectedClientModal.value]) {
+            this.props.getProjectByClient(selectedClientModal.value);
+        }
     }
 
     handleChangeProject = selectedProjectModal => {
@@ -99,15 +108,7 @@ class tiemposPage extends Component {
 
     handleAttorneyModal = selectedAttorneyModal => {
         this.setState({ selectedAttorneyModal });
-
-        const userSelect = this.props.users !== null ?
-            this.props.users.map((u) => ({
-                label: u.name || '',
-                value: u.uid,
-                ...u
-            })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(selectedAttorneyModal.uid);
-        const selectedHourlyRate = userSelect[idx]?.salary;
+        const selectedHourlyRate = selectedAttorneyModal?.salary;
         this.setState({ hourlyRate: selectedHourlyRate });
     }
 
@@ -176,19 +177,27 @@ class tiemposPage extends Component {
     }
 
     renderModal(authUser, isHidden) {
-        const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c) => ({
+        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate, validated } = this.state;
+
+        const clientSelect = this.props.clients?.length > 0
+            ? this.props.clients.map((c) => ({
                 label: c.denomination || '',
                 value: c.uid,
                 ...c
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+            })).sort((a, b) => a.label?.localeCompare(b.label))
+            : Object.entries(this.props.clientsNames).map(([uid, name]) => ({
+                label: name || '',
+                value: uid,
+                uid
+            })).sort((a, b) => a.label?.localeCompare(b.label));
 
-        const projectSelect = this.props.projects !== null ?
-            this.props.projects.map((p) => ({
-                label: p.projectTitle || '',
-                value: p.uid,
-                ...p
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+        const projectSelect = this.props.projectsByClient[selectedClientModal?.value]
+            ? this.props.projectsByClient[selectedClientModal.value]
+                .map(p => ({ label: p.title || '', value: p.uid, uid: p.uid }))
+                .sort((a, b) => a.label?.localeCompare(b.label))
+            : (this.props.projects || [])
+                .map(p => ({ label: p.projectTitle || '', value: p.uid, uid: p.uid }))
+                .sort((a, b) => a.label?.localeCompare(b.label));
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
@@ -197,10 +206,9 @@ class tiemposPage extends Component {
                 ...u
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
-        const idx = userSelect.map(function (u) { return u.value }).indexOf(authUser.uid);
-        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate, validated } = this.state;
-        const selectedAttorney = selectedAttorneyModal || userSelect[idx];
-        const selectedHourlyRate = hourlyRate ?? userSelect[idx]?.salary;
+        const defaultAttorney = userSelect.find(u => u.value === authUser.uid);
+        const selectedAttorney = selectedAttorneyModal || defaultAttorney;
+        const selectedHourlyRate = hourlyRate ?? defaultAttorney?.salary;
 
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -221,7 +229,6 @@ class tiemposPage extends Component {
 
                         {
                             selectedClientModal == null ? null :
-                            (this.props.loadingProjects ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingUsers}></BarLoader> :
                             <>
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="3">
@@ -308,7 +315,6 @@ class tiemposPage extends Component {
                                     </Col>
                                 </Form.Group>
                             </>
-                            )
                         }
                     </Form>
                 </Modal.Body>
@@ -330,13 +336,6 @@ class tiemposPage extends Component {
         )
     }
 
-    getTimes = authUser => {
-        let self = this;
-        if(!self.props.loadedTimesOnce) {
-            self.props.getTimes(authUser.uid, true);
-        }
-        return null;
-    }
 
     render() {
         const times = this.props.times !== null ?
@@ -347,7 +346,7 @@ class tiemposPage extends Component {
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
-                    this.props.loadingProjectsMapping ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
+                    (this.props.loadingProjectsMapping && Object.keys(this.props.projectsNames).length === 0) ? <BarLoader css={{width: "100%"}} loading={this.props.loadingProjectsMapping}></BarLoader> :
                     <div>
                         <Button className="legem-primary" size="lg" block onClick={this.handleShow}>
                             Register time
@@ -355,7 +354,6 @@ class tiemposPage extends Component {
 
                         {this.renderModal(authUser, !authUser?.roles[ROLES.ADMIN])}
 
-                        {this.getTimes(authUser)}
                         {
                             times.length === 0 ?
                             <Jumbotron fluid>
@@ -403,7 +401,7 @@ class tiemposPage extends Component {
                                                         </span>
                                                     </OverlayTrigger>
                                                 </TableCell>
-                                                <TableCell className="rightAlign">{`${row.timeHours}:${row.timeMinutes > 0 ? row.timeMinutes : '00'} hrs`}</TableCell>
+                                                <TableCell className="rightAlign">{`${row.timeHours}:${String(row.timeMinutes).padStart(2, '0')} hrs`}</TableCell>
                                                 <TableCell>{`$${row.timeTotal.toFixed(2)}`}</TableCell>
                                                 <TableCell>
                                                     <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" />
@@ -427,12 +425,11 @@ tiemposPage.propTypes = {
     clients: PropTypes.array,
     loadingClients: PropTypes.bool,
     users: PropTypes.array,
+    projectsByClient: PropTypes.object,
     projects: PropTypes.array,
     loadingUsers: PropTypes.bool,
-    loadingProjects: PropTypes.bool,
     times: PropTypes.array,
     loadingTimes: PropTypes.bool,
-    loadedTimesOnce: PropTypes.bool,
     clientsNames: PropTypes.object,
     projectsNames: PropTypes.object,
     loadingProjectsMapping: PropTypes.bool,

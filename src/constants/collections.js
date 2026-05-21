@@ -6,3 +6,5 @@ export const TIMES = "times";
 export const PAYMENTS = "payments";
 export const MISC = "misc";
 export const INVOICE = "invoice";
+export const PROJECTS_INDEX = "projectsIndex";
+export const CLIENTS_INDEX = "clientsIndex";
