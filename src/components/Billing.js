@@ -6,7 +6,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
 import { getProjectByClient,addTime, addExpense, deletePayment, updateTime, deleteTime,
-    updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients,
+    updateExpense, deleteExpense, getProjectById, getProjectsMapping,
     getUsers, getTimes, getExpenses, addDownPayment, getPayments, getReportData, updateInvoice
 } from "../redux/actions/index";
 import FileSaver from "file-saver";
@@ -65,12 +65,6 @@ class billing extends Component {
         this.state = { ...INITIAL_STATE };
         this.attorney = React.createRef();
         this.hour = React.createRef();
-    }
-
-    componentDidMount() {
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
     }
 
     loadFile = (url, callback) => {
@@ -298,7 +292,6 @@ billing.propTypes = {
     projectsNames: PropTypes.object,
     reportReady: PropTypes.bool,
     invoice: PropTypes.object,
-    getClients: PropTypes.func,
     getUsers: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     getProjectByClient: PropTypes.func,
@@ -309,7 +302,6 @@ billing.propTypes = {
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
     getProjectById,
-    getClients,
     getProjectsMapping,
     getUsers,
     getTimes,

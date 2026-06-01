@@ -4,7 +4,7 @@ import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
-import { addAlert, clearAlert, getClients, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
+import { addAlert, clearAlert, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
 import { connect } from "react-redux";
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -44,12 +44,6 @@ class Proyectos extends Component {
         this.handleShow = this.handleShow.bind(this);
         this.onChange = this.onChange.bind(this);
         this.handleNewProject = this.handleNewProject.bind(this);
-    }
-
-    componentDidMount() {
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
     }
 
     isFloat(n) {
@@ -248,7 +242,6 @@ Proyectos.propTypes = {
     loadingProjects: PropTypes.bool,
     addAlert: PropTypes.func,
     clearAlert: PropTypes.func,
-    getClients: PropTypes.func,
     getUsers: PropTypes.func,
     addProject: PropTypes.func,
     getProjectByClient: PropTypes.func
@@ -258,7 +251,6 @@ const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
     clearAlert,
     addAlert,
-    getClients,
     getUsers,
     addProject,
     getProjectByClient

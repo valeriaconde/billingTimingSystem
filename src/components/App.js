@@ -22,7 +22,7 @@ import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
 import { connect } from "react-redux";
-import { clearAlert, getClientsMapping, getUsers, getProjectsMapping } from "../redux/actions/index";
+import { clearAlert, subscribeToClients, getUsers, getProjectsMapping } from "../redux/actions/index";
 
 // REACT VERSION: 16.13.0
 
@@ -44,7 +44,7 @@ const mapStateToProps = state => {
 function mapDispatchToProps(dispatch) {
     return {
         clearAlert: alert => dispatch(clearAlert(alert)),
-        getClients: () => dispatch(getClientsMapping()),
+        getClients: () => dispatch(subscribeToClients()),
         getUsers: () => dispatch(getUsers()),
         getProjectsMapping: () => dispatch(getProjectsMapping())
     };
@@ -53,9 +53,7 @@ function mapDispatchToProps(dispatch) {
 class App extends Component {
     componentDidUpdate(prevProps) {
         if (!prevProps.authUser && this.props.authUser) {
-            if (isStale(this.props.lastFetchedClients)) {
-                this.props.getClients();
-            }
+            this.unsubscribeClients = this.props.getClients();
             if (isStale(this.props.lastFetchedUsers)) {
                 this.props.getUsers();
             }
@@ -63,6 +61,16 @@ class App extends Component {
                 this.props.getProjectsMapping();
             }
         }
+        if (prevProps.authUser && !this.props.authUser) {
+            if (this.unsubscribeClients) {
+                this.unsubscribeClients();
+                this.unsubscribeClients = null;
+            }
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeClients) this.unsubscribeClients();
     }
 
     getAlertColor(type) {

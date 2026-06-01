@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
@@ -84,9 +84,6 @@ class detailedProject extends Component {
         this.props.getTimes(this.props.match.params.projectId, false);
         this.props.getExpenses(this.props.match.params.projectId, false);
         this.props.getPayments(this.props.match.params.projectId);
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
     }
 
     isFloat(n) {
@@ -902,7 +899,6 @@ detailedProject.propTypes = {
     match: PropTypes.object,
     history: PropTypes.object,
     getProjectById: PropTypes.func,
-    getClients: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     getUsers: PropTypes.func,
     getTimes: PropTypes.func,
@@ -924,7 +920,6 @@ detailedProject.propTypes = {
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
     getProjectById,
-    getClients,
     getProjectsMapping,
     getUsers,
     getTimes,

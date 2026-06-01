@@ -22,6 +22,7 @@ import {
     query,
     where,
     increment,
+    onSnapshot,
 } from 'firebase/firestore';
 
 export function addAlert(type, message) {
@@ -296,21 +297,24 @@ export function getProjectsMapping() {
     }
 }
 
-export function getClients() {
-    return async function(dispatch) {
+export function subscribeToClients() {
+    return function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
-        await getDocs(collection(db, CLIENTS))
-            .then(snapshot => {
+        const unsubscribe = onSnapshot(
+            collection(db, CLIENTS),
+            (snapshot) => {
                 const clientsList = snapshot.docs.map(d => ({
                     ...d.data(),
                     uid: d.id
                 }));
                 dispatch({ type: CLIENTS_LOADED, payload: clientsList.sort((a, b) => a.denomination?.localeCompare(b.denomination)) });
-            })
-            .catch(error => {
+            },
+            (error) => {
                 const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
-            });
+            }
+        );
+        return unsubscribe;
     }
 }
 
