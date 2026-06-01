@@ -145,10 +145,18 @@ class gastos extends Component {
             isBilled: false
         };
 
-        this.setState(INITIAL_STATE);
-
-        if (isModalAdd) this.props.addExpense(payload);
-        else this.props.updateExpense(selectedExpenseUid, payload);
+        if (isModalAdd) {
+            this.props.addExpense(payload);
+            this.setState({
+                ...INITIAL_STATE,
+                showModal: true,
+                selectedClientModal,
+                selectedProjectModal,
+            });
+        } else {
+            this.setState(INITIAL_STATE);
+            this.props.updateExpense(selectedExpenseUid, payload);
+        }
     }
 
     editExpense = expense => {

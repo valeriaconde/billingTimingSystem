@@ -150,9 +150,18 @@ class tiemposPage extends Component {
             isBilled: false
         };
 
-        this.setState(INITIAL_STATE);
-        if(isModalAdd) this.props.addTime(payload);
-        else this.props.updateTime(selectedTimeUid, payload);
+        if(isModalAdd) {
+            this.props.addTime(payload);
+            this.setState({
+                ...INITIAL_STATE,
+                showModal: true,
+                selectedClientModal,
+                selectedProjectModal,
+            });
+        } else {
+            this.setState(INITIAL_STATE);
+            this.props.updateTime(selectedTimeUid, payload);
+        }
     }
 
     editTime = time => {
