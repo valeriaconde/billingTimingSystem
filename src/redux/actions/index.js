@@ -76,9 +76,6 @@ export function addExpense(payload) {
         addDoc(collection(db, EXPENSES), payload)
             .then(docRef => {
                 dispatch({ type: ADD_EXPENSE, payload: { ...payload, uid: docRef.id } });
-                const alert = { type: AlertType.Success, message: "Expense successfully created." };
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
@@ -93,9 +90,6 @@ export function addTime(payload) {
         addDoc(collection(db, TIMES), payload)
             .then(docRef => {
                 dispatch({ type: ADD_TIME, payload: { ...payload, uid: docRef.id } });
-                const alert = { type: AlertType.Success, message: "Time successfully registered." };
-                dispatch({ type: ADD_ALERT, payload: alert });
-                setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
             })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
