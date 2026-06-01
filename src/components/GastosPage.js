@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { toDate } from '../utils/dateUtils';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
-import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip, Alert } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { updateExpense, deleteExpense, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
@@ -152,7 +152,9 @@ class gastos extends Component {
                 showModal: true,
                 selectedClientModal,
                 selectedProjectModal,
+                showSavedAlert: true,
             });
+            setTimeout(() => this.setState({ showSavedAlert: false }), 3000);
         } else {
             this.setState(INITIAL_STATE);
             this.props.updateExpense(selectedExpenseUid, payload);
@@ -181,7 +183,7 @@ class gastos extends Component {
     }
 
     renderModal(authUser, isHidden) {
-        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd, validated } = this.state;
+        const { selectedClientModal, selectedProjectModal, selectedDate, expenseTitle, expenseTotal, selectedExpenseModal, selectedAttorneyModal, isModalAdd, validated, showSavedAlert } = this.state;
 
         const clientSelect = this.props.clients?.length > 0
             ? this.props.clients.map((c) => ({
@@ -217,6 +219,7 @@ class gastos extends Component {
                     <Modal.Title>New expense</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    {showSavedAlert && <Alert variant="success">Saved!</Alert>}
                     <Form onSubmit={this.handleNewExpense}>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { toDate } from '../utils/dateUtils';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
-import { Row, Col, OverlayTrigger, Tooltip, Container, Button, Form, Modal, Jumbotron } from 'react-bootstrap';
+import { Row, Col, OverlayTrigger, Tooltip, Container, Button, Form, Modal, Jumbotron, Alert } from 'react-bootstrap';
 import BarLoader from "react-spinners/BarLoader";
 import { AuthUserContext, withAuthorization } from './Auth';
 import TableContainer from '@material-ui/core/TableContainer';
@@ -157,7 +157,9 @@ class tiemposPage extends Component {
                 showModal: true,
                 selectedClientModal,
                 selectedProjectModal,
+                showSavedAlert: true,
             });
+            setTimeout(() => this.setState({ showSavedAlert: false }), 3000);
         } else {
             this.setState(INITIAL_STATE);
             this.props.updateTime(selectedTimeUid, payload);
@@ -186,7 +188,7 @@ class tiemposPage extends Component {
     }
 
     renderModal(authUser, isHidden) {
-        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate, validated } = this.state;
+        const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate, validated, showSavedAlert } = this.state;
 
         const clientSelect = this.props.clients?.length > 0
             ? this.props.clients.map((c) => ({
@@ -225,6 +227,7 @@ class tiemposPage extends Component {
                     <Modal.Title>Time register</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    {showSavedAlert && <Alert variant="success">Saved!</Alert>}
                     <Form>
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">
