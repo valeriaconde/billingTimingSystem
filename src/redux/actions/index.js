@@ -23,7 +23,19 @@ import {
     where,
     increment,
     onSnapshot,
+    serverTimestamp,
 } from 'firebase/firestore';
+
+const withCreateTimestamps = (payload) => ({
+    ...payload,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+});
+
+const withUpdateTimestamp = (payload) => ({
+    ...payload,
+    updatedAt: serverTimestamp(),
+});
 
 export function addAlert(type, message) {
     const payload = { type: type, message: message };
@@ -39,7 +51,7 @@ export function clearAlert(payload) {
 
 export function addClient(payload) {
     return function(dispatch) {
-        addDoc(collection(db, CLIENTS), payload)
+        addDoc(collection(db, CLIENTS), withCreateTimestamps(payload))
             .then(docRef => {
                 updateDoc(doc(db, MISC, CLIENTS_INDEX), { [docRef.id]: payload.denomination });
                 const alert = { type: AlertType.Success, message: "Client successfully registered."};
@@ -55,7 +67,7 @@ export function addClient(payload) {
 
 export function addProject(payload) {
     return function(dispatch) {
-        addDoc(collection(db, PROJECTS), payload)
+        addDoc(collection(db, PROJECTS), withCreateTimestamps(payload))
             .then(docRef => {
                 updateDoc(doc(db, MISC, PROJECTS_INDEX), { [docRef.id]: { title: payload.projectTitle, clientUid: payload.projectClient } });
                 const alert = { type: AlertType.Success, message: "Project successfully created." };
@@ -71,7 +83,7 @@ export function addProject(payload) {
 
 export function addExpense(payload) {
     return function(dispatch) {
-        addDoc(collection(db, EXPENSES), payload)
+        addDoc(collection(db, EXPENSES), withCreateTimestamps(payload))
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -81,7 +93,7 @@ export function addExpense(payload) {
 
 export function addTime(payload) {
     return function(dispatch) {
-        addDoc(collection(db, TIMES), payload)
+        addDoc(collection(db, TIMES), withCreateTimestamps(payload))
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -91,7 +103,7 @@ export function addTime(payload) {
 
 export function addDownPayment(payload) {
     return function(dispatch) {
-        addDoc(collection(db, PAYMENTS), payload)
+        addDoc(collection(db, PAYMENTS), withCreateTimestamps(payload))
             .then(() => {
                 const alert = { type: AlertType.Success, message: "Down payment successfully registered." };
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -108,7 +120,7 @@ export function updateClient(uid, payload) {
     return function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
         const docRef = doc(db, CLIENTS, uid);
-        updateDoc(docRef, payload)
+        updateDoc(docRef, withUpdateTimestamp(payload))
             .then(() => {
                 if (payload.denomination) {
                     updateDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: payload.denomination });
@@ -131,7 +143,7 @@ export function updateProject(uid, payload) {
     return function(dispatch) {
         dispatch({ type: LOADING_PROJECT, payload: {} });
         const docRef = doc(db, PROJECTS, uid);
-        updateDoc(docRef, payload)
+        updateDoc(docRef, withUpdateTimestamp(payload))
             .then(() => {
                 if (payload.projectTitle) {
                     updateDoc(doc(db, MISC, PROJECTS_INDEX), { [uid]: payload.projectTitle });
@@ -158,7 +170,7 @@ export function updateExpense(uid, payload) {
     return function(dispatch) {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
         const docRef = doc(db, EXPENSES, uid);
-        updateDoc(docRef, payload)
+        updateDoc(docRef, withUpdateTimestamp(payload))
             .then(() => {
                 getDoc(docRef).then(snapshot => {
                     dispatch({ type: UPDATED_EXPENSE, payload: { uid: uid, ...snapshot.data() } });
@@ -178,7 +190,7 @@ export function updateTime(uid, payload) {
     return function(dispatch) {
         dispatch({ type: LOADING_TIMES, payload: {} });
         const docRef = doc(db, TIMES, uid);
-        updateDoc(docRef, payload)
+        updateDoc(docRef, withUpdateTimestamp(payload))
             .then(() => {
                 getDoc(docRef).then(snapshot => {
                     dispatch({ type: UPDATED_TIME, payload: { uid: uid, ...snapshot.data() } });
