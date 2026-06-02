@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
 const config = {
     apiKey: process.env.REACT_APP_API_KEY,
@@ -12,5 +12,5 @@ const config = {
 
 const app = getApps().length === 0 ? initializeApp(config) : getApp();
 export const db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() }),
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
 }, process.env.REACT_APP_FIRESTORE_DATABASE);
