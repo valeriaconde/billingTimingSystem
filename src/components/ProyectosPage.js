@@ -4,7 +4,7 @@ import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
-import { addAlert, clearAlert, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
+import { addAlert, clearAlert, getUsers, addProject, subscribeToProjectsByClient } from "../redux/actions/index";
 import { connect } from "react-redux";
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -72,10 +72,15 @@ class Proyectos extends Component {
         this.setState({ ...INITIAL_STATE, selectedOption: selectedClientModal });
     }
 
-    handleChangeMain = selectedOption => { 
+    handleChangeMain = selectedOption => {
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
         this.setState( { selectedOption } );
-        this.props.getProjectByClient(selectedOption.value);
+        this.unsubscribeProjects = this.props.subscribeToProjectsByClient(selectedOption.value);
     };
+
+    componentWillUnmount() {
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
+    }
     
     handleChangeClientModal = selectedClientModal => { this.setState( { selectedClientModal } ); };
     
@@ -244,7 +249,7 @@ Proyectos.propTypes = {
     clearAlert: PropTypes.func,
     getUsers: PropTypes.func,
     addProject: PropTypes.func,
-    getProjectByClient: PropTypes.func
+    subscribeToProjectsByClient: PropTypes.func
 };
 
 const condition = authUser => !!authUser;
@@ -253,5 +258,5 @@ export default connect(mapStateToProps, {
     addAlert,
     getUsers,
     addProject,
-    getProjectByClient
+    subscribeToProjectsByClient
 })(withAuthorization(condition)(Proyectos));

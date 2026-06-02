@@ -297,6 +297,127 @@ export function getProjectsMapping() {
     }
 }
 
+export function subscribeToProjectsMapping() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS_MAPPING, payload: {} });
+        const indexRef = doc(db, MISC, PROJECTS_INDEX);
+        const unsubscribe = onSnapshot(
+            indexRef,
+            (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    const firstValue = Object.values(data)[0];
+                    if (firstValue !== undefined && typeof firstValue === 'string') {
+                        dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+                        buildProjectsIndex(indexRef, dispatch).catch(() => {});
+                    } else {
+                        dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+                    }
+                } else {
+                    buildProjectsIndex(indexRef, dispatch);
+                }
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToProjectsByClient(clientUid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        const q = query(
+            collection(db, PROJECTS),
+            where("projectClient", "==", clientUid),
+            where("isOpen", "==", true)
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToExpenses(uid, byAttorney) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        let q = query(
+            collection(db, EXPENSES),
+            where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
+        );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToTimes(uid, byAttorney) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        let q = query(
+            collection(db, TIMES),
+            where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
+        );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToPayments(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PAYMENT, payload: {} });
+        const q = query(collection(db, PAYMENTS), where("paymentProject", "==", uid));
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const paymentsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
 export function subscribeToClients() {
     return function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });

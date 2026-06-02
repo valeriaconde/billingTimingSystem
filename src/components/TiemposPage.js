@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { deleteTime, updateTime, getTimes, addTime, getProjectsMapping, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
+import { deleteTime, updateTime, subscribeToTimes, addTime, getProjectsMapping, getUsers, addProject, getProjectByClient } from "../redux/actions/index";
 import { connect } from "react-redux";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -71,8 +71,12 @@ class tiemposPage extends Component {
     componentDidMount() {
         const authUser = this.context;
         if (authUser) {
-            this.props.getTimes(authUser.uid, true);
+            this.unsubscribeTimes = this.props.subscribeToTimes(authUser.uid, true);
         }
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeTimes) this.unsubscribeTimes();
     }
 
     isFloat(n) {
@@ -447,7 +451,7 @@ tiemposPage.propTypes = {
     getProjectByClient: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     addTime: PropTypes.func,
-    getTimes: PropTypes.func,
+    subscribeToTimes: PropTypes.func,
     updateTime: PropTypes.func,
     deleteTime: PropTypes.func
 };
@@ -459,7 +463,7 @@ export default connect(mapStateToProps, {
     getProjectByClient,
     getProjectsMapping,
     addTime,
-    getTimes,
+    subscribeToTimes,
     updateTime,
     deleteTime
 })(withAuthorization(condition)(tiemposPage));
