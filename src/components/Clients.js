@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { ListGroup, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
+import { Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
@@ -8,11 +8,11 @@ import { connect } from "react-redux";
 import { addAlert, clearAlert, addClient, updateClient, deleteClient } from "../redux/actions/index";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
-import Select from 'react-select';
 import { trimFields, trimString } from '../utils/inputUtils';
+import '../styles/Clients.css';
 
 const mapStateToProps = state => {
-    return { 
+    return {
         alerts: state.alerts,
         clients: state.clients,
         loadingClients: state.loadingClients
@@ -25,6 +25,7 @@ const INITIAL_STATE = {
     address2: '', currAddress2: '',
     city: '', currCity: '',
     state: '', currState: '',
+    country: '', currCountry: '',
     zipCode: '', currZipCode: '',
     rfc: '', currRfc: '',
     contact: '', currContact: '',
@@ -38,7 +39,8 @@ const INITIAL_STATE = {
     edit: false,
     showModalCliente: false,
     error: null,
-    activeIdx: -1
+    activeIdx: -1,
+    searchQuery: ''
 };
 
 class Clientes extends Component {
@@ -65,23 +67,18 @@ class Clientes extends Component {
     }
 
     onSave() {
-        const { currDenomination, currAddress, currAddress2, currCity, currState, currZipCode,
+        const { currDenomination, currAddress, currAddress2, currCity, currState, currCountry, currZipCode,
              currRfc, currContact, currEmail, currPhone, currWebsite, currYearSince, currIva, currUid } = this.state;
         const trimmedClient = trimFields({
-            currDenomination, currAddress, currAddress2, currCity, currState, currZipCode,
+            currDenomination, currAddress, currAddress2, currCity, currState, currCountry, currZipCode,
             currRfc, currContact, currEmail, currPhone, currWebsite, currYearSince
         }, [
-            'currDenomination', 'currAddress', 'currAddress2', 'currCity', 'currState', 'currZipCode',
+            'currDenomination', 'currAddress', 'currAddress2', 'currCity', 'currState', 'currCountry', 'currZipCode',
             'currRfc', 'currContact', 'currEmail', 'currPhone', 'currWebsite', 'currYearSince'
         ]);
-        
+
         if(trimmedClient.currDenomination.length === 0) {
             this.props.addAlert(AlertType.Error, "Business name cannot be empty.");
-            return;
-        }
-
-        if(trimmedClient.currRfc.length === 0) {
-            this.props.addAlert(AlertType.Error, "RFC cannot be empty.");
             return;
         }
 
@@ -90,19 +87,14 @@ class Clientes extends Component {
             return;
         }
 
-        if(trimmedClient.currEmail.length === 0) {
-            this.props.addAlert(AlertType.Error, "Email cannot be empty.");
-            return;
-        }
-
         const payload = {
             address: trimmedClient.currAddress, address2: trimmedClient.currAddress2, city: trimmedClient.currCity, state: trimmedClient.currState,
-            zipCode: trimmedClient.currZipCode, contact: trimmedClient.currContact, denomination: trimmedClient.currDenomination,
+            country: trimmedClient.currCountry, zipCode: trimmedClient.currZipCode, contact: trimmedClient.currContact, denomination: trimmedClient.currDenomination,
             email: trimmedClient.currEmail, iva: currIva, phone: trimmedClient.currPhone, rfc: trimmedClient.currRfc,
             website: trimmedClient.currWebsite, yearSince: trimmedClient.currYearSince, uid: currUid
         };
         this.props.updateClient(currUid, payload);
-        
+
         this.setState({ edit: false });
     }
 
@@ -118,22 +110,27 @@ class Clientes extends Component {
         this.setState({ edit: true });
     }
 
+    onCancelEdit() {
+        const client = this.props.clients[this.state.activeIdx];
+        this.handleSelectClient(client, this.state.activeIdx);
+    }
+
     handleNewClient(event) {
         event.preventDefault();
         this.setState({ validated: true });
 
-        const { denomination, address, address2, city, state, zipCode,
+        const { denomination, address, address2, city, state, country, zipCode,
              rfc, contact, email, phone, website, yearSince } = this.state;
         const trimmedClient = trimFields({
-            denomination, address, address2, city, state, zipCode,
+            denomination, address, address2, city, state, country, zipCode,
             rfc, contact, email, phone, website, yearSince
         }, [
-            'denomination', 'address', 'address2', 'city', 'state', 'zipCode',
+            'denomination', 'address', 'address2', 'city', 'state', 'country', 'zipCode',
             'rfc', 'contact', 'email', 'phone', 'website', 'yearSince'
         ]);
         const iva = document.getElementById("yesIVA").checked;
 
-        if(trimmedClient.denomination === "" || trimmedClient.rfc === "" || trimmedClient.contact === "" || trimmedClient.email === "") return;
+        if(trimmedClient.denomination === "" || trimmedClient.contact === "") return;
 
         const payload = {
             denomination: trimmedClient.denomination,
@@ -141,6 +138,7 @@ class Clientes extends Component {
             address2: trimmedClient.address2,
             city: trimmedClient.city,
             state: trimmedClient.state,
+            country: trimmedClient.country,
             zipCode: trimmedClient.zipCode,
             rfc: trimmedClient.rfc,
             contact: trimmedClient.contact,
@@ -167,9 +165,50 @@ class Clientes extends Component {
         this.setState({ showModalCliente: false });
     }
 
+    handleSelectClient = (client, idx) => {
+        this.setState({
+            activeIdx: idx,
+            edit: false,
+            currUid: client.uid || '',
+            currDenomination: client.denomination || '',
+            currAddress: client.address || '',
+            currAddress2: client.address2 || '',
+            currCity: client.city || '',
+            currState: client.state || '',
+            currCountry: client.country || '',
+            currZipCode: client.zipCode || '',
+            currRfc: client.rfc || '',
+            currContact: client.contact || '',
+            currEmail: client.email || '',
+            currPhone: client.phone || '',
+            currWebsite: client.website || '',
+            currYearSince: client.yearSince || '',
+            currIva: client.iva !== undefined ? client.iva : true,
+        });
+    };
+
+    renderField(label, value, name) {
+        const { edit } = this.state;
+        return (
+            <div className="client-field-row">
+                <span className="client-field-label">{label}</span>
+                {edit ? (
+                    <Form.Control
+                        className="client-field-input"
+                        value={value || ''}
+                        onChange={this.onChange}
+                        name={name}
+                    />
+                ) : (
+                    <span className="client-field-value">{value || '—'}</span>
+                )}
+            </div>
+        );
+    }
+
     renderModal() {
         const { denomination, address, address2, rfc, contact, email,
-                phone, website, yearSince, city, state, zipCode, validated } = this.state;
+                phone, website, yearSince, city, state, country, zipCode, validated } = this.state;
         return(
             <Modal show={this.state.showModalCliente} onHide={this.handleCloseCliente}>
                 <Modal.Header closeButton>
@@ -214,6 +253,13 @@ class Clientes extends Component {
                         </Form.Group>
 
                         <Form.Group as={Row}>
+                            <Form.Label column sm="3"> Country </Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="country" onChange={this.handleOnChange} value={country} as="textarea" rows="1" />
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
                             <Form.Label column sm="3"> Zip Code </Form.Label>
                             <Col sm="7">
                                 <Form.Control name="zipCode" onChange={this.handleOnChange} value={zipCode} as="textarea" rows="1" />
@@ -223,8 +269,7 @@ class Clientes extends Component {
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> RFC </Form.Label>
                             <Col sm="7">
-                                <Form.Control isInvalid={validated && trimString(rfc).length === 0} name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" required />
-                                <Form.Control.Feedback type="invalid">RFC cannot be empty.</Form.Control.Feedback>
+                                <Form.Control name="rfc" onChange={this.handleOnChange} value={rfc} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
@@ -239,8 +284,7 @@ class Clientes extends Component {
                         <Form.Group as={Row}>
                             <Form.Label column sm="3"> Email </Form.Label>
                             <Col sm="7">
-                                <Form.Control isInvalid={validated && trimString(email).length === 0} name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" required />
-                                <Form.Control.Feedback type="invalid">Email cannot be empty.</Form.Control.Feedback>
+                                <Form.Control name="email" onChange={this.handleOnChange} value={email} as="textarea" rows="1" />
                             </Col>
                         </Form.Group>
 
@@ -299,197 +343,169 @@ class Clientes extends Component {
         );
     }
 
-    handleChangeClientModal = selectedClientModal => {
-        this.setState( { selectedClientModal,
-            activeIdx: selectedClientModal.idx,
-            edit: false,
-            currUid: selectedClientModal.uid,
-            currDenomination: selectedClientModal.denomination,
-            currAddress: selectedClientModal.address,
-            currAddress2: selectedClientModal.address2,
-            currCity: selectedClientModal.city,
-            currState: selectedClientModal.state,
-            currZipCode: selectedClientModal.zipCode,
-            currRfc: selectedClientModal.rfc,
-            currContact: selectedClientModal.contact,
-            currEmail: selectedClientModal.email,
-            currPhone: selectedClientModal.phone,
-            currWebsite: selectedClientModal.website,
-            currYearSince: selectedClientModal.yearSince,
-            currIva: selectedClientModal.iva
-        }); 
-    };
-
-    renderClients() {
-        return(
-            <ListGroup as="ul" className="">
-                {this.props.clients.map((client, i) => <ListGroup.Item onClick={this.onClickClient} value={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{client.denomination}</ListGroup.Item>)}
-            </ListGroup>
-        );
-    }
-    
     render() {
-        const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c, i) => ({
-                label: c.denomination || '',
-                value: c.uid,
-                idx: i,
-                ...c
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+        const { edit, currDenomination, currAddress, currAddress2, currRfc, currContact,
+            currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState,
+            currCountry, currZipCode, searchQuery, activeIdx } = this.state;
 
-        const { edit, currDenomination, currAddress, currAddress2, currRfc, currContact, selectedClientModal,
-            currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState, currZipCode } = this.state;
+        const allClients = this.props.clients || [];
+        const filteredClients = allClients.filter(c =>
+            (c.denomination || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
         return (
             <AuthUserContext.Consumer>
                 {() => (
-                    this.props.loadingClients ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
-                    <div>
-                        {this.renderModal()}
-                        <Container className="topMargin">
-                            <Row>
-                                <Col xs={9}>
-                                    <Select required value={selectedClientModal} placeholder="Search..." options={clientSelect} onChange={this.handleChangeClientModal} />
-                                </Col>
-                                <Col>
-                                    <Button variant="success" block onClick={this.handleShowCliente}> New client </Button>
-                                </Col>
-                            </Row>
-                            <Row><br/></Row>
-                            <Row>
-                                { this.state.activeIdx === -1 ? <div/> :
-                                <Col xs={11}>
-                                    <Form onSubmit={this.onSave}>
-                                        {
-                                            this.state.edit ?
-                                                <Form.Control value={currDenomination || "DENOMINATION"} onChange={this.onChange} name="currDenomination" size="lg" type="text" placeholder="DENOMINATION" />
-                                                :
-                                                <h3> { currDenomination || "DENOMINATION" } </h3>
-                                        }
+                    this.props.loadingClients
+                        ? <BarLoader css={{width: "100%"}} loading={this.props.loadingClients} />
+                        : <div className="clients-page">
+                            {this.renderModal()}
+                            <div className="clients-layout">
 
-                                        <br></br>
-        
-                                        {/* DOMICILIO */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> Address </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currAddress} onChange={this.onChange} name="currAddress" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> Address 2 </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currAddress2} onChange={this.onChange} name="currAddress2" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> City </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control name="currCity" onChange={this.onChange} value={currCity} readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> State </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control name="currState" onChange={this.onChange} value={currState} readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> ZIP Code </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currZipCode} onChange={this.onChange} name="currZipCode" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-        
-                                        {/* RFC */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> RFC </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currRfc} onChange={this.onChange} name="currRfc" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-        
-                                        {/* CONTACTO */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> Contact </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currContact} onChange={this.onChange} name="currContact" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-        
-                                        {/* CORREO */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> Email </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currEmail} onChange={this.onChange} name="currEmail" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-        
-                                        {/* TELEFONO */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> Phone </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currPhone} onChange={this.onChange} name="currPhone" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-        
-                                        {/* PAGINA WEB */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> Website </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currWebsite} onChange={this.onChange} name="currWebsite" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-        
-                                        {/* CLIENTE DESDE */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> Client since </Form.Label>
-                                            <Col sm="6">
-                                                <Form.Control value={currYearSince} onChange={this.onChange} name="currYearSince" readOnly={!edit} />
-                                            </Col>
-                                        </Form.Group>
-        
-                                        {/* IVA */}
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="4"> IVA </Form.Label>
-                                            <Col sm="6">
-                                                <div>
-                                                        {['radio'].map(type => (
-                                                            <div key={`inline-${type}`} className="mb-3">
-                                                                <Form.Check onChange={this.onChangeRadio} checked={currIva} inline name="radioBtn" label="Yes" type={type} id={`currIva`} />
-                                                                <Form.Check onChange={this.onChangeRadio} checked={!currIva} inline name="radioBtn" label="No" type={type} id={`currNoIva`} />
-                                                            </div>
-                                                        ))}
-                                                </div>
-                                            </Col>
-                                        </Form.Group>
-        
-                                        <Form.Group as={Row} >
-                                            <Form.Label column sm="4"></Form.Label>
-                                            <Col md={{ span: 4, offset: 4 }}>
-                                                <>
-                                                {
-                                                    this.state.edit ?
-                                                    <div>
-                                                        <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
-                                                            <DeleteIcon />
-                                                        </IconButton>
-                                                        <Button onClick={this.onSave}>Save</Button>
+                                {/* LEFT PANEL — client list */}
+                                <div className="client-list-panel">
+                                    <div className="client-list-header">
+                                        <input
+                                            type="text"
+                                            className="client-search-input"
+                                            placeholder="Search clients..."
+                                            value={searchQuery}
+                                            onChange={e => this.setState({ searchQuery: e.target.value })}
+                                        />
+                                        <Button className="btn-new-client" onClick={this.handleShowCliente}>
+                                            + New client
+                                        </Button>
+                                    </div>
+                                    <div className="client-list-scroll">
+                                        {filteredClients.map(client => {
+                                            const originalIdx = allClients.findIndex(c => c.uid === client.uid);
+                                            return (
+                                                <div
+                                                    key={client.uid}
+                                                    className={`client-list-item${activeIdx === originalIdx ? ' active' : ''}`}
+                                                    onClick={() => this.handleSelectClient(client, originalIdx)}
+                                                >
+                                                    <div className="client-list-avatar">
+                                                        {(client.denomination || '?')[0].toUpperCase()}
                                                     </div>
-                                                    : <Button onClick={this.onEdit} variant="outline-dark">Edit</Button>
-                                                }
-                                                </>
-                                            </Col>
-                                        </Form.Group>
-                                    </Form>
-                                </Col>
-                                }
-                            </Row>
-                        </Container>
-                    </div>
+                                                    <div>
+                                                        <div className="client-list-name">{client.denomination}</div>
+                                                        {client.city
+                                                            ? <div className="client-list-secondary">{client.city}</div>
+                                                            : null
+                                                        }
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* RIGHT PANEL — client detail */}
+                                <div className="client-detail-panel">
+                                    {activeIdx === -1
+                                        ? <div className="client-empty-state">
+                                            <p>Select a client to view details</p>
+                                          </div>
+                                        : <div className="client-card">
+
+                                            {/* HEADER */}
+                                            <div className="client-card-header">
+                                                <div className="client-avatar-large">
+                                                    {(currDenomination || '?')[0].toUpperCase()}
+                                                </div>
+                                                <div className="client-card-title">
+                                                    {edit
+                                                        ? <Form.Control
+                                                            value={currDenomination}
+                                                            onChange={this.onChange}
+                                                            name="currDenomination"
+                                                            size="lg"
+                                                            placeholder="Business name"
+                                                          />
+                                                        : <h2>{currDenomination}</h2>
+                                                    }
+                                                </div>
+                                                <div className="client-card-actions">
+                                                    {edit
+                                                        ? <>
+                                                            <Button variant="outline-secondary" onClick={() => this.onCancelEdit()}>Cancel</Button>
+                                                            <Button className="legem-primary" onClick={this.onSave}>Save</Button>
+                                                          </>
+                                                        : <Button variant="outline-primary" onClick={this.onEdit}>Edit</Button>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            {/* ADDRESS */}
+                                            <div className="client-section">
+                                                <div className="client-section-title">Address</div>
+                                                {this.renderField('Address', currAddress, 'currAddress')}
+                                                {this.renderField('Address 2', currAddress2, 'currAddress2')}
+                                                {this.renderField('City', currCity, 'currCity')}
+                                                {this.renderField('State', currState, 'currState')}
+                                                {this.renderField('Country', currCountry, 'currCountry')}
+                                                {this.renderField('ZIP Code', currZipCode, 'currZipCode')}
+                                            </div>
+
+                                            {/* CONTACT */}
+                                            <div className="client-section">
+                                                <div className="client-section-title">Contact</div>
+                                                {this.renderField('Contact', currContact, 'currContact')}
+                                                {this.renderField('Email', currEmail, 'currEmail')}
+                                                {this.renderField('Phone', currPhone, 'currPhone')}
+                                                {this.renderField('Website', currWebsite, 'currWebsite')}
+                                            </div>
+
+                                            {/* BUSINESS */}
+                                            <div className="client-section">
+                                                <div className="client-section-title">Business</div>
+                                                {this.renderField('RFC', currRfc, 'currRfc')}
+                                                {this.renderField('Client since', currYearSince, 'currYearSince')}
+                                                <div className="client-field-row">
+                                                    <span className="client-field-label">IVA</span>
+                                                    {edit
+                                                        ? <div className="client-field-input">
+                                                            <Form.Check
+                                                                onChange={this.onChangeRadio}
+                                                                checked={currIva}
+                                                                inline
+                                                                name="radioBtn"
+                                                                label="Yes"
+                                                                type="radio"
+                                                                id="currIva"
+                                                            />
+                                                            <Form.Check
+                                                                onChange={this.onChangeRadio}
+                                                                checked={!currIva}
+                                                                inline
+                                                                name="radioBtn"
+                                                                label="No"
+                                                                type="radio"
+                                                                id="currNoIva"
+                                                            />
+                                                          </div>
+                                                        : <span className={`iva-badge ${currIva ? 'yes' : 'no'}`}>
+                                                            {currIva ? 'Yes' : 'No'}
+                                                          </span>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            {edit &&
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                                                    <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </div>
+                                            }
+
+                                        </div>
+                                    }
+                                </div>
+
+                            </div>
+                        </div>
                 )}
             </AuthUserContext.Consumer>
         );
@@ -500,7 +516,6 @@ Clientes.propTypes = {
     alerts: PropTypes.array,
     clients: PropTypes.array,
     loadingClients: PropTypes.bool,
-    loadingUsers: PropTypes.bool,
     addAlert: PropTypes.func,
     clearAlert: PropTypes.func,
     addClient: PropTypes.func,

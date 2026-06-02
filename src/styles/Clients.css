@@ -1,0 +1,248 @@
+/* ======= CLIENTS PAGE ======= */
+
+.clients-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+.clients-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ---- LEFT PANEL ---- */
+
+.client-list-panel {
+  width: 280px;
+  min-width: 280px;
+  border-right: 1px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.client-list-header {
+  padding: 16px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.client-search-input {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  outline: none;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.client-search-input:focus {
+  border-color: rgb(25, 57, 145);
+  box-shadow: 0 0 0 2px rgba(25, 57, 145, 0.12);
+}
+
+.btn-new-client {
+  width: 100%;
+  background-color: rgb(25, 57, 145) !important;
+  border-color: rgb(25, 57, 145) !important;
+  color: white !important;
+  font-size: 14px !important;
+  padding: 7px 12px !important;
+}
+
+.client-list-scroll {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.client-list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  border-left: 3px solid transparent;
+  transition: background-color 0.12s;
+}
+
+.client-list-item:hover {
+  background-color: #f5f7ff;
+}
+
+.client-list-item.active {
+  background-color: rgba(25, 57, 145, 0.07);
+  border-left-color: rgb(25, 57, 145);
+}
+
+.client-list-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgb(25, 57, 145);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.client-list-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #222;
+  line-height: 1.3;
+}
+
+.client-list-secondary {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+/* ---- RIGHT PANEL ---- */
+
+.client-detail-panel {
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+  background-color: #f4f6fa;
+}
+
+/* EMPTY STATE */
+
+.client-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #bbb;
+  user-select: none;
+}
+
+.client-empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* CLIENT CARD */
+
+.client-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 28px 32px;
+  max-width: 700px;
+}
+
+.client-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 16px;
+}
+
+.client-avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: rgb(25, 57, 145);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.client-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.client-card-title h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.client-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* SECTIONS */
+
+.client-section {
+  margin-bottom: 24px;
+}
+
+.client-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(25, 57, 145);
+  margin-bottom: 12px;
+}
+
+.client-field-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  min-height: 34px;
+}
+
+.client-field-label {
+  font-size: 13px;
+  color: #999;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.client-field-value {
+  font-size: 14px;
+  color: #333;
+}
+
+.client-field-input {
+  flex: 1;
+  max-width: 320px;
+}
+
+/* IVA BADGE */
+
+.iva-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.iva-badge.yes {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.iva-badge.no {
+  background-color: #fff3f3;
+  color: #c62828;
+}
