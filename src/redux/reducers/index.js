@@ -116,16 +116,24 @@ function rootReducer(state = initialState, action) {
             users: tmp.sort((a, b) => a.name?.localeCompare(b.name))
         });
     } else if(action.type === REMOVED_CLIENT) {
-        let tmp = state.clients.filter(c => { return c.uid !== action.payload });
+        const clientUid = action.payload;
+        const deletedProjectUids = new Set(state.projects.filter(p => p.projectClient === clientUid).map(p => p.uid));
         return Object.assign({}, state, {
             loadingClients: false,
-            clients: tmp.sort((a, b) => a.denomination?.localeCompare(b.denomination))
+            clients: state.clients.filter(c => c.uid !== clientUid).sort((a, b) => a.denomination?.localeCompare(b.denomination)),
+            projects: state.projects.filter(p => p.projectClient !== clientUid),
+            expenses: state.expenses.filter(e => e.expenseClient !== clientUid),
+            times: state.times.filter(t => t.timeClient !== clientUid),
+            payments: state.payments.filter(p => !deletedProjectUids.has(p.paymentProject)),
         });
     } else if(action.type === REMOVED_PROJECT) {
-        let tmp = state.projects.filter(p => { return p.uid !== action.payload });
+        const projectUid = action.payload;
         return Object.assign({}, state, {
             loadingProject: false,
-            projects: tmp
+            projects: state.projects.filter(p => p.uid !== projectUid),
+            expenses: state.expenses.filter(e => e.expenseProject !== projectUid),
+            times: state.times.filter(t => t.timeProject !== projectUid),
+            payments: state.payments.filter(p => p.paymentProject !== projectUid),
         });
     } else if(action.type === REMOVED_EXPENSE) {
         let tmp = state.expenses.filter(e => e.uid !== action.payload);

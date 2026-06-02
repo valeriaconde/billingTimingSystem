@@ -677,6 +677,26 @@ export function deleteClient(uid) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
         deleteDoc(doc(db, CLIENTS, uid)).then(() => {
             updateDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: deleteField() });
+
+            // Cascade: delete all projects and their expenses/times/payments
+            getDocs(query(collection(db, PROJECTS), where("projectClient", "==", uid)))
+                .then(projectsSnap => {
+                    projectsSnap.forEach(projectDoc => {
+                        const projectUid = projectDoc.id;
+                        deleteDoc(projectDoc.ref);
+                        updateDoc(doc(db, MISC, PROJECTS_INDEX), { [projectUid]: deleteField() });
+                        Promise.all([
+                            getDocs(query(collection(db, EXPENSES), where("expenseProject", "==", projectUid))),
+                            getDocs(query(collection(db, TIMES), where("timeProject", "==", projectUid))),
+                            getDocs(query(collection(db, PAYMENTS), where("paymentProject", "==", projectUid))),
+                        ]).then(([expenseSnap, timesSnap, paymentsSnap]) => {
+                            expenseSnap.forEach(d => deleteDoc(d.ref));
+                            timesSnap.forEach(d => deleteDoc(d.ref));
+                            paymentsSnap.forEach(d => deleteDoc(d.ref));
+                        });
+                    });
+                });
+
             dispatch({ type: REMOVED_CLIENT, payload: uid });
             const alert = { type: AlertType.Success, message: "Client successfully deleted."};
             dispatch({ type: ADD_ALERT, payload: alert });
