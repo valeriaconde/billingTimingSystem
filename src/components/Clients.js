@@ -5,7 +5,7 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
-import { addAlert, clearAlert, addClient, getClients, updateClient, deleteClient } from "../redux/actions/index";
+import { addAlert, clearAlert, addClient, updateClient, deleteClient } from "../redux/actions/index";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Select from 'react-select';
@@ -55,12 +55,6 @@ class Clientes extends Component {
         this.onChange = this.onChange.bind(this);
         this.onSave = this.onSave.bind(this);
         this.onDelete = this.onDelete.bind(this);
-    }
-
-    componentDidMount() {
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
     }
 
     onDelete() {
@@ -510,7 +504,6 @@ Clientes.propTypes = {
     addAlert: PropTypes.func,
     clearAlert: PropTypes.func,
     addClient: PropTypes.func,
-    getClients: PropTypes.func,
     updateClient: PropTypes.func,
     deleteClient: PropTypes.func
 };
@@ -520,7 +513,6 @@ export default connect(mapStateToProps, {
     clearAlert,
     addAlert,
     addClient,
-    getClients,
     updateClient,
     deleteClient
 })(withAuthorization(condition)(Clientes));

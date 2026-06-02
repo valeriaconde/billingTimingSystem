@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getClients, getUsers, getTimes, getExpenses, addDownPayment, getPayments } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses, addDownPayment, subscribeToPayments } from "../redux/actions/index";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
@@ -80,13 +80,17 @@ class detailedProject extends Component {
     }
 
     componentDidMount() {
-        this.props.getProjectById(this.props.match.params.projectId);
-        this.props.getTimes(this.props.match.params.projectId, false);
-        this.props.getExpenses(this.props.match.params.projectId, false);
-        this.props.getPayments(this.props.match.params.projectId);
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
+        const { projectId } = this.props.match.params;
+        this.props.getProjectById(projectId);
+        this.unsubscribeTimes = this.props.subscribeToTimes(projectId, false);
+        this.unsubscribeExpenses = this.props.subscribeToExpenses(projectId, false);
+        this.unsubscribePayments = this.props.subscribeToPayments(projectId);
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeTimes) this.unsubscribeTimes();
+        if (this.unsubscribeExpenses) this.unsubscribeExpenses();
+        if (this.unsubscribePayments) this.unsubscribePayments();
     }
 
     isFloat(n) {
@@ -902,13 +906,12 @@ detailedProject.propTypes = {
     match: PropTypes.object,
     history: PropTypes.object,
     getProjectById: PropTypes.func,
-    getClients: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     getUsers: PropTypes.func,
-    getTimes: PropTypes.func,
-    getExpenses: PropTypes.func,
+    subscribeToTimes: PropTypes.func,
+    subscribeToExpenses: PropTypes.func,
     addDownPayment: PropTypes.func,
-    getPayments: PropTypes.func,
+    subscribeToPayments: PropTypes.func,
     updateExpense: PropTypes.func,
     deleteExpense: PropTypes.func,
     updateTime: PropTypes.func,
@@ -924,13 +927,12 @@ detailedProject.propTypes = {
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
     getProjectById,
-    getClients,
     getProjectsMapping,
     getUsers,
-    getTimes,
-    getExpenses,
+    subscribeToTimes,
+    subscribeToExpenses,
     addDownPayment,
-    getPayments,
+    subscribeToPayments,
     updateExpense,
     deleteExpense,
     updateTime,

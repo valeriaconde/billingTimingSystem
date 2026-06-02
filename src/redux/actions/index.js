@@ -1,9 +1,9 @@
-import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED, ADD_PAYMENT,
-    LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, ADD_CLIENT, LOADING_CLIENTS,
+import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,
+    LOADING_USERS, UPDATED_USER, UPDATED_CLIENT, LOADING_CLIENTS,
     PROJECTS_MAPPING_LOADED, REMOVED_CLIENT, REMOVED_USER, LOADING_PROJECTS,
-    ADD_PROJECT, PROJECTS_LOADED, ADD_EXPENSE, LOADING_EXPENSES, EXPENSES_LOADED,
+    PROJECTS_LOADED, LOADING_EXPENSES, EXPENSES_LOADED,
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES,
-    ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
+    TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
     PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX } from '../../constants/collections';
 import axios from 'axios';
@@ -22,6 +22,7 @@ import {
     query,
     where,
     increment,
+    onSnapshot,
 } from 'firebase/firestore';
 
 export function addAlert(type, message) {
@@ -41,7 +42,6 @@ export function addClient(payload) {
         addDoc(collection(db, CLIENTS), payload)
             .then(docRef => {
                 updateDoc(doc(db, MISC, CLIENTS_INDEX), { [docRef.id]: payload.denomination });
-                dispatch({ type: ADD_CLIENT, payload: { ...payload, uid: docRef.id } });
                 const alert = { type: AlertType.Success, message: "Client successfully registered."};
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
@@ -58,7 +58,6 @@ export function addProject(payload) {
         addDoc(collection(db, PROJECTS), payload)
             .then(docRef => {
                 updateDoc(doc(db, MISC, PROJECTS_INDEX), { [docRef.id]: { title: payload.projectTitle, clientUid: payload.projectClient } });
-                dispatch({ type: ADD_PROJECT, payload: { ...payload, uid: docRef.id } });
                 const alert = { type: AlertType.Success, message: "Project successfully created." };
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
@@ -72,11 +71,7 @@ export function addProject(payload) {
 
 export function addExpense(payload) {
     return function(dispatch) {
-        dispatch({ type: LOADING_EXPENSES, payload: {} });
         addDoc(collection(db, EXPENSES), payload)
-            .then(docRef => {
-                dispatch({ type: ADD_EXPENSE, payload: { ...payload, uid: docRef.id } });
-            })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -86,11 +81,7 @@ export function addExpense(payload) {
 
 export function addTime(payload) {
     return function(dispatch) {
-        dispatch({ type: LOADING_TIMES, payload: {} });
         addDoc(collection(db, TIMES), payload)
-            .then(docRef => {
-                dispatch({ type: ADD_TIME, payload: { ...payload, uid: docRef.id } });
-            })
             .catch(error => {
                 const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
@@ -100,10 +91,8 @@ export function addTime(payload) {
 
 export function addDownPayment(payload) {
     return function(dispatch) {
-        dispatch({ type: LOADING_PAYMENT, payload: {} });
         addDoc(collection(db, PAYMENTS), payload)
-            .then(docRef => {
-                dispatch({ type: ADD_PAYMENT, payload: { ...payload, uid: docRef.id } });
+            .then(() => {
                 const alert = { type: AlertType.Success, message: "Down payment successfully registered." };
                 dispatch({ type: ADD_ALERT, payload: alert });
                 setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
@@ -296,21 +285,145 @@ export function getProjectsMapping() {
     }
 }
 
-export function getClients() {
-    return async function(dispatch) {
+export function subscribeToProjectsMapping() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS_MAPPING, payload: {} });
+        const indexRef = doc(db, MISC, PROJECTS_INDEX);
+        const unsubscribe = onSnapshot(
+            indexRef,
+            (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    const firstValue = Object.values(data)[0];
+                    if (firstValue !== undefined && typeof firstValue === 'string') {
+                        dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+                        buildProjectsIndex(indexRef, dispatch).catch(() => {});
+                    } else {
+                        dispatch({ type: PROJECTS_MAPPING_LOADED, payload: data });
+                    }
+                } else {
+                    buildProjectsIndex(indexRef, dispatch);
+                }
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToProjectsByClient(clientUid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        const q = query(
+            collection(db, PROJECTS),
+            where("projectClient", "==", clientUid),
+            where("isOpen", "==", true)
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToExpenses(uid, byAttorney) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        let q = query(
+            collection(db, EXPENSES),
+            where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
+        );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToTimes(uid, byAttorney) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        let q = query(
+            collection(db, TIMES),
+            where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
+        );
+        if (!byAttorney) {
+            q = query(q, where("isBilled", "==", false));
+        }
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToPayments(uid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PAYMENT, payload: {} });
+        const q = query(collection(db, PAYMENTS), where("paymentProject", "==", uid));
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const paymentsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToClients() {
+    return function(dispatch) {
         dispatch({ type: LOADING_CLIENTS, payload: {} });
-        await getDocs(collection(db, CLIENTS))
-            .then(snapshot => {
+        const unsubscribe = onSnapshot(
+            collection(db, CLIENTS),
+            (snapshot) => {
                 const clientsList = snapshot.docs.map(d => ({
                     ...d.data(),
                     uid: d.id
                 }));
                 dispatch({ type: CLIENTS_LOADED, payload: clientsList.sort((a, b) => a.denomination?.localeCompare(b.denomination)) });
-            })
-            .catch(error => {
+            },
+            (error) => {
                 const alert = { type: AlertType.Error, message: error };
                 dispatch({ type: ADD_ALERT, payload: alert });
-            });
+            }
+        );
+        return unsubscribe;
     }
 }
 

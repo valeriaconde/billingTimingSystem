@@ -22,7 +22,7 @@ import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
 import { connect } from "react-redux";
-import { clearAlert, getClientsMapping, getUsers, getProjectsMapping } from "../redux/actions/index";
+import { clearAlert, subscribeToClients, getUsers, subscribeToProjectsMapping } from "../redux/actions/index";
 
 // REACT VERSION: 16.13.0
 
@@ -44,25 +44,36 @@ const mapStateToProps = state => {
 function mapDispatchToProps(dispatch) {
     return {
         clearAlert: alert => dispatch(clearAlert(alert)),
-        getClients: () => dispatch(getClientsMapping()),
+        getClients: () => dispatch(subscribeToClients()),
         getUsers: () => dispatch(getUsers()),
-        getProjectsMapping: () => dispatch(getProjectsMapping())
+        getProjectsMapping: () => dispatch(subscribeToProjectsMapping())
     };
 }
 
 class App extends Component {
     componentDidUpdate(prevProps) {
         if (!prevProps.authUser && this.props.authUser) {
-            if (isStale(this.props.lastFetchedClients)) {
-                this.props.getClients();
-            }
+            this.unsubscribeClients = this.props.getClients();
+            this.unsubscribeProjectsMapping = this.props.getProjectsMapping();
             if (isStale(this.props.lastFetchedUsers)) {
                 this.props.getUsers();
             }
-            if (isStale(this.props.lastFetchedProjectsNames)) {
-                this.props.getProjectsMapping();
+        }
+        if (prevProps.authUser && !this.props.authUser) {
+            if (this.unsubscribeClients) {
+                this.unsubscribeClients();
+                this.unsubscribeClients = null;
+            }
+            if (this.unsubscribeProjectsMapping) {
+                this.unsubscribeProjectsMapping();
+                this.unsubscribeProjectsMapping = null;
             }
         }
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeClients) this.unsubscribeClients();
+        if (this.unsubscribeProjectsMapping) this.unsubscribeProjectsMapping();
     }
 
     getAlertColor(type) {

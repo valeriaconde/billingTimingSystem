@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Jumbotron, Container, OverlayTrigger, Tooltip, Alert } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { updateExpense, deleteExpense, getProjectsMapping, getClients, getUsers, addProject, getProjectByClient, addExpense, getExpenses } from "../redux/actions/index";
+import { updateExpense, deleteExpense, getProjectsMapping, getUsers, addProject, getProjectByClient, addExpense, subscribeToExpenses } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -67,13 +67,14 @@ class gastos extends Component {
     static contextType = AuthUserContext;
 
     componentDidMount() {
-        if (this.props.clients.length === 0) {
-            this.props.getClients();
-        }
         const authUser = this.context;
         if (authUser) {
-            this.props.getExpenses(authUser.uid, true);
+            this.unsubscribeExpenses = this.props.subscribeToExpenses(authUser.uid, true);
         }
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeExpenses) this.unsubscribeExpenses();
     }
 
     isFloat(n) {
@@ -414,12 +415,11 @@ gastos.propTypes = {
     clientsNames: PropTypes.object,
     projectsNames: PropTypes.object,
     loadingProjectsMapping: PropTypes.bool,
-    getClients: PropTypes.func,
     getUsers: PropTypes.func,
     addProject: PropTypes.func,
     getProjectByClient: PropTypes.func,
     addExpense: PropTypes.func,
-    getExpenses: PropTypes.func,
+    subscribeToExpenses: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     updateExpense: PropTypes.func,
     deleteExpense: PropTypes.func
@@ -427,12 +427,11 @@ gastos.propTypes = {
 
 const condition = authUser => !!authUser;
 export default connect(mapStateToProps, {
-    getClients,
     getUsers,
     addProject,
     getProjectByClient,
     addExpense,
-    getExpenses,
+    subscribeToExpenses,
     getProjectsMapping,
     updateExpense,
     deleteExpense
