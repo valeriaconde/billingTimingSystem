@@ -8,7 +8,7 @@ import {
     updatePassword,
     onAuthStateChanged,
 } from 'firebase/auth';
-import { getDatabase, ref, get, set } from 'firebase/database';
+import { getDatabase, ref, set } from 'firebase/database';
 
 const config = {
     apiKey: process.env.REACT_APP_API_KEY,
@@ -65,24 +65,23 @@ class Firebase {
     onAuthUserListener = (next, fallback) =>
         onAuthStateChanged(this.auth, authUser => {
             if (authUser) {
-                get(ref(this.db, `users/${authUser.uid}`))
-                    .then(snapshot => {
-                        const dbUser = snapshot.val();
-
-                        if (dbUser.email !== authUser.email) {
+                authUser.getIdToken()
+                    .then(token => fetch(`${process.env.REACT_APP_DATABASE_URL}/users/${authUser.uid}.json?auth=${token}`))
+                    .then(res => res.json())
+                    .then(dbUser => {
+                        if (!dbUser || dbUser.email !== authUser.email) {
                             fallback();
-                        } else {
-                            if (!dbUser.roles) {
-                                dbUser.roles = {};
-                            }
-
-                            this.mergedUser = {
-                                ...authUser,
-                                ...dbUser,
-                            };
-
-                            next(this.mergedUser);
+                            return;
                         }
+                        if (!dbUser.roles) {
+                            dbUser.roles = {};
+                        }
+                        this.mergedUser = { ...authUser, ...dbUser };
+                        next(this.mergedUser);
+                    })
+                    .catch(() => {
+                        this.mergedUser = { ...authUser, roles: {} };
+                        next(this.mergedUser);
                     });
             } else {
                 fallback();
