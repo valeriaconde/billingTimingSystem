@@ -4,7 +4,7 @@ import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
-import { addAlert, clearAlert, getUsers, addProject, subscribeToProjectsByClient } from "../redux/actions/index";
+import { addAlert, clearAlert, getUsers, addProject, subscribeToProjectsByClient, subscribeToAllOpenProjects, subscribeToAllProjects, subscribeToClientProjectsAll } from "../redux/actions/index";
 import { connect } from "react-redux";
 import BarLoader from "react-spinners/BarLoader";
 import { trimString } from '../utils/inputUtils';
@@ -31,25 +31,79 @@ const INITIAL_STATE = {
     projectFixedFee: 'false',
     projectFee: 0,
     validated: false,
-    searchQuery: '',
+    clientSearch: '',
+    projectSearch: '',
     activeClientIdx: -1,
-    selectedClientUid: null
+    selectedClientUid: null,
+    filterStatus: 'open',
+    filterAttorney: [],
+    filterBilling: []
 };
 
 class Proyectos extends Component {
     constructor(props) {
         super(props);
         this.state = { ...INITIAL_STATE };
-
         this.handleClose = this.handleClose.bind(this);
         this.handleShow = this.handleShow.bind(this);
         this.onChange = this.onChange.bind(this);
         this.handleNewProject = this.handleNewProject.bind(this);
     }
 
+    componentDidMount() {
+        this.unsubscribeProjects = this.props.subscribeToAllOpenProjects();
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
+    }
+
     isFloat(n) {
         return n.length > 0 && !isNaN(n) && n > 0;
     }
+
+    getSubscription(clientIdx, clientUid, status) {
+        const needsAll = status !== 'open';
+        if (clientIdx === -1) {
+            return needsAll
+                ? this.props.subscribeToAllProjects()
+                : this.props.subscribeToAllOpenProjects();
+        } else {
+            return needsAll
+                ? this.props.subscribeToClientProjectsAll(clientUid)
+                : this.props.subscribeToProjectsByClient(clientUid);
+        }
+    }
+
+    handleSelectAll = () => {
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
+        const { filterStatus } = this.state;
+        this.setState({ activeClientIdx: -1, selectedClientUid: null, projectSearch: '' });
+        this.unsubscribeProjects = this.getSubscription(-1, null, filterStatus);
+    };
+
+    handleSelectClient = (client, idx) => {
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
+        const { filterStatus } = this.state;
+        this.setState({ activeClientIdx: idx, selectedClientUid: client.uid, projectSearch: '' });
+        this.unsubscribeProjects = this.getSubscription(idx, client.uid, filterStatus);
+    };
+
+    handleStatusFilter = (status) => {
+        if (status === this.state.filterStatus) return;
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
+        const { activeClientIdx, selectedClientUid } = this.state;
+        this.setState({ filterStatus: status });
+        this.unsubscribeProjects = this.getSubscription(activeClientIdx, selectedClientUid, status);
+    };
+
+    toggleBillingFilter = (value) => {
+        const { filterBilling } = this.state;
+        const newFilter = filterBilling.includes(value)
+            ? filterBilling.filter(v => v !== value)
+            : [...filterBilling, value];
+        this.setState({ filterBilling: newFilter });
+    };
 
     handleNewProject(event) {
         event.preventDefault();
@@ -60,15 +114,14 @@ class Proyectos extends Component {
         if (projectFixedFee === 'true' && !this.isFloat(projectFee)) return;
         if (trimmedProjectTitle === '' || selectedClientModal == null || selectedAppointed == null) return;
 
-        const payload = {
+        this.props.addProject({
             projectTitle: trimmedProjectTitle,
             projectClient: selectedClientModal.uid,
             appointedIds: selectedAppointed.value,
             projectFixedFee: projectFixedFee === 'true',
             projectFee: Number(projectFee),
             isOpen: true
-        };
-        this.props.addProject(payload);
+        });
         this.setState({
             showModal: false,
             selectedAppointed: null,
@@ -80,45 +133,24 @@ class Proyectos extends Component {
         });
     }
 
-    handleSelectClient = (client, idx) => {
-        if (this.unsubscribeProjects) this.unsubscribeProjects();
-        this.setState({ activeClientIdx: idx, selectedClientUid: client.uid });
-        this.unsubscribeProjects = this.props.subscribeToProjectsByClient(client.uid);
-    };
-
-    componentWillUnmount() {
-        if (this.unsubscribeProjects) this.unsubscribeProjects();
-    }
-
     handleChangeClientModal = selectedClientModal => { this.setState({ selectedClientModal }); };
     handleChangeMulti = selectedAppointed => { this.setState({ selectedAppointed }); };
-
-    onChange(event) {
-        this.setState({ [event.target.name]: event.target.value });
-    }
-
-    handleShow() {
-        this.setState({ showModal: true });
-    }
-
-    handleClose() {
-        this.setState({ showModal: false });
-    }
+    onChange(event) { this.setState({ [event.target.name]: event.target.value }); }
+    handleShow() { this.setState({ showModal: true }); }
+    handleClose() { this.setState({ showModal: false }); }
 
     renderModal() {
-        const clientSelect = this.props.clients !== null ?
-            this.props.clients.map((c) => ({
-                label: c.denomination || '',
-                value: c.uid,
-                ...c
-            })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
+        const clientSelect = (this.props.clients || []).map((c) => ({
+            label: c.denomination || '',
+            value: c.uid,
+            ...c
+        })).sort((a, b) => a.label?.localeCompare(b.label));
 
-        const userSelect = this.props.users !== null ?
-            this.props.users.map((u) => ({
-                label: u.name || '',
-                value: u.uid,
-                ...u
-            })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
+        const userSelect = (this.props.users || []).map((u) => ({
+            label: u.name || '',
+            value: u.uid,
+            ...u
+        })).sort((a, b) => a.name?.localeCompare(b.name));
 
         const { showModal, selectedClientModal, selectedAppointed, projectTitle, projectFixedFee, projectFee, validated } = this.state;
 
@@ -136,7 +168,6 @@ class Proyectos extends Component {
                                 {validated && selectedClientModal == null ? <Form.Text className="text-danger">Client is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
-
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Title</Form.Label>
                             <Col sm="7">
@@ -144,7 +175,6 @@ class Proyectos extends Component {
                                 <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
                             </Col>
                         </Form.Group>
-
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Attorney</Form.Label>
                             <Col sm="7">
@@ -152,7 +182,6 @@ class Proyectos extends Component {
                                 {validated && selectedAppointed == null ? <Form.Text className="text-danger">Attorney is required.</Form.Text> : null}
                             </Col>
                         </Form.Group>
-
                         <Form.Group as={Row}>
                             <Form.Label column sm="3">Billed by</Form.Label>
                             <Col sm="7">
@@ -162,7 +191,6 @@ class Proyectos extends Component {
                                 </Form.Control>
                             </Col>
                         </Form.Group>
-
                         <Form.Group as={Row} hidden={projectFixedFee === 'false'}>
                             <Form.Label column sm="3">Fee</Form.Label>
                             <Col sm="7">
@@ -180,13 +208,99 @@ class Proyectos extends Component {
         );
     }
 
+    renderFilters() {
+        const { filterStatus, filterAttorney, filterBilling } = this.state;
+
+        const userOptions = (this.props.users || []).map(u => ({ value: u.uid, label: u.name }));
+        const selectedAttorneys = userOptions.filter(u => filterAttorney.includes(u.value));
+
+        return (
+            <div className="projects-filters">
+                <div className="projects-filter-group">
+                    <div className="projects-filter-label">Status</div>
+                    <div className="projects-filter-pills">
+                        {[
+                            { value: 'open', label: 'Open' },
+                            { value: 'concluded', label: 'Concluded' },
+                            { value: 'all', label: 'All' }
+                        ].map(s => (
+                            <span
+                                key={s.value}
+                                className={`projects-filter-pill${filterStatus === s.value ? ' active' : ''}`}
+                                onClick={() => this.handleStatusFilter(s.value)}
+                            >
+                                {s.label}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="projects-filter-group">
+                    <div className="projects-filter-label">Billing type</div>
+                    <div className="projects-filter-pills">
+                        {[
+                            { value: 'hourly', label: 'By the hour' },
+                            { value: 'fixed', label: 'Fixed fee' }
+                        ].map(b => (
+                            <span
+                                key={b.value}
+                                className={`projects-filter-pill${filterBilling.includes(b.value) ? ' active' : ''}`}
+                                onClick={() => this.toggleBillingFilter(b.value)}
+                            >
+                                {b.label}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="projects-filter-group projects-filter-group--select">
+                    <div className="projects-filter-label">Lead</div>
+                    <Select
+                        isMulti
+                        placeholder="All attorneys"
+                        options={userOptions}
+                        value={selectedAttorneys}
+                        onChange={sel => this.setState({ filterAttorney: (sel || []).map(s => s.value) })}
+                        className="projects-filter-select"
+                        classNamePrefix="pf-select"
+                    />
+                </div>
+
+            </div>
+        );
+    }
+
     render() {
-        const { searchQuery, activeClientIdx, selectedClientUid } = this.state;
+        const { clientSearch, projectSearch, activeClientIdx, selectedClientUid,
+                filterStatus, filterAttorney, filterBilling } = this.state;
+
         const allClients = this.props.clients || [];
         const filteredClients = allClients.filter(c =>
-            (c.denomination || '').toLowerCase().includes(searchQuery.toLowerCase())
+            (c.denomination || '').toLowerCase().includes(clientSearch.toLowerCase())
         );
         const activeClient = allClients.find(c => c.uid === selectedClientUid);
+
+        let filteredProjects = this.props.projects || [];
+
+        if (filterStatus === 'open') filteredProjects = filteredProjects.filter(p => p.isOpen);
+        else if (filterStatus === 'concluded') filteredProjects = filteredProjects.filter(p => !p.isOpen);
+
+        if (filterBilling.length > 0) {
+            filteredProjects = filteredProjects.filter(p =>
+                (filterBilling.includes('fixed') && p.projectFixedFee) ||
+                (filterBilling.includes('hourly') && !p.projectFixedFee)
+            );
+        }
+
+        if (filterAttorney.length > 0) {
+            filteredProjects = filteredProjects.filter(p => filterAttorney.includes(p.appointedIds));
+        }
+
+        if (projectSearch) {
+            filteredProjects = filteredProjects.filter(p =>
+                (p.projectTitle || '').toLowerCase().includes(projectSearch.toLowerCase())
+            );
+        }
 
         return (
             <AuthUserContext.Consumer>
@@ -197,21 +311,28 @@ class Proyectos extends Component {
                             {this.renderModal()}
                             <div className="projects-layout">
 
-                                {/* LEFT PANEL — client list */}
+                                {/* LEFT PANEL */}
                                 <div className="client-list-panel">
                                     <div className="client-list-header">
                                         <input
                                             type="text"
                                             className="client-search-input"
                                             placeholder="Search clients..."
-                                            value={searchQuery}
-                                            onChange={e => this.setState({ searchQuery: e.target.value })}
+                                            value={clientSearch}
+                                            onChange={e => this.setState({ clientSearch: e.target.value })}
                                         />
                                         <Button className="btn-new-client" onClick={this.handleShow}>
                                             + New project
                                         </Button>
                                     </div>
                                     <div className="client-list-scroll">
+                                        <div
+                                            className={`client-list-item projects-all-item${activeClientIdx === -1 ? ' active' : ''}`}
+                                            onClick={this.handleSelectAll}
+                                        >
+                                            <div className="client-list-avatar projects-all-avatar">✦</div>
+                                            <div className="client-list-name">All projects</div>
+                                        </div>
                                         {filteredClients.map(client => {
                                             const originalIdx = allClients.findIndex(c => c.uid === client.uid);
                                             return (
@@ -223,67 +344,76 @@ class Proyectos extends Component {
                                                     <div className="client-list-avatar">
                                                         {(client.denomination || '?')[0].toUpperCase()}
                                                     </div>
-                                                    <div>
-                                                        <div className="client-list-name">{client.denomination}</div>
-                                                    </div>
+                                                    <div className="client-list-name">{client.denomination}</div>
                                                 </div>
                                             );
                                         })}
                                     </div>
                                 </div>
 
-                                {/* RIGHT PANEL — project cards */}
+                                {/* RIGHT PANEL */}
                                 <div className="projects-panel">
-                                    {activeClientIdx === -1
-                                        ? <div className="projects-empty-state">
-                                            <p>Select a client to view their projects</p>
-                                          </div>
-                                        : <>
-                                            <div className="projects-panel-header">
-                                                <div>
-                                                    <div className="projects-panel-title">{activeClient?.denomination}</div>
-                                                    <div className="projects-panel-subtitle">
-                                                        {this.props.loadingProjects
-                                                            ? 'Loading...'
-                                                            : `${this.props.projects.length} project${this.props.projects.length !== 1 ? 's' : ''}`
-                                                        }
-                                                    </div>
-                                                </div>
+                                    <div className="projects-panel-header">
+                                        <div>
+                                            <div className="projects-panel-title">
+                                                {activeClientIdx === -1 ? 'All projects' : activeClient?.denomination}
                                             </div>
+                                            <div className="projects-panel-subtitle">
+                                                {this.props.loadingProjects
+                                                    ? 'Loading...'
+                                                    : `${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''}`
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                            {this.props.loadingProjects
-                                                ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingProjects} />
-                                                : this.props.projects.length === 0
-                                                    ? <div className="projects-no-results">No active projects for this client.</div>
-                                                    : <div className="projects-grid">
-                                                        {this.props.projects.map(project => {
-                                                            const attorney = this.props.users?.find(u => u.uid === project.appointedIds);
-                                                            return (
-                                                                <Link
-                                                                    key={project.uid}
-                                                                    to={`/projects/${project.projectClient}/${project.uid}`}
-                                                                    className="project-card"
-                                                                >
-                                                                    <div className="project-card-title">{project.projectTitle}</div>
-                                                                    <div className="project-card-meta">
-                                                                        <span className={`project-badge ${project.isOpen ? 'open' : 'closed'}`}>
-                                                                            {project.isOpen ? 'Open' : 'Concluded'}
-                                                                        </span>
-                                                                        <span className={`project-badge ${project.projectFixedFee ? 'fixed-fee' : 'hourly'}`}>
-                                                                            {project.projectFixedFee
-                                                                                ? `Fixed fee${project.projectFee ? ` · $${project.projectFee}` : ''}`
-                                                                                : 'By the hour'}
-                                                                        </span>
-                                                                    </div>
-                                                                    {attorney && (
-                                                                        <div className="project-card-attorney">{attorney.name}</div>
-                                                                    )}
-                                                                </Link>
-                                                            );
-                                                        })}
-                                                    </div>
-                                            }
-                                          </>
+                                    <input
+                                        type="text"
+                                        className="projects-search-input"
+                                        placeholder="Search projects..."
+                                        value={projectSearch}
+                                        onChange={e => this.setState({ projectSearch: e.target.value })}
+                                    />
+
+                                    {this.renderFilters()}
+
+                                    {this.props.loadingProjects
+                                        ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingProjects} />
+                                        : filteredProjects.length === 0
+                                            ? <div className="projects-no-results">No projects match the current filters.</div>
+                                            : <div className="projects-grid">
+                                                {filteredProjects.map(project => {
+                                                    const attorney = this.props.users?.find(u => u.uid === project.appointedIds);
+                                                    const client = activeClientIdx === -1
+                                                        ? allClients.find(c => c.uid === project.projectClient)
+                                                        : null;
+                                                    return (
+                                                        <Link
+                                                            key={project.uid}
+                                                            to={`/projects/${project.projectClient}/${project.uid}`}
+                                                            className="project-card"
+                                                        >
+                                                            <div className="project-card-title">{project.projectTitle}</div>
+                                                            <div className="project-card-meta">
+                                                                <span className={`project-badge ${project.isOpen ? 'open' : 'closed'}`}>
+                                                                    {project.isOpen ? 'Open' : 'Concluded'}
+                                                                </span>
+                                                                <span className={`project-badge ${project.projectFixedFee ? 'fixed-fee' : 'hourly'}`}>
+                                                                    {project.projectFixedFee
+                                                                        ? `Fixed fee${project.projectFee ? ` · $${project.projectFee}` : ''}`
+                                                                        : 'By the hour'}
+                                                                </span>
+                                                            </div>
+                                                            {attorney && (
+                                                                <div className="project-card-attorney">{attorney.name}</div>
+                                                            )}
+                                                            {client && (
+                                                                <div className="project-card-client">{client.denomination}</div>
+                                                            )}
+                                                        </Link>
+                                                    );
+                                                })}
+                                              </div>
                                     }
                                 </div>
 
@@ -307,7 +437,10 @@ Proyectos.propTypes = {
     clearAlert: PropTypes.func,
     getUsers: PropTypes.func,
     addProject: PropTypes.func,
-    subscribeToProjectsByClient: PropTypes.func
+    subscribeToProjectsByClient: PropTypes.func,
+    subscribeToAllOpenProjects: PropTypes.func,
+    subscribeToAllProjects: PropTypes.func,
+    subscribeToClientProjectsAll: PropTypes.func
 };
 
 const condition = authUser => !!authUser;
@@ -316,5 +449,8 @@ export default connect(mapStateToProps, {
     addAlert,
     getUsers,
     addProject,
-    subscribeToProjectsByClient
+    subscribeToProjectsByClient,
+    subscribeToAllOpenProjects,
+    subscribeToAllProjects,
+    subscribeToClientProjectsAll
 })(withAuthorization(condition)(Proyectos));
