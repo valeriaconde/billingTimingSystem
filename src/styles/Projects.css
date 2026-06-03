@@ -1,0 +1,292 @@
+/* ======= PROJECTS PAGE ======= */
+
+.projects-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+.projects-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ---- RIGHT PANEL ---- */
+
+.projects-panel {
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+  background-color: #f4f6fa;
+}
+
+.projects-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.projects-panel-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.projects-panel-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* GRID */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* CARD */
+
+.project-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  padding: 20px 22px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.12s;
+  text-decoration: none !important;
+  display: block;
+  color: inherit !important;
+}
+
+.project-card:hover {
+  box-shadow: 0 4px 14px rgba(25, 57, 145, 0.14);
+  border-left-color: rgb(25, 57, 145);
+  transform: translateY(-2px);
+}
+
+.project-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.project-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* BADGES */
+
+.project-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.project-badge.open {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.project-badge.closed {
+  background-color: #f5f5f5;
+  color: #777;
+}
+
+.project-badge.fixed-fee {
+  background-color: #e8f0ff;
+  color: rgb(25, 57, 145);
+}
+
+.project-badge.hourly {
+  background-color: #fff8e1;
+  color: #e65100;
+}
+
+.project-card-attorney {
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+}
+
+/* EMPTY / NO RESULTS */
+
+.projects-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #bbb;
+  user-select: none;
+}
+
+.projects-empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+.projects-no-results {
+  color: #aaa;
+  font-size: 14px;
+  padding-top: 40px;
+  text-align: center;
+}
+
+/* PROJECT SEARCH (right panel) */
+
+.projects-search-input {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  outline: none;
+  color: #333;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.projects-search-input:focus {
+  border-color: rgb(25, 57, 145);
+  box-shadow: 0 0 0 2px rgba(25, 57, 145, 0.12);
+}
+
+/* FILTER BAR */
+
+.projects-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin-bottom: 20px;
+  align-items: flex-end;
+}
+
+.projects-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.projects-filter-group--select {
+  min-width: 190px;
+}
+
+.projects-filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+}
+
+.projects-filter-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.projects-filter-pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.projects-filter-pill:hover {
+  border-color: rgb(25, 57, 145);
+  color: rgb(25, 57, 145);
+}
+
+.projects-filter-pill.active {
+  background-color: rgb(25, 57, 145);
+  border-color: rgb(25, 57, 145);
+  color: white;
+}
+
+/* react-select in filter bar */
+
+.projects-filter-select .pf-select__control {
+  min-height: 34px;
+  font-size: 13px;
+  border-color: #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.projects-filter-select .pf-select__control:hover {
+  border-color: rgb(25, 57, 145);
+}
+
+.projects-filter-select .pf-select__control--is-focused {
+  border-color: rgb(25, 57, 145) !important;
+  box-shadow: 0 0 0 2px rgba(25, 57, 145, 0.12) !important;
+}
+
+.projects-filter-select .pf-select__multi-value {
+  background-color: rgba(25, 57, 145, 0.1);
+  border-radius: 4px;
+}
+
+.projects-filter-select .pf-select__multi-value__label {
+  color: rgb(25, 57, 145);
+  font-size: 11px;
+}
+
+.projects-filter-select .pf-select__multi-value__remove:hover {
+  background-color: rgb(25, 57, 145);
+  color: white;
+}
+
+.projects-filter-select .pf-select__placeholder {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.projects-filter-select .pf-select__indicator {
+  padding: 4px;
+}
+
+/* ALL PROJECTS item in left panel */
+
+.projects-all-item {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.projects-all-avatar {
+  background-color: #e8f0ff !important;
+  color: rgb(25, 57, 145) !important;
+  font-size: 13px !important;
+}
+
+/* Client name on card (all-projects view) */
+
+.project-card-client {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgb(25, 57, 145);
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

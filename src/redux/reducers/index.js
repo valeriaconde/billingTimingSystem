@@ -3,7 +3,8 @@ import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     REMOVED_USER, REMOVED_CLIENT, LOADING_PROJECTS, ADD_PROJECT, PROJECTS_LOADED,
     LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED,
     UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME,
-    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
+    PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
+    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED } from "../../constants/action-types";
 
 const toMillis = (d) => {
     if (!d) return 0;
@@ -31,6 +32,8 @@ const initialState = {
     loadingProjects: false,
     loadingExpenses: false,
     loadingPayments: false,
+    clientProjects: [],
+    loadingClientProjects: false,
     loadingProjectsMapping: false,
     loadingReport: false,
     reportReady: false,
@@ -264,6 +267,15 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingClients: false,
             clients: state.clients.concat([action.payload]).sort((a, b) => a.denomination?.localeCompare(b.denomination))
+        });
+    } else if(action.type === LOADING_CLIENT_PROJECTS) {
+        return Object.assign({}, state, {
+            loadingClientProjects: true
+        });
+    } else if(action.type === CLIENT_PROJECTS_LOADED) {
+        return Object.assign({}, state, {
+            clientProjects: action.payload,
+            loadingClientProjects: false
         });
     } else if(action.type === CLIENTS_MAPPING_LOADED) {
         return Object.assign({}, state, {

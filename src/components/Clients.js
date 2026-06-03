@@ -3,19 +3,25 @@ import PropTypes from 'prop-types';
 import { Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
+import Select from 'react-select';
+import { Link } from 'react-router-dom';
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
-import { addAlert, clearAlert, addClient, updateClient, deleteClient } from "../redux/actions/index";
+import { addAlert, clearAlert, addClient, updateClient, deleteClient, addProject, subscribeToAllProjectsByClient } from "../redux/actions/index";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { trimFields, trimString } from '../utils/inputUtils';
 import '../styles/Clients.css';
+import '../styles/Projects.css';
 
 const mapStateToProps = state => {
     return {
         alerts: state.alerts,
         clients: state.clients,
-        loadingClients: state.loadingClients
+        loadingClients: state.loadingClients,
+        users: state.users,
+        clientProjects: state.clientProjects,
+        loadingClientProjects: state.loadingClientProjects
      };
 };
 
@@ -40,7 +46,14 @@ const INITIAL_STATE = {
     showModalCliente: false,
     error: null,
     activeIdx: -1,
-    searchQuery: ''
+    searchQuery: '',
+    // new project modal
+    showProjectModal: false,
+    newProjectTitle: '',
+    newProjectFixedFee: 'false',
+    newProjectFee: 0,
+    newProjectAppointed: null,
+    projectValidated: false
 };
 
 class Clientes extends Component {
@@ -57,6 +70,14 @@ class Clientes extends Component {
         this.onChange = this.onChange.bind(this);
         this.onSave = this.onSave.bind(this);
         this.onDelete = this.onDelete.bind(this);
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
+    }
+
+    isFloat(n) {
+        return String(n).length > 0 && !isNaN(n) && n > 0;
     }
 
     onDelete() {
@@ -166,6 +187,8 @@ class Clientes extends Component {
     }
 
     handleSelectClient = (client, idx) => {
+        if (this.unsubscribeProjects) this.unsubscribeProjects();
+        this.unsubscribeProjects = this.props.subscribeToAllProjectsByClient(client.uid);
         this.setState({
             activeIdx: idx,
             edit: false,
@@ -184,6 +207,33 @@ class Clientes extends Component {
             currWebsite: client.website || '',
             currYearSince: client.yearSince || '',
             currIva: client.iva !== undefined ? client.iva : true,
+        });
+    };
+
+    handleNewProject = event => {
+        event.preventDefault();
+        this.setState({ projectValidated: true });
+        const { currUid, newProjectTitle, newProjectFixedFee, newProjectFee, newProjectAppointed } = this.state;
+        const trimmedTitle = trimString(newProjectTitle);
+
+        if (newProjectFixedFee === 'true' && !this.isFloat(newProjectFee)) return;
+        if (trimmedTitle === '' || newProjectAppointed == null) return;
+
+        this.props.addProject({
+            projectTitle: trimmedTitle,
+            projectClient: currUid,
+            appointedIds: newProjectAppointed.value,
+            projectFixedFee: newProjectFixedFee === 'true',
+            projectFee: Number(newProjectFee),
+            isOpen: true
+        });
+        this.setState({
+            showProjectModal: false,
+            newProjectTitle: '',
+            newProjectFixedFee: 'false',
+            newProjectFee: 0,
+            newProjectAppointed: null,
+            projectValidated: false
         });
     };
 
@@ -343,6 +393,164 @@ class Clientes extends Component {
         );
     }
 
+    renderNewProjectModal() {
+        const userSelect = this.props.users !== null ?
+            this.props.users.map((u) => ({
+                label: u.name || '',
+                value: u.uid,
+                ...u
+            })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
+
+        const { showProjectModal, newProjectTitle, newProjectFixedFee, newProjectFee, newProjectAppointed, projectValidated, currDenomination } = this.state;
+
+        return (
+            <Modal show={showProjectModal} onHide={() => this.setState({ showProjectModal: false })}>
+                <Modal.Header closeButton>
+                    <Modal.Title>New project — {currDenomination}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={this.handleNewProject}>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">Title</Form.Label>
+                            <Col sm="7">
+                                <Form.Control
+                                    isInvalid={projectValidated && trimString(newProjectTitle).length === 0}
+                                    name="newProjectTitle"
+                                    value={newProjectTitle}
+                                    onChange={this.onChange}
+                                    as="textarea"
+                                    rows="2"
+                                    required
+                                />
+                                <Form.Control.Feedback type="invalid">Title cannot be empty.</Form.Control.Feedback>
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">Attorney</Form.Label>
+                            <Col sm="7">
+                                <Select
+                                    value={newProjectAppointed}
+                                    placeholder="Select attorney..."
+                                    onChange={v => this.setState({ newProjectAppointed: v })}
+                                    options={userSelect}
+                                />
+                                {projectValidated && newProjectAppointed == null
+                                    ? <Form.Text className="text-danger">Attorney is required.</Form.Text>
+                                    : null}
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="3">Billed by</Form.Label>
+                            <Col sm="7">
+                                <Form.Control name="newProjectFixedFee" onChange={this.onChange} as="select" required>
+                                    <option value={false}>The hour</option>
+                                    <option value={true}>Fixed fee</option>
+                                </Form.Control>
+                            </Col>
+                        </Form.Group>
+
+                        <Form.Group as={Row} hidden={newProjectFixedFee === 'false'}>
+                            <Form.Label column sm="3">Fee</Form.Label>
+                            <Col sm="7">
+                                <Form.Control
+                                    isInvalid={projectValidated && !this.isFloat(newProjectFee)}
+                                    name="newProjectFee"
+                                    value={newProjectFee}
+                                    onChange={this.onChange}
+                                    required
+                                />
+                                <Form.Control.Feedback type="invalid">Fee must be greater than zero.</Form.Control.Feedback>
+                            </Col>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => this.setState({ showProjectModal: false })}>Cancel</Button>
+                    <Button className="legem-primary" type="submit" onClick={this.handleNewProject}>Save</Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    renderProjectCards(projects) {
+        const users = this.props.users || [];
+        return (
+            <div className="projects-grid">
+                {projects.map(project => {
+                    const attorney = users.find(u => u.uid === project.appointedIds);
+                    return (
+                        <Link
+                            key={project.uid}
+                            to={`/projects/${project.projectClient}/${project.uid}`}
+                            className="project-card"
+                        >
+                            <div className="project-card-title">{project.projectTitle}</div>
+                            <div className="project-card-meta">
+                                <span className={`project-badge ${project.isOpen ? 'open' : 'closed'}`}>
+                                    {project.isOpen ? 'Open' : 'Concluded'}
+                                </span>
+                                <span className={`project-badge ${project.projectFixedFee ? 'fixed-fee' : 'hourly'}`}>
+                                    {project.projectFixedFee
+                                        ? `Fixed fee${project.projectFee ? ` · $${project.projectFee}` : ''}`
+                                        : 'By the hour'}
+                                </span>
+                            </div>
+                            {attorney && (
+                                <div className="project-card-attorney">{attorney.name}</div>
+                            )}
+                        </Link>
+                    );
+                })}
+            </div>
+        );
+    }
+
+    renderProjectsSection() {
+        const allProjects = this.props.clientProjects || [];
+        const open = allProjects.filter(p => p.isOpen);
+        const archived = allProjects.filter(p => !p.isOpen);
+
+        return (
+            <div className="client-projects-section">
+                <div className="client-projects-header">
+                    <div className="client-section-title" style={{ margin: 0 }}>Projects</div>
+                    <button
+                        className="client-projects-add-btn"
+                        onClick={() => this.setState({ showProjectModal: true })}
+                    >
+                        + New project
+                    </button>
+                </div>
+
+                {this.props.loadingClientProjects
+                    ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingClientProjects} />
+                    : <>
+                        <div className="client-projects-group-title">
+                            Open
+                            <span className="client-projects-count">{open.length}</span>
+                        </div>
+                        {open.length === 0
+                            ? <div className="projects-no-results" style={{ paddingTop: 8, paddingBottom: 16 }}>No open projects for this client.</div>
+                            : this.renderProjectCards(open)
+                        }
+
+                        {archived.length > 0 && (
+                            <div className="client-projects-archived">
+                                <div className="client-projects-group-title">
+                                    Concluded
+                                    <span className="client-projects-count">{archived.length}</span>
+                                </div>
+                                {this.renderProjectCards(archived)}
+                            </div>
+                        )}
+                      </>
+                }
+            </div>
+        );
+    }
+
     render() {
         const { edit, currDenomination, currAddress, currAddress2, currRfc, currContact,
             currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState,
@@ -360,6 +568,7 @@ class Clientes extends Component {
                         ? <BarLoader css={{width: "100%"}} loading={this.props.loadingClients} />
                         : <div className="clients-page">
                             {this.renderModal()}
+                            {this.renderNewProjectModal()}
                             <div className="clients-layout">
 
                                 {/* LEFT PANEL — client list */}
@@ -401,106 +610,111 @@ class Clientes extends Component {
                                     </div>
                                 </div>
 
-                                {/* RIGHT PANEL — client detail */}
+                                {/* RIGHT PANEL — client detail + projects */}
                                 <div className="client-detail-panel">
                                     {activeIdx === -1
                                         ? <div className="client-empty-state">
                                             <p>Select a client to view details</p>
                                           </div>
-                                        : <div className="client-card">
+                                        : <>
+                                            <div className="client-card">
 
-                                            {/* HEADER */}
-                                            <div className="client-card-header">
-                                                <div className="client-avatar-large">
-                                                    {(currDenomination || '?')[0].toUpperCase()}
+                                                {/* HEADER */}
+                                                <div className="client-card-header">
+                                                    <div className="client-avatar-large">
+                                                        {(currDenomination || '?')[0].toUpperCase()}
+                                                    </div>
+                                                    <div className="client-card-title">
+                                                        {edit
+                                                            ? <Form.Control
+                                                                value={currDenomination}
+                                                                onChange={this.onChange}
+                                                                name="currDenomination"
+                                                                size="lg"
+                                                                placeholder="Business name"
+                                                              />
+                                                            : <h2>{currDenomination}</h2>
+                                                        }
+                                                    </div>
+                                                    <div className="client-card-actions">
+                                                        {edit
+                                                            ? <>
+                                                                <Button variant="outline-secondary" onClick={() => this.onCancelEdit()}>Cancel</Button>
+                                                                <Button className="legem-primary" onClick={this.onSave}>Save</Button>
+                                                              </>
+                                                            : <Button variant="outline-primary" onClick={this.onEdit}>Edit</Button>
+                                                        }
+                                                    </div>
                                                 </div>
-                                                <div className="client-card-title">
-                                                    {edit
-                                                        ? <Form.Control
-                                                            value={currDenomination}
-                                                            onChange={this.onChange}
-                                                            name="currDenomination"
-                                                            size="lg"
-                                                            placeholder="Business name"
-                                                          />
-                                                        : <h2>{currDenomination}</h2>
-                                                    }
+
+                                                {/* ADDRESS */}
+                                                <div className="client-section">
+                                                    <div className="client-section-title">Address</div>
+                                                    {this.renderField('Address', currAddress, 'currAddress')}
+                                                    {this.renderField('Address 2', currAddress2, 'currAddress2')}
+                                                    {this.renderField('City', currCity, 'currCity')}
+                                                    {this.renderField('State', currState, 'currState')}
+                                                    {this.renderField('Country', currCountry, 'currCountry')}
+                                                    {this.renderField('ZIP Code', currZipCode, 'currZipCode')}
                                                 </div>
-                                                <div className="client-card-actions">
-                                                    {edit
-                                                        ? <>
-                                                            <Button variant="outline-secondary" onClick={() => this.onCancelEdit()}>Cancel</Button>
-                                                            <Button className="legem-primary" onClick={this.onSave}>Save</Button>
-                                                          </>
-                                                        : <Button variant="outline-primary" onClick={this.onEdit}>Edit</Button>
-                                                    }
+
+                                                {/* CONTACT */}
+                                                <div className="client-section">
+                                                    <div className="client-section-title">Contact</div>
+                                                    {this.renderField('Contact', currContact, 'currContact')}
+                                                    {this.renderField('Email', currEmail, 'currEmail')}
+                                                    {this.renderField('Phone', currPhone, 'currPhone')}
+                                                    {this.renderField('Website', currWebsite, 'currWebsite')}
                                                 </div>
+
+                                                {/* BUSINESS */}
+                                                <div className="client-section">
+                                                    <div className="client-section-title">Business</div>
+                                                    {this.renderField('RFC', currRfc, 'currRfc')}
+                                                    {this.renderField('Client since', currYearSince, 'currYearSince')}
+                                                    <div className="client-field-row">
+                                                        <span className="client-field-label">IVA</span>
+                                                        {edit
+                                                            ? <div className="client-field-input">
+                                                                <Form.Check
+                                                                    onChange={this.onChangeRadio}
+                                                                    checked={currIva}
+                                                                    inline
+                                                                    name="radioBtn"
+                                                                    label="Yes"
+                                                                    type="radio"
+                                                                    id="currIva"
+                                                                />
+                                                                <Form.Check
+                                                                    onChange={this.onChangeRadio}
+                                                                    checked={!currIva}
+                                                                    inline
+                                                                    name="radioBtn"
+                                                                    label="No"
+                                                                    type="radio"
+                                                                    id="currNoIva"
+                                                                />
+                                                              </div>
+                                                            : <span className={`iva-badge ${currIva ? 'yes' : 'no'}`}>
+                                                                {currIva ? 'Yes' : 'No'}
+                                                              </span>
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                {edit &&
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                                                        <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </div>
+                                                }
+
                                             </div>
 
-                                            {/* ADDRESS */}
-                                            <div className="client-section">
-                                                <div className="client-section-title">Address</div>
-                                                {this.renderField('Address', currAddress, 'currAddress')}
-                                                {this.renderField('Address 2', currAddress2, 'currAddress2')}
-                                                {this.renderField('City', currCity, 'currCity')}
-                                                {this.renderField('State', currState, 'currState')}
-                                                {this.renderField('Country', currCountry, 'currCountry')}
-                                                {this.renderField('ZIP Code', currZipCode, 'currZipCode')}
-                                            </div>
-
-                                            {/* CONTACT */}
-                                            <div className="client-section">
-                                                <div className="client-section-title">Contact</div>
-                                                {this.renderField('Contact', currContact, 'currContact')}
-                                                {this.renderField('Email', currEmail, 'currEmail')}
-                                                {this.renderField('Phone', currPhone, 'currPhone')}
-                                                {this.renderField('Website', currWebsite, 'currWebsite')}
-                                            </div>
-
-                                            {/* BUSINESS */}
-                                            <div className="client-section">
-                                                <div className="client-section-title">Business</div>
-                                                {this.renderField('RFC', currRfc, 'currRfc')}
-                                                {this.renderField('Client since', currYearSince, 'currYearSince')}
-                                                <div className="client-field-row">
-                                                    <span className="client-field-label">IVA</span>
-                                                    {edit
-                                                        ? <div className="client-field-input">
-                                                            <Form.Check
-                                                                onChange={this.onChangeRadio}
-                                                                checked={currIva}
-                                                                inline
-                                                                name="radioBtn"
-                                                                label="Yes"
-                                                                type="radio"
-                                                                id="currIva"
-                                                            />
-                                                            <Form.Check
-                                                                onChange={this.onChangeRadio}
-                                                                checked={!currIva}
-                                                                inline
-                                                                name="radioBtn"
-                                                                label="No"
-                                                                type="radio"
-                                                                id="currNoIva"
-                                                            />
-                                                          </div>
-                                                        : <span className={`iva-badge ${currIva ? 'yes' : 'no'}`}>
-                                                            {currIva ? 'Yes' : 'No'}
-                                                          </span>
-                                                    }
-                                                </div>
-                                            </div>
-
-                                            {edit &&
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                                                    <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </div>
-                                            }
-
-                                        </div>
+                                            {/* PROJECTS */}
+                                            {this.renderProjectsSection()}
+                                          </>
                                     }
                                 </div>
 
@@ -516,11 +730,16 @@ Clientes.propTypes = {
     alerts: PropTypes.array,
     clients: PropTypes.array,
     loadingClients: PropTypes.bool,
+    users: PropTypes.array,
+    clientProjects: PropTypes.array,
+    loadingClientProjects: PropTypes.bool,
     addAlert: PropTypes.func,
     clearAlert: PropTypes.func,
     addClient: PropTypes.func,
     updateClient: PropTypes.func,
-    deleteClient: PropTypes.func
+    deleteClient: PropTypes.func,
+    addProject: PropTypes.func,
+    subscribeToAllProjectsByClient: PropTypes.func
 };
 
 const condition = authUser => !!authUser;
@@ -529,5 +748,7 @@ export default connect(mapStateToProps, {
     addAlert,
     addClient,
     updateClient,
-    deleteClient
+    deleteClient,
+    addProject,
+    subscribeToAllProjectsByClient
 })(withAuthorization(condition)(Clientes));

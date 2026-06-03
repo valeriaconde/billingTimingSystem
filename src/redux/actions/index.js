@@ -4,7 +4,8 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,
     PROJECTS_LOADED, LOADING_EXPENSES, EXPENSES_LOADED,
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES,
     TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
-    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED } from "../../constants/action-types";
+    PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
+    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED } from "../../constants/action-types";
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -339,6 +340,85 @@ export function subscribeToProjectsByClient(clientUid) {
             (snapshot) => {
                 const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
                 dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToAllOpenProjects() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        const q = query(
+            collection(db, PROJECTS),
+            where("isOpen", "==", true)
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToAllProjects() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        const unsubscribe = onSnapshot(
+            collection(db, PROJECTS),
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
+            },
+            (error) => {
+                dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error } });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToClientProjectsAll(clientUid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_PROJECTS, payload: {} });
+        const q = query(collection(db, PROJECTS), where("projectClient", "==", clientUid));
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
+            },
+            (error) => {
+                dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error } });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToAllProjectsByClient(clientUid) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_CLIENT_PROJECTS, payload: {} });
+        const q = query(
+            collection(db, PROJECTS),
+            where("projectClient", "==", clientUid)
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: CLIENT_PROJECTS_LOADED, payload: projectsList.sort((a, b) => a.projectTitle?.localeCompare(b.projectTitle)) });
             },
             (error) => {
                 const alert = { type: AlertType.Error, message: error };

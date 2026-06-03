@@ -638,8 +638,14 @@ class detailedProject extends Component {
     }
 
     archiveProject = () => {
-        if(window.confirm('Are you sure you want to archive this project?')) {
+        if(window.confirm('Are you sure you want to close this project?')) {
             this.props.updateProject(this.props.match.params.projectId, { ...this.props.project, isOpen: false });
+        }
+    }
+
+    reopenProject = () => {
+        if(window.confirm('Are you sure you want to reopen this project?')) {
+            this.props.updateProject(this.props.match.params.projectId, { ...this.props.project, isOpen: true });
         }
     }
 
@@ -879,7 +885,10 @@ class detailedProject extends Component {
                             </IconButton>
                             <Button onClick={() => this.handleShow(4)} variant="outline-dark">Edit project</Button>
                             &nbsp;&nbsp;
-                            <Button onClick={this.archiveProject} variant="outline-danger">Archive project</Button>{' '}
+                            {this.props.project?.isOpen
+                                ? <Button onClick={this.archiveProject} variant="outline-danger">Close project</Button>
+                                : <Button onClick={this.reopenProject} variant="outline-primary">Reopen project</Button>
+                            }{' '}
                         </div>
                     </div>
                 }
