@@ -1,0 +1,148 @@
+/* ======= PROJECTS PAGE ======= */
+
+.projects-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+.projects-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ---- RIGHT PANEL ---- */
+
+.projects-panel {
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+  background-color: #f4f6fa;
+}
+
+.projects-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.projects-panel-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.projects-panel-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* GRID */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* CARD */
+
+.project-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  padding: 20px 22px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.12s;
+  text-decoration: none !important;
+  display: block;
+  color: inherit !important;
+}
+
+.project-card:hover {
+  box-shadow: 0 4px 14px rgba(25, 57, 145, 0.14);
+  border-left-color: rgb(25, 57, 145);
+  transform: translateY(-2px);
+}
+
+.project-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.project-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* BADGES */
+
+.project-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.project-badge.open {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.project-badge.closed {
+  background-color: #f5f5f5;
+  color: #777;
+}
+
+.project-badge.fixed-fee {
+  background-color: #e8f0ff;
+  color: rgb(25, 57, 145);
+}
+
+.project-badge.hourly {
+  background-color: #fff8e1;
+  color: #e65100;
+}
+
+.project-card-attorney {
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+}
+
+/* EMPTY / NO RESULTS */
+
+.projects-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #bbb;
+  user-select: none;
+}
+
+.projects-empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+.projects-no-results {
+  color: #aaa;
+  font-size: 14px;
+  padding-top: 40px;
+  text-align: center;
+}
