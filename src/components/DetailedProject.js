@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses, addDownPayment, subscribeToPayments } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, addExpense, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses } from "../redux/actions/index";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
@@ -43,8 +43,6 @@ const mapStateToProps = state => {
         loadingTimes: state.loadingTimes,
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping,
-        loadedPaymentsOnce: state.loadedPaymentsOnce,
-        payments: state.payments,
         loadingProject: state.loadingProject
      };
 };
@@ -55,7 +53,6 @@ const INITIAL_STATE = {
     showTimeModal: false,
     showEditModal: false,
     selectedDate: new Date(),
-    paymentTotal: 0,
     timeMinutes: 15,
     selectedOption: null,
     selectedClientModal: null,
@@ -86,13 +83,11 @@ class detailedProject extends Component {
         this.props.getProjectById(projectId);
         this.unsubscribeTimes = this.props.subscribeToTimes(projectId, false);
         this.unsubscribeExpenses = this.props.subscribeToExpenses(projectId, false);
-        this.unsubscribePayments = this.props.subscribeToPayments(projectId);
     }
 
     componentWillUnmount() {
         if (this.unsubscribeTimes) this.unsubscribeTimes();
         if (this.unsubscribeExpenses) this.unsubscribeExpenses();
-        if (this.unsubscribePayments) this.unsubscribePayments();
     }
 
     isFloat(n) {
@@ -132,87 +127,6 @@ class detailedProject extends Component {
     handleDateChange = selectedDate => {
         this.setState({ selectedDate });
     };
-
-    handleNewPayment = event => {
-        event.preventDefault();
-        this.setState({ validated: true });
-
-        const form = event.currentTarget;
-        if (form.checkValidity() === false) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        const { paymentTotal, selectedDate } = this.state;
-
-        if (!this.isFloat(paymentTotal)) return;
-        if (selectedDate == null) return;
-
-        const payload = {
-            paymentTotal: Number(paymentTotal),
-            paymentDate: selectedDate,
-            paymentProject: this.props.match.params.projectId
-        };
-
-        this.setState(INITIAL_STATE);
-
-        this.props.addDownPayment(payload);
-    }
-
-    renderModal() {
-        const { selectedDate, paymentTotal, validated } = this.state;
-
-        return (
-            <Modal show={this.state.showModal} onHide={() => this.handleClose(1)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Add down payment</Modal.Title>
-                </Modal.Header>
-
-                <Modal.Body>
-                    <Form>
-                        <Form.Group as={Row}>
-                            <Form.Label column sm="3">Date</Form.Label>
-                            <Col sm="7">
-                                {/* DAY PICKER */}
-                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                                    <KeyboardDatePicker
-                                        
-                                        variant="inline"
-                                        format="dd/MM/yyyy"
-                                        margin="normal"
-                                        id="date-picker-inline"
-                                        label="Enter date dd/mm/yyyy"
-                                        value={selectedDate}
-                                        onChange={this.handleDateChange}
-                                        KeyboardButtonProps={{
-                                            'aria-label': 'change date',
-                                        }}
-                                    />
-                                </MuiPickersUtilsProvider>
-                            </Col>
-                        </Form.Group>
-
-                        <Form.Group as={Row}>
-                            <Form.Label column sm="3">Amount</Form.Label>
-                            <Col sm="7">
-                                <Form.Control isInvalid={validated && !this.isFloat(paymentTotal)} name="paymentTotal" value={paymentTotal} onChange={this.onChange} required />
-                                <Form.Control.Feedback type="invalid">Amount must be zero or greater.</Form.Control.Feedback>
-                            </Col>
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => this.handleClose(1)}>
-                        Cancel
-                            </Button>
-                    <Button className="legem-primary" onClick={this.handleNewPayment}>
-                        Save
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
 
     handleNewExpense = event => {
         event.preventDefault();
@@ -632,13 +546,6 @@ class detailedProject extends Component {
         )
     }
 
-    handleDeletePayment = payment => {
-        if(window.confirm('Are you sure you want to delete this down payment?')) {
-            this.props.deletePayment(payment.uid);
-        }
-        this.setState(INITIAL_STATE);
-    }
-
     archiveProject = () => {
         if(window.confirm('Are you sure you want to close this project?')) {
             this.props.updateProject(this.props.match.params.projectId, { ...this.props.project, isOpen: false });
@@ -713,18 +620,12 @@ class detailedProject extends Component {
                 ...t
             })) : [];
 
-        const payments = this.props.payments !== null ?
-            this.props.payments.map(p => ({
-                ...p
-            })) : [];
-
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
                     this.props.loadingProject || this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
                     <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects}></BarLoader> :
                     <div>
-                        {this.renderModal()}
                         {this.renderExpenseModal(authUser, !authUser?.roles[ROLES.ADMIN])}
                         {this.renderTimeModal(authUser, !authUser?.roles[ROLES.ADMIN])}
                         {this.renderEditModal()}
@@ -745,33 +646,6 @@ class detailedProject extends Component {
                                         <Card.Body>
                                             <Card.Title> Billed by { this.props.project?.projectFixedFee ? "fixed fee" : "by the hour" } </Card.Title>
                                             <Card.Text> { this.props.project?.projectFixedFee ? `$${this.props.project?.projectFee}` : null } </Card.Text>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                                <Col className="leftMargin">
-                                    <Card style={{ width: '22rem' }} >
-                                        <Card.Body>
-                                            <Card.Title>Down payments</Card.Title>
-                                            <TableContainer>
-                                                <Table aria-label="simple table">
-                                                    <TableBody>
-                                                        {payments.map((row) => (
-                                                            <TableRow key={row.uid}>
-                                                                <TableCell>{toDate(row.paymentDate)?.toDateString()}</TableCell>
-                                                                <TableCell className="centerText">${row.paymentTotal}</TableCell>
-                                                                <TableCell>
-                                                                    <IconButton onClick={() => this.handleDeletePayment(row)} color="secondary" aria-label="delete">
-                                                                        <DeleteIcon />
-                                                                    </IconButton>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </TableContainer>
-                                        </Card.Body>
-                                        <Card.Body className="rightAlign">
-                                            <Button variant="outline-success" onClick={() => this.handleShow(1)} >Add</Button>
                                         </Card.Body>
                                     </Card>
                                 </Col>
@@ -913,7 +787,6 @@ detailedProject.propTypes = {
     expenses: PropTypes.array,
     times: PropTypes.array,
     projectsNames: PropTypes.object,
-    payments: PropTypes.array,
     match: PropTypes.object,
     history: PropTypes.object,
     getProjectById: PropTypes.func,
@@ -921,13 +794,10 @@ detailedProject.propTypes = {
     getUsers: PropTypes.func,
     subscribeToTimes: PropTypes.func,
     subscribeToExpenses: PropTypes.func,
-    addDownPayment: PropTypes.func,
-    subscribeToPayments: PropTypes.func,
     updateExpense: PropTypes.func,
     deleteExpense: PropTypes.func,
     updateTime: PropTypes.func,
     deleteTime: PropTypes.func,
-    deletePayment: PropTypes.func,
     addTime: PropTypes.func,
     addExpense: PropTypes.func,
     updateProject: PropTypes.func,
@@ -942,13 +812,10 @@ export default connect(mapStateToProps, {
     getUsers,
     subscribeToTimes,
     subscribeToExpenses,
-    addDownPayment,
-    subscribeToPayments,
     updateExpense,
     deleteExpense,
     updateTime,
     deleteTime,
-    deletePayment,
     addTime,
     addExpense,
     updateProject,

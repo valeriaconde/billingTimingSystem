@@ -5,9 +5,9 @@ import Select from 'react-select';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
-import { getProjectByClient,addTime, addExpense, deletePayment, updateTime, deleteTime,
+import { getProjectByClient, addTime, addExpense, updateTime, deleteTime,
     updateExpense, deleteExpense, getProjectById, getProjectsMapping,
-    getUsers, getTimes, getExpenses, addDownPayment, getPayments, getReportData, updateInvoice
+    getUsers, getTimes, getExpenses, getReportData, updateInvoice
 } from "../redux/actions/index";
 import FileSaver from "file-saver";
 import Docxtemplater from 'docxtemplater';
@@ -30,8 +30,6 @@ const mapStateToProps = state => {
         loadingTimes: state.loadingTimes,
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping,
-        loadedPaymentsOnce: state.loadedPaymentsOnce,
-        payments: state.payments,
         reportReady: state.reportReady,
         loadingReport: state.loadingReport,
         invoice: state.invoice
@@ -44,7 +42,6 @@ const INITIAL_STATE = {
     showExpenseModal: false,
     showTimeModal: false,
     selectedDate: new Date(),
-    paymentTotal: 0,
     timeMinutes: 15,
     selectedOption: null,
     selectedClient: null,
@@ -88,10 +85,6 @@ class billing extends Component {
         /* Expenses */
         let totalExpenses = 0;
         this.props.expenses.map(e => totalExpenses += Number(e.expenseTotal));
-
-        /* Down Payments */
-        let totalDiscount = 0;
-        this.props.payments.map(p => totalDiscount += Number(p.paymentTotal));
 
         var amount = 0, totalTimes = 0, totalHours = 0, totalMinutes = 0;
         var projects = [];
@@ -152,8 +145,7 @@ class billing extends Component {
         }
 
         const total = amount + tax;
-        const amount_discount = total - totalDiscount;
-        const grandTotal = amount_discount + totalExpenses;
+        const grandTotal = total + totalExpenses;
 
         const data = {
             invoice: this.props.invoice.current,
@@ -174,10 +166,7 @@ class billing extends Component {
             expenses: expenses,
             hasExpenses: expenses.length > 0,
             hasTimes: times.length > 0,
-            hasDiscount: totalDiscount > 0,
-            discount: parseFloat(totalDiscount).toFixed(2),
             total: parseFloat(total).toFixed(2),
-            amount_discount: parseFloat(amount_discount).toFixed(2),
             grandTotal: parseFloat(grandTotal).toFixed(2),
             totalTimes: totalTimes,
             totalHrs: `${totalHours + Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, '0')}`
@@ -288,7 +277,6 @@ billing.propTypes = {
     users: PropTypes.array,
     expenses: PropTypes.array,
     times: PropTypes.array,
-    payments: PropTypes.array,
     projectsNames: PropTypes.object,
     reportReady: PropTypes.bool,
     invoice: PropTypes.object,
@@ -306,13 +294,10 @@ export default connect(mapStateToProps, {
     getUsers,
     getTimes,
     getExpenses,
-    addDownPayment,
-    getPayments,
     updateExpense,
     deleteExpense,
     updateTime,
     deleteTime,
-    deletePayment,
     addTime,
     addExpense,
     getProjectByClient,
