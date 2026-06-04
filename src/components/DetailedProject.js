@@ -168,7 +168,7 @@ class detailedProject extends Component {
         this.setState({
             selectedClientModal: { value: expense.expenseClient, label: this.props.clientsNames[expense.expenseClient], uid: expense.expenseClient },
             selectedProjectModal: { value: expense.expenseProject, label: this.props.projectsNames[expense.expenseProject], uid: expense.expenseProject },
-            selectedAttorneyModal: { value: expense.expenseAttorney, label: this.props.users.find(u => u.uid === expense.expenseAttorney)?.name},
+            selectedAttorneyModal: { value: expense.expenseAttorney, label: getUserName(this.props.users, expense.expenseAttorney)},
             expenseTitle: expense.expenseTitle,
             expenseTotal: expense.expenseTotal,
             selectedDate: toDate(expense.expenseDate),
@@ -374,7 +374,7 @@ class detailedProject extends Component {
         this.setState({
             selectedClientModal: { value: time.timeClient, label: this.props.clientsNames[time.timeClient], uid: time.timeClient },
             selectedProjectModal: { value: time.timeProject, label: this.props.projectsNames[time.timeProject], uid: time.timeProject },
-            selectedAttorneyModal: { value: time.timeAttorney, label: this.props.users.find(u => u.uid === time.timeAttorney)?.name},
+            selectedAttorneyModal: { value: time.timeAttorney, label: getUserName(this.props.users, time.timeAttorney)},
             timeTitle: time.timeTitle,
             selectedDate: toDate(time.timeDate),
             timeHours: time.timeHours,
@@ -659,7 +659,7 @@ class detailedProject extends Component {
                             <div className="dp-info-item">
                                 <span className="dp-info-label">Attorney</span>
                                 <span className="dp-info-value">
-                                    {this.props.users.find(u => u.uid === this.props.project?.appointedIds)?.name || 'None'}
+                                    {getUserName(this.props.users, this.props.project?.appointedIds)}
                                 </span>
                             </div>
                             <div className="dp-divider" />
@@ -709,7 +709,7 @@ class detailedProject extends Component {
                                                 <TableRow key={row.uid} hover>
                                                     <TableCell>
                                                         <div>{row.expenseTitle}</div>
-                                                        <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{this.props.users.find(u => u.uid === row.expenseAttorney)?.name}</div>
+                                                        <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{getUserName(this.props.users, row.expenseAttorney)}</div>
                                                     </TableCell>
                                                     <TableCell style={{ color: '#555' }}>{expenseClasses.find(obj => obj.value === row.expenseClass)?.label}</TableCell>
                                                     <TableCell style={{ whiteSpace: 'nowrap', color: '#555' }}>{toDate(row.expenseDate)?.toLocaleDateString()}</TableCell>
@@ -762,7 +762,7 @@ class detailedProject extends Component {
                                                 <TableRow key={row.uid} hover>
                                                     <TableCell>
                                                         <div>{row.timeTitle}</div>
-                                                        <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{this.props.users.find(u => u.uid === row.timeAttorney)?.name}</div>
+                                                        <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{getUserName(this.props.users, row.timeAttorney)}</div>
                                                     </TableCell>
                                                     <TableCell style={{ color: '#555' }}>{`${row.timeHours}:${row.timeMinutes > 0 ? String(row.timeMinutes).padStart(2, '0') : '00'} hrs`}</TableCell>
                                                     <TableCell style={{ whiteSpace: 'nowrap', color: '#555' }}>{toDate(row.timeDate)?.toLocaleDateString()}</TableCell>
