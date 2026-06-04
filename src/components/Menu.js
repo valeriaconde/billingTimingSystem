@@ -17,7 +17,7 @@ class Menu extends Component {
                     <Navbar bg="light" variant="light">
                         <Navbar.Brand href="/home"><Image src="/logo.png" height={"35"} /></Navbar.Brand>
                         <Nav className="mr-auto">
-                            <Nav.Link href="/home">Clients</Nav.Link>
+                            <Nav.Link href="/clients" hidden={!authUser?.roles[ROLES.ADMIN]}>Clients</Nav.Link>
                             <Nav.Link href="/projects" hidden={!authUser?.roles[ROLES.ADMIN]}>Projects</Nav.Link>
                             <Nav.Link href="/expenses">Expenses</Nav.Link>
                             <Nav.Link href="/timing">Timing</Nav.Link>

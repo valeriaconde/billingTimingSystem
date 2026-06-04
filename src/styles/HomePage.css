@@ -1,0 +1,12 @@
+.home-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 60px);
+}
+
+.home-greeting {
+    font-size: 26px;
+    font-weight: 600;
+    color: rgb(25, 57, 145);
+}

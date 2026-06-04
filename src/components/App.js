@@ -7,6 +7,7 @@ import {
     Route,
 } from "react-router-dom";
 import Clientes from './Clients';
+import HomePage from './HomePage';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from './LoginPage';
 import Registeruser from './Register';
@@ -105,9 +106,11 @@ class App extends Component {
                         </div>
                     }
                     <Switch>
-                        <Route path="/" exact component={Clientes} />
+                        <Route path="/" exact component={HomePage} />
 
-                        <Route path="/home" exact component={Clientes} />
+                        <Route path="/home" exact component={HomePage} />
+
+                        <Route path="/clients" exact component={Clientes} />
 
                         <Route path="/users/register" exact component={Registeruser} />
 
