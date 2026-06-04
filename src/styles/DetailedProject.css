@@ -1,0 +1,196 @@
+/* ======= DETAILED PROJECT PAGE ======= */
+
+.dp-page {
+  background-color: #f4f6fa;
+  min-height: calc(100vh - 56px);
+  padding-bottom: 48px;
+}
+
+/* ---- HEADER ---- */
+
+.dp-header {
+  background: white;
+  padding: 24px 40px 20px 40px;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.dp-header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+}
+
+.dp-header-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 10px 0;
+}
+
+.dp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+/* ---- INFO STRIP ---- */
+
+.dp-info-strip {
+  background: white;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 14px 40px;
+  display: flex;
+  gap: 40px;
+}
+
+.dp-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dp-info-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+}
+
+.dp-info-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+/* ---- CONTENT AREA ---- */
+
+.dp-content {
+  padding: 28px 40px 0 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---- TABLE SECTIONS ---- */
+
+.dp-section {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+
+.dp-section-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px 10px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 2px;
+}
+
+.dp-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+  margin: 0;
+  flex: 1;
+}
+
+.dp-col-header {
+  color: #bbb !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.dp-empty-cell {
+  color: #bbb;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.dp-total-row td {
+  font-weight: 600 !important;
+  border-top: 1px solid #eee !important;
+  color: #1a1a2e !important;
+}
+
+/* ---- TOTALS STRIP ---- */
+
+.dp-totals {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  padding: 20px 28px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 48px;
+}
+
+.dp-total-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.dp-total-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+}
+
+.dp-total-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.dp-grand-total .dp-total-value {
+  font-size: 20px;
+  color: rgb(25, 57, 145);
+}
+
+.dp-totals--header {
+  box-shadow: none;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* ---- ACTIONS ---- */
+
+.dp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.dp-divider {
+  width: 1px;
+  background: #eee;
+  align-self: stretch;
+}
+
+/* ---- ACTIONS ---- */
+
+.dp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-bottom: 8px;
+}

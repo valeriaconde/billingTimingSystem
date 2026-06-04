@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { toDate } from '../utils/dateUtils';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
-import { Container, Row, Col, Card, Button, Form, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { Button, Form, Modal, Row, Col } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addAlert, addTime, deleteProject, updateProject, addExpense, deletePayment, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses, addDownPayment, subscribeToPayments } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, addExpense, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses } from "../redux/actions/index";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
@@ -27,6 +27,7 @@ import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
 import { trimString } from '../utils/inputUtils';
+import '../styles/DetailedProject.css';
 
 const mapStateToProps = state => {
     return {
@@ -43,8 +44,6 @@ const mapStateToProps = state => {
         loadingTimes: state.loadingTimes,
         projectsNames: state.projectsNames,
         loadingProjectsMapping: state.loadingProjectsMapping,
-        loadedPaymentsOnce: state.loadedPaymentsOnce,
-        payments: state.payments,
         loadingProject: state.loadingProject
      };
 };
@@ -55,7 +54,6 @@ const INITIAL_STATE = {
     showTimeModal: false,
     showEditModal: false,
     selectedDate: new Date(),
-    paymentTotal: 0,
     timeMinutes: 15,
     selectedOption: null,
     selectedClientModal: null,
@@ -86,13 +84,11 @@ class detailedProject extends Component {
         this.props.getProjectById(projectId);
         this.unsubscribeTimes = this.props.subscribeToTimes(projectId, false);
         this.unsubscribeExpenses = this.props.subscribeToExpenses(projectId, false);
-        this.unsubscribePayments = this.props.subscribeToPayments(projectId);
     }
 
     componentWillUnmount() {
         if (this.unsubscribeTimes) this.unsubscribeTimes();
         if (this.unsubscribeExpenses) this.unsubscribeExpenses();
-        if (this.unsubscribePayments) this.unsubscribePayments();
     }
 
     isFloat(n) {
@@ -132,87 +128,6 @@ class detailedProject extends Component {
     handleDateChange = selectedDate => {
         this.setState({ selectedDate });
     };
-
-    handleNewPayment = event => {
-        event.preventDefault();
-        this.setState({ validated: true });
-
-        const form = event.currentTarget;
-        if (form.checkValidity() === false) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        const { paymentTotal, selectedDate } = this.state;
-
-        if (!this.isFloat(paymentTotal)) return;
-        if (selectedDate == null) return;
-
-        const payload = {
-            paymentTotal: Number(paymentTotal),
-            paymentDate: selectedDate,
-            paymentProject: this.props.match.params.projectId
-        };
-
-        this.setState(INITIAL_STATE);
-
-        this.props.addDownPayment(payload);
-    }
-
-    renderModal() {
-        const { selectedDate, paymentTotal, validated } = this.state;
-
-        return (
-            <Modal show={this.state.showModal} onHide={() => this.handleClose(1)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Add down payment</Modal.Title>
-                </Modal.Header>
-
-                <Modal.Body>
-                    <Form>
-                        <Form.Group as={Row}>
-                            <Form.Label column sm="3">Date</Form.Label>
-                            <Col sm="7">
-                                {/* DAY PICKER */}
-                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                                    <KeyboardDatePicker
-                                        
-                                        variant="inline"
-                                        format="dd/MM/yyyy"
-                                        margin="normal"
-                                        id="date-picker-inline"
-                                        label="Enter date dd/mm/yyyy"
-                                        value={selectedDate}
-                                        onChange={this.handleDateChange}
-                                        KeyboardButtonProps={{
-                                            'aria-label': 'change date',
-                                        }}
-                                    />
-                                </MuiPickersUtilsProvider>
-                            </Col>
-                        </Form.Group>
-
-                        <Form.Group as={Row}>
-                            <Form.Label column sm="3">Amount</Form.Label>
-                            <Col sm="7">
-                                <Form.Control isInvalid={validated && !this.isFloat(paymentTotal)} name="paymentTotal" value={paymentTotal} onChange={this.onChange} required />
-                                <Form.Control.Feedback type="invalid">Amount must be zero or greater.</Form.Control.Feedback>
-                            </Col>
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => this.handleClose(1)}>
-                        Cancel
-                            </Button>
-                    <Button className="legem-primary" onClick={this.handleNewPayment}>
-                        Save
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
 
     handleNewExpense = event => {
         event.preventDefault();
@@ -572,26 +487,22 @@ class detailedProject extends Component {
                                         Time
                                     </Form.Label>
                                     <Col sm="7">
-                                        <Container>
-                                            <Row>
-                                                <Col>
-                                                    <Form.Control isInvalid={validated && (timeHours < 0 || timeHours > 100)} value={timeHours} name="timeHours" onChange={this.onChange} type="number" min="0" max="100" required />
-                                                    <Form.Control.Feedback type="invalid">Hours must be between 0 and 100.</Form.Control.Feedback>
-                                                </Col>
-                                                <Col>
-                                                    <Form.Control name="timeMinutes" value={timeMinutes} onChange={this.onChange} as="select" required >
-                                                        <option value={0}>0</option>
-                                                        <option value={15}>15</option>
-                                                        <option value={30}>30</option>
-                                                        <option value={45}>45</option>
-                                                    </Form.Control>
-                                                </Col>
-                                            </Row>
-                                            <Row>
-                                                <Col><Form.Label> hours </Form.Label></Col>
-                                                <Col><Form.Label> minutes </Form.Label></Col>
-                                            </Row>
-                                        </Container>
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <div style={{ flex: 1 }}>
+                                                <Form.Control isInvalid={validated && (timeHours < 0 || timeHours > 100)} value={timeHours} name="timeHours" onChange={this.onChange} type="number" min="0" max="100" required />
+                                                <Form.Control.Feedback type="invalid">Hours must be between 0 and 100.</Form.Control.Feedback>
+                                                <Form.Label style={{ fontSize: 12, color: '#888' }}>hours</Form.Label>
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <Form.Control name="timeMinutes" value={timeMinutes} onChange={this.onChange} as="select" required>
+                                                    <option value={0}>0</option>
+                                                    <option value={15}>15</option>
+                                                    <option value={30}>30</option>
+                                                    <option value={45}>45</option>
+                                                </Form.Control>
+                                                <Form.Label style={{ fontSize: 12, color: '#888' }}>minutes</Form.Label>
+                                            </div>
+                                        </div>
                                     </Col>
                                 </Form.Group>
 
@@ -630,13 +541,6 @@ class detailedProject extends Component {
                 </Modal.Footer>
             </Modal>
         )
-    }
-
-    handleDeletePayment = payment => {
-        if(window.confirm('Are you sure you want to delete this down payment?')) {
-            this.props.deletePayment(payment.uid);
-        }
-        this.setState(INITIAL_STATE);
     }
 
     archiveProject = () => {
@@ -703,195 +607,201 @@ class detailedProject extends Component {
 
     render() {
         const expenses = this.props.expenses !== null ?
-            this.props.expenses.map((e) => ({
-                ...e
-            })) : [];
-
+            this.props.expenses.map(e => ({ ...e })) : [];
 
         const times = this.props.times !== null ?
-            this.props.times.map(t => ({
-                ...t
-            })) : [];
+            this.props.times.map(t => ({ ...t })) : [];
 
-        const payments = this.props.payments !== null ?
-            this.props.payments.map(p => ({
-                ...p
-            })) : [];
+        const totalExpenses = expenses.reduce((acc, e) => acc + e.expenseTotal, 0);
+        const totalTime = times.reduce((acc, t) => acc + t.timeTotal, 0);
+
+        const colHeaderStyle = { color: '#bbb', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' };
 
         return (
             <AuthUserContext.Consumer>
                 {authUser =>
-                    this.props.loadingProject || this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ? 
-                    <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects}></BarLoader> :
-                    <div>
-                        {this.renderModal()}
+                    this.props.loadingProject || this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ?
+                    <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects} /> :
+                    <div className="dp-page">
                         {this.renderExpenseModal(authUser, !authUser?.roles[ROLES.ADMIN])}
                         {this.renderTimeModal(authUser, !authUser?.roles[ROLES.ADMIN])}
                         {this.renderEditModal()}
 
-                        <h3 className="blueLetters topMargin leftMargin"> {this.props.project?.projectTitle} </h3>
-                        <h6 className="bigLeftMargin"> For {this.props.clientsNames[this.state.clientId]} </h6>
+                        {/* Header */}
+                        <div className="dp-header">
+                            <div>
+                                <h2 className="dp-header-title">{this.props.project?.projectTitle}</h2>
+                                <p className="dp-header-subtitle">For {this.props.clientsNames[this.state.clientId]}</p>
+                                <span className={`project-badge ${this.props.project?.isOpen ? 'open' : 'closed'}`}>
+                                    {this.props.project?.isOpen ? 'Open' : 'Closed'}
+                                </span>
+                            </div>
+                            <div className="dp-totals dp-totals--header">
+                                <div className="dp-total-item">
+                                    <span className="dp-total-label">Expenses</span>
+                                    <span className="dp-total-value">${totalExpenses.toFixed(2)}</span>
+                                </div>
+                                <div className="dp-divider" />
+                                <div className="dp-total-item">
+                                    <span className="dp-total-label">Time</span>
+                                    <span className="dp-total-value">${totalTime.toFixed(2)}</span>
+                                </div>
+                                <div className="dp-divider" />
+                                <div className="dp-total-item dp-grand-total">
+                                    <span className="dp-total-label">Total</span>
+                                    <span className="dp-total-value">${(totalExpenses + totalTime).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                        <Container className="bigTopMargin">
-                            <Row>
-                                <Col className="bigLeftMargin">
-                                    <Card style={{ width: '18rem' }} >
-                                        <Card.Body>
-                                            <Card.Title>Attorney</Card.Title>
-                                            <Card.Text> { this.props.users.find(u => u.uid === this.props.project?.appointedIds)?.name || "None" } </Card.Text>
-                                        </Card.Body>
-                                    </Card>
-                                    <Card style={{ width: '18rem' }} className="topMargin">
-                                        <Card.Body>
-                                            <Card.Title> Billed by { this.props.project?.projectFixedFee ? "fixed fee" : "by the hour" } </Card.Title>
-                                            <Card.Text> { this.props.project?.projectFixedFee ? `$${this.props.project?.projectFee}` : null } </Card.Text>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                                <Col className="leftMargin">
-                                    <Card style={{ width: '22rem' }} >
-                                        <Card.Body>
-                                            <Card.Title>Down payments</Card.Title>
-                                            <TableContainer>
-                                                <Table aria-label="simple table">
-                                                    <TableBody>
-                                                        {payments.map((row) => (
-                                                            <TableRow key={row.uid}>
-                                                                <TableCell>{toDate(row.paymentDate)?.toDateString()}</TableCell>
-                                                                <TableCell className="centerText">${row.paymentTotal}</TableCell>
-                                                                <TableCell>
-                                                                    <IconButton onClick={() => this.handleDeletePayment(row)} color="secondary" aria-label="delete">
-                                                                        <DeleteIcon />
-                                                                    </IconButton>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </TableContainer>
-                                        </Card.Body>
-                                        <Card.Body className="rightAlign">
-                                            <Button variant="outline-success" onClick={() => this.handleShow(1)} >Add</Button>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            </Row>
-                        </Container>
+                        {/* Info strip */}
+                        <div className="dp-info-strip">
+                            <div className="dp-info-item">
+                                <span className="dp-info-label">Attorney</span>
+                                <span className="dp-info-value">
+                                    {this.props.users.find(u => u.uid === this.props.project?.appointedIds)?.name || 'None'}
+                                </span>
+                            </div>
+                            <div className="dp-divider" />
+                            <div className="dp-info-item">
+                                <span className="dp-info-label">Billing</span>
+                                <span className="dp-info-value">
+                                    <span className={`project-badge ${this.props.project?.projectFixedFee ? 'fixed-fee' : 'hourly'}`}>
+                                        {this.props.project?.projectFixedFee ? 'Fixed fee' : 'Hourly'}
+                                    </span>
+                                </span>
+                            </div>
+                            {this.props.project?.projectFixedFee && (
+                                <>
+                                    <div className="dp-divider" />
+                                    <div className="dp-info-item">
+                                        <span className="dp-info-label">Fee</span>
+                                        <span className="dp-info-value">${this.props.project?.projectFee}</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
-                        {/* EXPENSES TABLE */}
-                        <div className="tableMargins ">
-                            <TableContainer>
-                                <Table aria-label="simple table">
-                                    <colgroup>
-                                        <col width="80%" />
-                                        <col width="10%" />
-                                        <col width="5%" />
-                                        <col width="5%" />
-                                    </colgroup>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>
-                                                <b>Registered expenses</b>
-                                                <IconButton onClick={this.handleAddExpense} aria-label="Add expense">
-                                                    <AddIcon className="legemblue" />
-                                                </IconButton>
-                                            </TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {expenses.map((row) => (
-                                            <TableRow key={row.uid}>
-                                                <TableCell>
-                                                    <OverlayTrigger overlay={
-                                                        <Tooltip>
-                                                            {toDate(row.expenseDate)?.toDateString()}
-                                                            <br/>
-                                                            {expenseClasses.find(obj => {
-                                                                return obj.value === row.expenseClass;
-                                                            })?.label  }
-                                                        </Tooltip>}>
-                                                        <span className="d-inline-block">
-                                                            {`${getUserName(this.props.users, row.expenseAttorney)} - ${row.expenseTitle}`}
-                                                        </span>
-                                                    </OverlayTrigger>
-                                                </TableCell>
-                                                    <TableCell className="rightAlign"> ${row.expenseTotal} </TableCell>
-                                                <TableCell>
-                                                    <OverlayTrigger overlay={<Tooltip id="tooltip">Billed</Tooltip>}>
-                                                        <span className="d-inline-block">
-                                                            {row.isBilled ? <FontAwesomeIcon icon={faCheckCircle} color="green" /> : null}
-                                                        </span>
-                                                    </OverlayTrigger>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <FontAwesomeIcon onClick={() => this.editExpense(row)} icon={faEdit} className="legemblue" />
-                                                </TableCell>
+                        <div className="dp-content">
+
+                            {/* Expenses table */}
+                            <div className="dp-section">
+                                <div className="dp-section-header">
+                                    <span className="dp-section-title">Expenses</span>
+                                    <IconButton onClick={this.handleAddExpense} aria-label="Add expense" size="small">
+                                        <AddIcon style={{ color: 'rgb(25, 57, 145)', fontSize: 18 }} />
+                                    </IconButton>
+                                </div>
+                                <TableContainer>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell style={colHeaderStyle}>Description</TableCell>
+                                                <TableCell style={colHeaderStyle}>Type</TableCell>
+                                                <TableCell style={colHeaderStyle}>Date</TableCell>
+                                                <TableCell style={{ ...colHeaderStyle, textAlign: 'right' }}>Amount</TableCell>
+                                                <TableCell />
+                                                <TableCell />
                                             </TableRow>
-                                        ))
-                                        }
-                                        <TableRow>
-                                            <TableCell>Total</TableCell>
-                                            <TableCell className="rightAlign">${expenses.reduce((acc, e) => acc + e.expenseTotal, 0)}</TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>
-                                                <b>Registered time</b>
-                                                <IconButton onClick={this.handleAddTime} aria-label="Add time">
-                                                    <AddIcon className="legemblue" />
-                                                </IconButton>
-                                            </TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                        {times.map((row) => (
-                                        <TableRow key={row.uid}>
-                                            <TableCell>
-                                                <OverlayTrigger overlay={
-                                                    <Tooltip>
-                                                        {toDate(row.timeDate)?.toDateString()}
-                                                    </Tooltip>
-                                                }>
-                                                    <span className="d-inline-block">
-                                                        {`${getUserName(this.props.users, row.timeAttorney)} - ${row.timeTitle}`}
-                                                    </span>
-                                                </OverlayTrigger>
-                                            </TableCell>
-                                            <TableCell className="rightAlign">{`$${row.timeTotal}`}</TableCell>
-                                            <TableCell>{`${row.timeHours}:${row.timeMinutes > 0 ? row.timeMinutes : '00'} hrs`}</TableCell>
-                                            <TableCell>
-                                                <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" />
-                                            </TableCell>
-                                        </TableRow>
-                                        ))
-                                        }
-                                        <TableRow>
-                                            <TableCell>Total </TableCell>
-                                            <TableCell className="rightAlign">${times.reduce((acc, t) => acc + t.timeTotal, 0)}</TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                                        </TableHead>
+                                        <TableBody>
+                                            {expenses.map(row => (
+                                                <TableRow key={row.uid} hover>
+                                                    <TableCell>
+                                                        <div>{row.expenseTitle}</div>
+                                                        <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{this.props.users.find(u => u.uid === row.expenseAttorney)?.name}</div>
+                                                    </TableCell>
+                                                    <TableCell style={{ color: '#555' }}>{expenseClasses.find(obj => obj.value === row.expenseClass)?.label}</TableCell>
+                                                    <TableCell style={{ whiteSpace: 'nowrap', color: '#555' }}>{toDate(row.expenseDate)?.toLocaleDateString()}</TableCell>
+                                                    <TableCell style={{ textAlign: 'right' }}>${Number(row.expenseTotal).toFixed(2)}</TableCell>
+                                                    <TableCell>
+                                                        {row.isBilled ? <FontAwesomeIcon icon={faCheckCircle} color="green" title="Billed" /> : null}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <FontAwesomeIcon onClick={() => this.editExpense(row)} icon={faEdit} className="legemblue" style={{ cursor: 'pointer' }} />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {expenses.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="dp-empty-cell">No expenses registered.</TableCell>
+                                                </TableRow>
+                                            )}
+                                            <TableRow className="dp-total-row">
+                                                <TableCell>Total</TableCell>
+                                                <TableCell /><TableCell />
+                                                <TableCell style={{ textAlign: 'right' }}>${totalExpenses.toFixed(2)}</TableCell>
+                                                <TableCell /><TableCell />
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+
+                            {/* Time table */}
+                            <div className="dp-section">
+                                <div className="dp-section-header">
+                                    <span className="dp-section-title">Time</span>
+                                    <IconButton onClick={this.handleAddTime} aria-label="Add time" size="small">
+                                        <AddIcon style={{ color: 'rgb(25, 57, 145)', fontSize: 18 }} />
+                                    </IconButton>
+                                </div>
+                                <TableContainer>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell style={colHeaderStyle}>Description</TableCell>
+                                                <TableCell style={colHeaderStyle}>Duration</TableCell>
+                                                <TableCell style={colHeaderStyle}>Date</TableCell>
+                                                <TableCell style={{ ...colHeaderStyle, textAlign: 'right' }}>Amount</TableCell>
+                                                <TableCell />
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {times.map(row => (
+                                                <TableRow key={row.uid} hover>
+                                                    <TableCell>
+                                                        <div>{row.timeTitle}</div>
+                                                        <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{this.props.users.find(u => u.uid === row.timeAttorney)?.name}</div>
+                                                    </TableCell>
+                                                    <TableCell style={{ color: '#555' }}>{`${row.timeHours}:${row.timeMinutes > 0 ? String(row.timeMinutes).padStart(2, '0') : '00'} hrs`}</TableCell>
+                                                    <TableCell style={{ whiteSpace: 'nowrap', color: '#555' }}>{toDate(row.timeDate)?.toLocaleDateString()}</TableCell>
+                                                    <TableCell style={{ textAlign: 'right' }}>${Number(row.timeTotal).toFixed(2)}</TableCell>
+                                                    <TableCell>
+                                                        <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" style={{ cursor: 'pointer' }} />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {times.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={5} className="dp-empty-cell">No time registered.</TableCell>
+                                                </TableRow>
+                                            )}
+                                            <TableRow className="dp-total-row">
+                                                <TableCell>Total</TableCell>
+                                                <TableCell /><TableCell />
+                                                <TableCell style={{ textAlign: 'right' }}>${totalTime.toFixed(2)}</TableCell>
+                                                <TableCell />
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="dp-actions">
+                                <Button onClick={() => this.handleShow(4)} variant="outline-secondary" size="sm">Edit</Button>
+                                {this.props.project?.isOpen
+                                    ? <Button onClick={this.archiveProject} variant="outline-danger" size="sm">Close project</Button>
+                                    : <Button onClick={this.reopenProject} variant="outline-primary" size="sm">Reopen project</Button>
+                                }
+                                <IconButton onClick={this.onDelete} color="secondary" aria-label="delete" size="small">
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </div>
+
                         </div>
-                        <br />
-                        <div className="rightAlign biggerRightMargin bottomMargin">
-                            <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
-                                <DeleteIcon />
-                            </IconButton>
-                            <Button onClick={() => this.handleShow(4)} variant="outline-dark">Edit project</Button>
-                            &nbsp;&nbsp;
-                            {this.props.project?.isOpen
-                                ? <Button onClick={this.archiveProject} variant="outline-danger">Close project</Button>
-                                : <Button onClick={this.reopenProject} variant="outline-primary">Reopen project</Button>
-                            }{' '}
-                        </div>
+
                     </div>
                 }
             </AuthUserContext.Consumer>
@@ -913,7 +823,6 @@ detailedProject.propTypes = {
     expenses: PropTypes.array,
     times: PropTypes.array,
     projectsNames: PropTypes.object,
-    payments: PropTypes.array,
     match: PropTypes.object,
     history: PropTypes.object,
     getProjectById: PropTypes.func,
@@ -921,13 +830,10 @@ detailedProject.propTypes = {
     getUsers: PropTypes.func,
     subscribeToTimes: PropTypes.func,
     subscribeToExpenses: PropTypes.func,
-    addDownPayment: PropTypes.func,
-    subscribeToPayments: PropTypes.func,
     updateExpense: PropTypes.func,
     deleteExpense: PropTypes.func,
     updateTime: PropTypes.func,
     deleteTime: PropTypes.func,
-    deletePayment: PropTypes.func,
     addTime: PropTypes.func,
     addExpense: PropTypes.func,
     updateProject: PropTypes.func,
@@ -942,13 +848,10 @@ export default connect(mapStateToProps, {
     getUsers,
     subscribeToTimes,
     subscribeToExpenses,
-    addDownPayment,
-    subscribeToPayments,
     updateExpense,
     deleteExpense,
     updateTime,
     deleteTime,
-    deletePayment,
     addTime,
     addExpense,
     updateProject,
