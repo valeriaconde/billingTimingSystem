@@ -71,6 +71,8 @@ const INITIAL_STATE = {
     projectTitle: null
 };
 
+const getUserName = (users, uid) => users.find(u => u.uid === uid)?.name || 'Unknown user';
+
 class detailedProject extends Component {
     constructor(props) {
         super(props);
@@ -812,7 +814,7 @@ class detailedProject extends Component {
                                                             })?.label  }
                                                         </Tooltip>}>
                                                         <span className="d-inline-block">
-                                                            {`${this.props.users.find(u => u.uid === row.expenseAttorney)?.name} - ${row.expenseTitle}`}
+                                                            {`${getUserName(this.props.users, row.expenseAttorney)} - ${row.expenseTitle}`}
                                                         </span>
                                                     </OverlayTrigger>
                                                 </TableCell>
@@ -856,7 +858,7 @@ class detailedProject extends Component {
                                                     </Tooltip>
                                                 }>
                                                     <span className="d-inline-block">
-                                                        {`${this.props.users.find(u => u.uid === row.timeAttorney)?.name} - ${row.timeTitle}`}
+                                                        {`${getUserName(this.props.users, row.timeAttorney)} - ${row.timeTitle}`}
                                                     </span>
                                                 </OverlayTrigger>
                                             </TableCell>

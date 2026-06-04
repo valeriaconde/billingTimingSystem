@@ -226,7 +226,7 @@ export function updateUser(uid, payload) {
         dispatch({ type: LOADING_USERS, payload: {} });
         try {
             const response = await axios.put(url, payload);
-            dispatch({ type: UPDATED_USER, payload: response.data });
+            dispatch({ type: UPDATED_USER, payload: { uid, ...response.data } });
 
             const alert = { type: AlertType.Success, message: "User successfully updated." };
             dispatch({ type: ADD_ALERT, payload: alert });

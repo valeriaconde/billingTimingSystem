@@ -227,12 +227,14 @@ function rootReducer(state = initialState, action) {
             loadingTimes: false,
         });
     } else if(action.type === UPDATED_USER) {
+        const uid = action.payload.uid;
         const email = action.payload.email;
-        let tmp = state.users.filter(u => { return u.email !== email });
+        let tmp = state.users.filter(u => { return u.uid !== uid && u.email !== email });
         tmp.push(action.payload);
         return Object.assign({}, state, {
             loadingUsers: false,
-            users: tmp.sort((a, b) => a.name?.localeCompare(b.name))
+            users: tmp.sort((a, b) => a.name?.localeCompare(b.name)),
+            lastFetchedUsers: Date.now(),
         });
     } else if(action.type === UPDATED_PROJECT) {
         return Object.assign({}, state, {

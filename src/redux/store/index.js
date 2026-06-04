@@ -20,6 +20,8 @@ const persistConfig = {
         "loadingProjectsMapping",
         "loadingReport",
         "reportReady",
+        "users",
+        "lastFetchedUsers",
     ],
 };
 
