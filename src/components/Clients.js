@@ -48,6 +48,7 @@ const INITIAL_STATE = {
     error: null,
     activeIdx: -1,
     searchQuery: '',
+    showConcluded: false,
     // new project modal
     showProjectModal: false,
     newProjectTitle: '',
@@ -512,6 +513,7 @@ class Clientes extends Component {
         const allProjects = this.props.clientProjects || [];
         const open = allProjects.filter(p => p.isOpen);
         const archived = allProjects.filter(p => !p.isOpen);
+        const { showConcluded } = this.state;
 
         return (
             <div className="client-projects-section">
@@ -539,11 +541,15 @@ class Clientes extends Component {
 
                         {archived.length > 0 && (
                             <div className="client-projects-archived">
-                                <div className="client-projects-group-title">
+                                <div
+                                    className="client-projects-group-title client-projects-group-toggle"
+                                    onClick={() => this.setState({ showConcluded: !showConcluded })}
+                                >
                                     Concluded
                                     <span className="client-projects-count">{archived.length}</span>
+                                    <span className="client-projects-chevron">{showConcluded ? '▲' : '▼'}</span>
                                 </div>
-                                {this.renderProjectCards(archived)}
+                                {showConcluded && this.renderProjectCards(archived)}
                             </div>
                         )}
                       </>
@@ -617,7 +623,7 @@ class Clientes extends Component {
                                         ? <div className="client-empty-state">
                                             <p>Select a client to view details</p>
                                           </div>
-                                        : <>
+                                        : <div className="client-detail-content">
                                             <div className="client-card">
 
                                                 {/* HEADER */}
@@ -635,15 +641,6 @@ class Clientes extends Component {
                                                                 placeholder="Business name"
                                                               />
                                                             : <h2>{currDenomination}</h2>
-                                                        }
-                                                    </div>
-                                                    <div className="client-card-actions">
-                                                        {edit
-                                                            ? <>
-                                                                <Button variant="outline-secondary" onClick={() => this.onCancelEdit()}>Cancel</Button>
-                                                                <Button className="legem-primary" onClick={this.onSave}>Save</Button>
-                                                              </>
-                                                            : <Button variant="outline-primary" onClick={this.onEdit}>Edit</Button>
                                                         }
                                                     </div>
                                                 </div>
@@ -703,19 +700,29 @@ class Clientes extends Component {
                                                     </div>
                                                 </div>
 
-                                                {edit &&
-                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                                                        <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+                                                    {edit
+                                                        ? <IconButton onClick={this.onDelete} color="secondary" aria-label="delete">
                                                             <DeleteIcon />
-                                                        </IconButton>
+                                                          </IconButton>
+                                                        : <span />
+                                                    }
+                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                        {edit
+                                                            ? <>
+                                                                <button className="client-projects-add-btn client-btn-secondary" onClick={() => this.onCancelEdit()}>Cancel</button>
+                                                                <button className="client-projects-add-btn" onClick={this.onSave}>Save</button>
+                                                              </>
+                                                            : <button className="client-projects-add-btn" onClick={this.onEdit}>Edit</button>
+                                                        }
                                                     </div>
-                                                }
+                                                </div>
 
                                             </div>
 
                                             {/* PROJECTS */}
                                             {this.renderProjectsSection()}
-                                          </>
+                                          </div>
                                     }
                                 </div>
 
