@@ -133,6 +133,15 @@
   margin: 0;
 }
 
+/* CLIENT DETAIL CONTENT (card + projects side by side) */
+
+.client-detail-content {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  align-items: flex-start;
+}
+
 /* CLIENT CARD */
 
 .client-card {
@@ -140,7 +149,8 @@
   border-radius: 12px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
   padding: 28px 32px;
-  max-width: 700px;
+  width: 520px;
+  flex-shrink: 0;
 }
 
 .client-card-header {
@@ -250,8 +260,12 @@
 /* PROJECTS SECTION (inside client detail panel) */
 
 .client-projects-section {
-  max-width: 700px;
-  margin-top: 24px;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.client-projects-section .projects-grid {
+  grid-template-columns: 1fr;
 }
 
 .client-projects-header {
@@ -294,6 +308,16 @@
   color: white;
 }
 
+.client-btn-secondary {
+  border-color: #aaa;
+  color: #666;
+}
+
+.client-btn-secondary:hover {
+  background-color: #aaa;
+  color: white;
+}
+
 .client-projects-archived {
   margin-top: 28px;
 }
@@ -308,6 +332,20 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.client-projects-group-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.client-projects-group-toggle:hover {
+  color: rgb(25, 57, 145);
+}
+
+.client-projects-chevron {
+  margin-left: 6px;
+  font-size: 9px;
 }
 
 .client-projects-archived .project-card {

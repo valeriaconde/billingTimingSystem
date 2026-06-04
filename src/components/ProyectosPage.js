@@ -33,7 +33,7 @@ const INITIAL_STATE = {
     validated: false,
     clientSearch: '',
     projectSearch: '',
-    activeClientIdx: -1,
+    activeClientIdx: null,
     selectedClientUid: null,
     filterStatus: 'open',
     filterAttorney: [],
@@ -50,9 +50,7 @@ class Proyectos extends Component {
         this.handleNewProject = this.handleNewProject.bind(this);
     }
 
-    componentDidMount() {
-        this.unsubscribeProjects = this.props.subscribeToAllOpenProjects();
-    }
+    componentDidMount() {}
 
     componentWillUnmount() {
         if (this.unsubscribeProjects) this.unsubscribeProjects();
@@ -279,6 +277,7 @@ class Proyectos extends Component {
             (c.denomination || '').toLowerCase().includes(clientSearch.toLowerCase())
         );
         const activeClient = allClients.find(c => c.uid === selectedClientUid);
+        const nothingSelected = activeClientIdx === null;
 
         let filteredProjects = this.props.projects || [];
 
@@ -353,6 +352,11 @@ class Proyectos extends Component {
 
                                 {/* RIGHT PANEL */}
                                 <div className="projects-panel">
+                                    {nothingSelected ? (
+                                        <div className="projects-no-results" style={{ marginTop: '4rem' }}>
+                                            Select a client or &ldquo;All projects&rdquo; to view projects.
+                                        </div>
+                                    ) : (<>
                                     <div className="projects-panel-header">
                                         <div>
                                             <div className="projects-panel-title">
@@ -415,6 +419,7 @@ class Proyectos extends Component {
                                                 })}
                                               </div>
                                     }
+                                    </>)}
                                 </div>
 
                             </div>
