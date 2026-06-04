@@ -5,6 +5,7 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import BarLoader from "react-spinners/BarLoader";
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
+import * as ROLES from '../constants/roles';
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { addAlert, clearAlert, addClient, updateClient, deleteClient, addProject, subscribeToAllProjectsByClient } from "../redux/actions/index";
@@ -742,7 +743,7 @@ Clientes.propTypes = {
     subscribeToAllProjectsByClient: PropTypes.func
 };
 
-const condition = authUser => !!authUser;
+const condition = authUser => authUser && !!authUser.roles[ROLES.ADMIN];
 export default connect(mapStateToProps, {
     clearAlert,
     addAlert,
