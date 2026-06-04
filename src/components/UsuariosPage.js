@@ -60,8 +60,16 @@ class UsuariosPage extends Component {
         }
     }
 
-    onSave() {
+    onSave(event) {
+        if (event) event.preventDefault();
         const { startYear, job, salary, name, uid, activeIdx, initials } = this.state;
+        const selectedUser = this.props.users[activeIdx];
+
+        if(!uid || !selectedUser) {
+            this.props.addAlert(AlertType.Error, "Please select a valid user before saving.");
+            return;
+        }
+
         const trimmedUser = trimFields({ startYear, job, salary, name, initials }, [
             'startYear', 'job', 'salary', 'name', 'initials'
         ]);
@@ -86,8 +94,8 @@ class UsuariosPage extends Component {
             job: trimmedUser.job,
             salary: trimmedUser.salary,
             startYear: trimmedUser.startYear,
-            email: this.props.users[activeIdx].email,
-            roles: this.props.users[activeIdx].roles,
+            email: selectedUser.email,
+            roles: selectedUser.roles,
             initials: trimmedUser.initials
         };
         this.props.updateUser(uid, payload);
@@ -96,22 +104,25 @@ class UsuariosPage extends Component {
     }
 
     onClickUser(event) {
-        const activeIdx = event.target.value;
+        const activeIdx = Number(event.currentTarget.dataset.index);
+        const selectedUser = this.props.users[activeIdx];
+        if (!selectedUser) return;
+
         this.setState({ activeIdx: activeIdx, edit: false, 
-            uid: this.props.users[activeIdx].uid,
-            job: this.props.users[activeIdx].job,
-            startYear: this.props.users[activeIdx].startYear, 
-            salary: this.props.users[activeIdx].salary,
-            name: this.props.users[activeIdx].name || this.props.users[activeIdx].email,
-            initials: this.props.users[activeIdx].initials || "AAA",
-            email: this.props.users[activeIdx].email
+            uid: selectedUser.uid,
+            job: selectedUser.job,
+            startYear: selectedUser.startYear, 
+            salary: selectedUser.salary,
+            name: selectedUser.name || selectedUser.email,
+            initials: selectedUser.initials || "AAA",
+            email: selectedUser.email
         });
     }
 
     renderUsers() {
         return (
             <ListGroup as="ul" className="">
-                {this.props.users.map((user, i) => <ListGroup.Item onClick={this.onClickUser} value={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{user.name || user.email} {user.roles && !!user.roles[ROLES.ADMIN] ? "(Admin)" : ""}</ListGroup.Item>)}
+                {this.props.users.map((user, i) => <ListGroup.Item onClick={this.onClickUser} data-index={i} active={this.state.activeIdx === i} key={`user-${i}`} as="li" >{user.name || user.email} {user.roles && !!user.roles[ROLES.ADMIN] ? "(Admin)" : ""}</ListGroup.Item>)}
             </ListGroup>
         );
     }

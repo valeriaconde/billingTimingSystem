@@ -222,6 +222,13 @@ export function updateInvoice() {
 
 export function updateUser(uid, payload) {
     return async function(dispatch) {
+        if (!uid || uid === 'undefined') {
+            const alert = { type: AlertType.Error, message: "Cannot update user without a valid id." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+            return;
+        }
+
         const url = `${process.env.REACT_APP_DATABASE_URL}/users/${uid}.json`;
         dispatch({ type: LOADING_USERS, payload: {} });
         try {
