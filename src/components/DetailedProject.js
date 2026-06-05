@@ -646,16 +646,18 @@ class detailedProject extends Component {
                                     <span className="dp-total-label">Expenses</span>
                                     <span className="dp-total-value">${totalExpenses.toFixed(2)}</span>
                                 </div>
-                                <div className="dp-divider" />
-                                <div className="dp-total-item">
-                                    <span className="dp-total-label">Time</span>
-                                    <span className="dp-total-value">${totalTime.toFixed(2)}</span>
-                                </div>
-                                <div className="dp-divider" />
-                                <div className="dp-total-item dp-grand-total">
-                                    <span className="dp-total-label">Total</span>
-                                    <span className="dp-total-value">${(totalExpenses + totalTime).toFixed(2)}</span>
-                                </div>
+                                {!this.props.project?.projectFixedFee && (<>
+                                    <div className="dp-divider" />
+                                    <div className="dp-total-item">
+                                        <span className="dp-total-label">Time</span>
+                                        <span className="dp-total-value">${totalTime.toFixed(2)}</span>
+                                    </div>
+                                    <div className="dp-divider" />
+                                    <div className="dp-total-item dp-grand-total">
+                                        <span className="dp-total-label">Total</span>
+                                        <span className="dp-total-value">${(totalExpenses + totalTime).toFixed(2)}</span>
+                                    </div>
+                                </>)}
                             </div>
                         </div>
 
@@ -754,7 +756,8 @@ class detailedProject extends Component {
                                 </TableContainer>
                             </div>
 
-                            {/* Time table */}
+                            {/* Time table — hidden for fixed-fee projects */}
+                            {!this.props.project?.projectFixedFee && (
                             <div className="dp-section">
                                 <div className="dp-section-header">
                                     <span className="dp-section-title">Time</span>
@@ -803,6 +806,7 @@ class detailedProject extends Component {
                                     </Table>
                                 </TableContainer>
                             </div>
+                            )}
 
                             {/* Actions */}
                             <div className="dp-actions">
