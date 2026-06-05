@@ -35,9 +35,9 @@ const INITIAL_STATE = {
     projectSearch: '',
     activeClientIdx: null,
     selectedClientUid: null,
-    filterStatus: 'open',
+    filterStatus: 'all',
     filterAttorney: [],
-    filterBilling: []
+    filterBilling: null
 };
 
 class Proyectos extends Component {
@@ -50,7 +50,43 @@ class Proyectos extends Component {
         this.handleNewProject = this.handleNewProject.bind(this);
     }
 
-    componentDidMount() {}
+    componentDidMount() {
+        this.tryPreselectClient(this.props.clients);
+    }
+
+    componentDidUpdate(prevProps) {
+        if (!prevProps.clients?.length && this.props.clients?.length && this.state.activeClientIdx === null) {
+            this.tryPreselectClient(this.props.clients);
+        }
+    }
+
+    tryPreselectClient(clients) {
+        const locationState = this.props.location?.state;
+        if (!locationState) return;
+
+        const { clientUid, isAllProjects, filterStatus, filterBilling, filterAttorney } = locationState;
+        const effectiveFilterStatus = filterStatus ?? this.state.filterStatus;
+        const stateOverrides = {
+            ...(filterStatus != null && { filterStatus }),
+            ...(filterBilling != null && { filterBilling }),
+            ...(filterAttorney != null && { filterAttorney }),
+        };
+
+        if (isAllProjects) {
+            if (this.unsubscribeProjects) this.unsubscribeProjects();
+            this.setState({ ...stateOverrides, activeClientIdx: -1, selectedClientUid: null });
+            this.unsubscribeProjects = this.getSubscription(-1, null, effectiveFilterStatus);
+            return;
+        }
+
+        if (!clientUid || !clients?.length) return;
+        const idx = clients.findIndex(c => c.uid === clientUid);
+        if (idx !== -1) {
+            if (this.unsubscribeProjects) this.unsubscribeProjects();
+            this.setState({ ...stateOverrides, activeClientIdx: idx, selectedClientUid: clientUid });
+            this.unsubscribeProjects = this.getSubscription(idx, clientUid, effectiveFilterStatus);
+        }
+    }
 
     componentWillUnmount() {
         if (this.unsubscribeProjects) this.unsubscribeProjects();
@@ -96,11 +132,7 @@ class Proyectos extends Component {
     };
 
     toggleBillingFilter = (value) => {
-        const { filterBilling } = this.state;
-        const newFilter = filterBilling.includes(value)
-            ? filterBilling.filter(v => v !== value)
-            : [...filterBilling, value];
-        this.setState({ filterBilling: newFilter });
+        this.setState(prev => ({ filterBilling: prev.filterBilling === value ? null : value }));
     };
 
     handleNewProject(event) {
@@ -218,9 +250,9 @@ class Proyectos extends Component {
                     <div className="projects-filter-label">Status</div>
                     <div className="projects-filter-pills">
                         {[
+                            { value: 'all', label: 'All' },
                             { value: 'open', label: 'Open' },
-                            { value: 'concluded', label: 'Concluded' },
-                            { value: 'all', label: 'All' }
+                            { value: 'concluded', label: 'Concluded' }
                         ].map(s => (
                             <span
                                 key={s.value}
@@ -242,7 +274,7 @@ class Proyectos extends Component {
                         ].map(b => (
                             <span
                                 key={b.value}
-                                className={`projects-filter-pill${filterBilling.includes(b.value) ? ' active' : ''}`}
+                                className={`projects-filter-pill${filterBilling === b.value ? ' active' : ''}`}
                                 onClick={() => this.toggleBillingFilter(b.value)}
                             >
                                 {b.label}
@@ -283,13 +315,10 @@ class Proyectos extends Component {
 
         if (filterStatus === 'open') filteredProjects = filteredProjects.filter(p => p.isOpen);
         else if (filterStatus === 'concluded') filteredProjects = filteredProjects.filter(p => !p.isOpen);
+        else filteredProjects = [...filteredProjects].sort((a, b) => (b.isOpen ? 1 : 0) - (a.isOpen ? 1 : 0));
 
-        if (filterBilling.length > 0) {
-            filteredProjects = filteredProjects.filter(p =>
-                (filterBilling.includes('fixed') && p.projectFixedFee) ||
-                (filterBilling.includes('hourly') && !p.projectFixedFee)
-            );
-        }
+        if (filterBilling === 'fixed') filteredProjects = filteredProjects.filter(p => p.projectFixedFee);
+        else if (filterBilling === 'hourly') filteredProjects = filteredProjects.filter(p => !p.projectFixedFee);
 
         if (filterAttorney.length > 0) {
             filteredProjects = filteredProjects.filter(p => filterAttorney.includes(p.appointedIds));
@@ -396,6 +425,13 @@ class Proyectos extends Component {
                                                             key={project.uid}
                                                             to={`/projects/${project.projectClient}/${project.uid}`}
                                                             className="project-card"
+                                                            onClick={() => this.props.history.replace('/projects', {
+                                                                clientUid: selectedClientUid,
+                                                                isAllProjects: activeClientIdx === -1,
+                                                                filterStatus,
+                                                                filterBilling,
+                                                                filterAttorney
+                                                            })}
                                                         >
                                                             <div className="project-card-title">{project.projectTitle}</div>
                                                             <div className="project-card-meta">
@@ -445,7 +481,9 @@ Proyectos.propTypes = {
     subscribeToProjectsByClient: PropTypes.func,
     subscribeToAllOpenProjects: PropTypes.func,
     subscribeToAllProjects: PropTypes.func,
-    subscribeToClientProjectsAll: PropTypes.func
+    subscribeToClientProjectsAll: PropTypes.func,
+    location: PropTypes.object,
+    history: PropTypes.object
 };
 
 const condition = authUser => !!authUser;

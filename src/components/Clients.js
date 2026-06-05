@@ -528,7 +528,12 @@ class Clientes extends Component {
         const allProjects = this.props.clientProjects || [];
         const open = allProjects.filter(p => p.isOpen);
         const archived = allProjects.filter(p => !p.isOpen);
-        const { showConcluded } = this.state;
+        const { currUid } = this.state;
+
+        const MAX = 5;
+        const previewOpen = open.slice(0, MAX);
+        const previewArchived = archived.slice(0, Math.max(0, MAX - previewOpen.length));
+        const hiddenCount = allProjects.length - previewOpen.length - previewArchived.length;
 
         return (
             <div className="client-projects-section">
@@ -545,27 +550,39 @@ class Clientes extends Component {
                 {this.props.loadingClientProjects
                     ? <BarLoader css={{ width: "100%" }} loading={this.props.loadingClientProjects} />
                     : <>
-                        <div className="client-projects-group-title">
-                            Open
-                            <span className="client-projects-count">{open.length}</span>
-                        </div>
-                        {open.length === 0
-                            ? <div className="projects-no-results" style={{ paddingTop: 8, paddingBottom: 16 }}>No open projects for this client.</div>
-                            : this.renderProjectCards(open)
-                        }
+                        {previewOpen.length > 0 && (
+                            <>
+                                <div className="client-projects-group-title">
+                                    Open
+                                    <span className="client-projects-count">{open.length}</span>
+                                </div>
+                                {this.renderProjectCards(previewOpen)}
+                            </>
+                        )}
 
-                        {archived.length > 0 && (
-                            <div className="client-projects-archived">
-                                <div
-                                    className="client-projects-group-title client-projects-group-toggle"
-                                    onClick={() => this.setState({ showConcluded: !showConcluded })}
-                                >
+                        {previewArchived.length > 0 && (
+                            <div className={previewOpen.length > 0 ? 'client-projects-archived' : ''}>
+                                <div className="client-projects-group-title">
                                     Concluded
                                     <span className="client-projects-count">{archived.length}</span>
-                                    <span className="client-projects-chevron">{showConcluded ? '▲' : '▼'}</span>
                                 </div>
-                                {showConcluded && this.renderProjectCards(archived)}
+                                {this.renderProjectCards(previewArchived)}
                             </div>
+                        )}
+
+                        {previewOpen.length === 0 && previewArchived.length === 0 && (
+                            <div className="projects-no-results" style={{ paddingTop: 8, paddingBottom: 16 }}>
+                                No projects for this client.
+                            </div>
+                        )}
+
+                        {hiddenCount > 0 && (
+                            <Link
+                                to={{ pathname: '/projects', state: { clientUid: currUid } }}
+                                className="client-view-all-projects"
+                            >
+                                View all projects (+{hiddenCount} more)
+                            </Link>
                         )}
                       </>
                 }

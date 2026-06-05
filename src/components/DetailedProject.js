@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addAlert, addTime, deleteProject, updateProject, addExpense, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, updateClient, addExpense, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses } from "../redux/actions/index";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
@@ -552,6 +552,11 @@ class detailedProject extends Component {
     reopenProject = () => {
         if(window.confirm('Are you sure you want to reopen this project?')) {
             this.props.updateProject(this.props.match.params.projectId, { ...this.props.project, isOpen: true });
+            const clientUid = this.props.project?.projectClient;
+            const client = (this.props.clients || []).find(c => c.uid === clientUid);
+            if (client && client.isActive === false) {
+                this.props.updateClient(clientUid, { isActive: true });
+            }
         }
     }
 
@@ -641,16 +646,18 @@ class detailedProject extends Component {
                                     <span className="dp-total-label">Expenses</span>
                                     <span className="dp-total-value">${totalExpenses.toFixed(2)}</span>
                                 </div>
-                                <div className="dp-divider" />
-                                <div className="dp-total-item">
-                                    <span className="dp-total-label">Time</span>
-                                    <span className="dp-total-value">${totalTime.toFixed(2)}</span>
-                                </div>
-                                <div className="dp-divider" />
-                                <div className="dp-total-item dp-grand-total">
-                                    <span className="dp-total-label">Total</span>
-                                    <span className="dp-total-value">${(totalExpenses + totalTime).toFixed(2)}</span>
-                                </div>
+                                {!this.props.project?.projectFixedFee && (<>
+                                    <div className="dp-divider" />
+                                    <div className="dp-total-item">
+                                        <span className="dp-total-label">Time</span>
+                                        <span className="dp-total-value">${totalTime.toFixed(2)}</span>
+                                    </div>
+                                    <div className="dp-divider" />
+                                    <div className="dp-total-item dp-grand-total">
+                                        <span className="dp-total-label">Total</span>
+                                        <span className="dp-total-value">${(totalExpenses + totalTime).toFixed(2)}</span>
+                                    </div>
+                                </>)}
                             </div>
                         </div>
 
@@ -677,6 +684,17 @@ class detailedProject extends Component {
                                     <div className="dp-info-item">
                                         <span className="dp-info-label">Fee</span>
                                         <span className="dp-info-value">${this.props.project?.projectFee}</span>
+                                    </div>
+                                </>
+                            )}
+                            {this.props.project?.createdAt && (
+                                <>
+                                    <div className="dp-divider" />
+                                    <div className="dp-info-item">
+                                        <span className="dp-info-label">Created</span>
+                                        <span className="dp-info-value">
+                                            {toDate(this.props.project.createdAt)?.toLocaleDateString()}
+                                        </span>
                                     </div>
                                 </>
                             )}
@@ -738,7 +756,8 @@ class detailedProject extends Component {
                                 </TableContainer>
                             </div>
 
-                            {/* Time table */}
+                            {/* Time table — hidden for fixed-fee projects */}
+                            {!this.props.project?.projectFixedFee && (
                             <div className="dp-section">
                                 <div className="dp-section-header">
                                     <span className="dp-section-title">Time</span>
@@ -787,6 +806,7 @@ class detailedProject extends Component {
                                     </Table>
                                 </TableContainer>
                             </div>
+                            )}
 
                             {/* Actions */}
                             <div className="dp-actions">
@@ -837,6 +857,7 @@ detailedProject.propTypes = {
     addTime: PropTypes.func,
     addExpense: PropTypes.func,
     updateProject: PropTypes.func,
+    updateClient: PropTypes.func,
     deleteProject: PropTypes.func,
     addAlert: PropTypes.func
 };
@@ -855,6 +876,7 @@ export default connect(mapStateToProps, {
     addTime,
     addExpense,
     updateProject,
+    updateClient,
     deleteProject,
     addAlert
 })(withAuthorization(condition)(detailedProject));

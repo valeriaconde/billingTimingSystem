@@ -94,9 +94,7 @@ class tiemposPage extends Component {
 
     handleChangeClient = selectedClientModal => {
         this.setState({ selectedClientModal, selectedProjectModal: null });
-        if (!this.props.projectsByClient[selectedClientModal.value]) {
-            this.props.getProjectByClient(selectedClientModal.value);
-        }
+        this.props.getProjectByClient(selectedClientModal.value);
     }
 
     handleChangeProject = selectedProjectModal => {
@@ -203,13 +201,10 @@ class tiemposPage extends Component {
                 uid
             })).sort((a, b) => a.label?.localeCompare(b.label));
 
-        const projectSelect = this.props.projectsByClient[selectedClientModal?.value]
-            ? this.props.projectsByClient[selectedClientModal.value]
-                .map(p => ({ label: p.title || '', value: p.uid, uid: p.uid }))
-                .sort((a, b) => a.label?.localeCompare(b.label))
-            : (this.props.projects || [])
-                .map(p => ({ label: p.projectTitle || '', value: p.uid, uid: p.uid }))
-                .sort((a, b) => a.label?.localeCompare(b.label));
+        const projectSelect = (this.props.projects || [])
+            .filter(p => !p.projectFixedFee)
+            .map(p => ({ label: p.projectTitle || '', value: p.uid, uid: p.uid }))
+            .sort((a, b) => a.label?.localeCompare(b.label));
 
         const userSelect = this.props.users !== null ?
             this.props.users.map((u) => ({
