@@ -35,7 +35,7 @@ const INITIAL_STATE = {
     projectSearch: '',
     activeClientIdx: null,
     selectedClientUid: null,
-    filterStatus: 'open',
+    filterStatus: 'all',
     filterAttorney: [],
     filterBilling: []
 };
@@ -50,7 +50,22 @@ class Proyectos extends Component {
         this.handleNewProject = this.handleNewProject.bind(this);
     }
 
-    componentDidMount() {}
+    componentDidMount() {
+        this.tryPreselectClient(this.props.clients);
+    }
+
+    componentDidUpdate(prevProps) {
+        if (!prevProps.clients?.length && this.props.clients?.length && this.state.activeClientIdx === null) {
+            this.tryPreselectClient(this.props.clients);
+        }
+    }
+
+    tryPreselectClient(clients) {
+        const clientUid = this.props.location?.state?.clientUid;
+        if (!clientUid || !clients?.length) return;
+        const idx = clients.findIndex(c => c.uid === clientUid);
+        if (idx !== -1) this.handleSelectClient(clients[idx], idx);
+    }
 
     componentWillUnmount() {
         if (this.unsubscribeProjects) this.unsubscribeProjects();
@@ -218,9 +233,9 @@ class Proyectos extends Component {
                     <div className="projects-filter-label">Status</div>
                     <div className="projects-filter-pills">
                         {[
+                            { value: 'all', label: 'All' },
                             { value: 'open', label: 'Open' },
-                            { value: 'concluded', label: 'Concluded' },
-                            { value: 'all', label: 'All' }
+                            { value: 'concluded', label: 'Concluded' }
                         ].map(s => (
                             <span
                                 key={s.value}
@@ -283,6 +298,7 @@ class Proyectos extends Component {
 
         if (filterStatus === 'open') filteredProjects = filteredProjects.filter(p => p.isOpen);
         else if (filterStatus === 'concluded') filteredProjects = filteredProjects.filter(p => !p.isOpen);
+        else filteredProjects = [...filteredProjects].sort((a, b) => (b.isOpen ? 1 : 0) - (a.isOpen ? 1 : 0));
 
         if (filterBilling.length > 0) {
             filteredProjects = filteredProjects.filter(p =>
@@ -445,7 +461,8 @@ Proyectos.propTypes = {
     subscribeToProjectsByClient: PropTypes.func,
     subscribeToAllOpenProjects: PropTypes.func,
     subscribeToAllProjects: PropTypes.func,
-    subscribeToClientProjectsAll: PropTypes.func
+    subscribeToClientProjectsAll: PropTypes.func,
+    location: PropTypes.object
 };
 
 const condition = authUser => !!authUser;

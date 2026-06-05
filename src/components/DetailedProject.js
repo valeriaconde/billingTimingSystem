@@ -19,7 +19,7 @@ import {
     MuiPickersUtilsProvider,
     KeyboardDatePicker,
 } from '@material-ui/pickers';
-import { addAlert, addTime, deleteProject, updateProject, addExpense, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses } from "../redux/actions/index";
+import { addAlert, addTime, deleteProject, updateProject, updateClient, addExpense, updateTime, deleteTime, updateExpense, deleteExpense, getProjectById, getProjectsMapping, getUsers, subscribeToTimes, subscribeToExpenses } from "../redux/actions/index";
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
 import { expenseClasses } from "../constants/enums";
@@ -552,6 +552,11 @@ class detailedProject extends Component {
     reopenProject = () => {
         if(window.confirm('Are you sure you want to reopen this project?')) {
             this.props.updateProject(this.props.match.params.projectId, { ...this.props.project, isOpen: true });
+            const clientUid = this.props.project?.projectClient;
+            const client = (this.props.clients || []).find(c => c.uid === clientUid);
+            if (client && client.isActive === false) {
+                this.props.updateClient(clientUid, { isActive: true });
+            }
         }
     }
 
@@ -837,6 +842,7 @@ detailedProject.propTypes = {
     addTime: PropTypes.func,
     addExpense: PropTypes.func,
     updateProject: PropTypes.func,
+    updateClient: PropTypes.func,
     deleteProject: PropTypes.func,
     addAlert: PropTypes.func
 };
@@ -855,6 +861,7 @@ export default connect(mapStateToProps, {
     addTime,
     addExpense,
     updateProject,
+    updateClient,
     deleteProject,
     addAlert
 })(withAuthorization(condition)(detailedProject));

@@ -356,6 +356,23 @@
   opacity: 1;
 }
 
+.client-view-all-projects {
+  display: block;
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(25, 57, 145);
+  text-align: center;
+  text-decoration: none;
+  padding: 6px 0;
+  border-top: 1px solid #f0f0f0;
+}
+
+.client-view-all-projects:hover {
+  text-decoration: underline;
+  color: rgb(25, 57, 145);
+}
+
 /* ---- INACTIVE / FORMER CLIENTS ---- */
 
 .client-list-inactive-section {
