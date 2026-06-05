@@ -355,3 +355,47 @@
 .client-projects-archived .project-card:hover {
   opacity: 1;
 }
+
+/* ---- INACTIVE / FORMER CLIENTS ---- */
+
+.client-list-inactive-section {
+  border-top: 1px solid #f0f0f0;
+  margin-top: 4px;
+}
+
+.client-list-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+  cursor: pointer;
+  user-select: none;
+}
+
+.client-list-section-header:hover {
+  color: #666;
+}
+
+.client-list-item.inactive .client-list-name {
+  color: #999;
+}
+
+.inactive-avatar {
+  background-color: #bbb !important;
+}
+
+.client-inactive-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: #f5f5f5;
+  color: #888;
+  margin-top: 4px;
+}

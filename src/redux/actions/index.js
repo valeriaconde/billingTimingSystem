@@ -25,6 +25,7 @@ import {
     increment,
     onSnapshot,
     serverTimestamp,
+    writeBatch,
 } from 'firebase/firestore';
 
 const withCreateTimestamps = (payload) => ({
@@ -127,7 +128,7 @@ export function updateClient(uid, payload) {
                     updateDoc(doc(db, MISC, CLIENTS_INDEX), { [uid]: payload.denomination });
                 }
                 getDoc(docRef).then(snapshot => {
-                    dispatch({ type: UPDATED_CLIENT, payload: snapshot.data() });
+                    dispatch({ type: UPDATED_CLIENT, payload: { ...snapshot.data(), uid: docRef.id } });
                     const alert = { type: AlertType.Success, message: "Client successfully updated." };
                     dispatch({ type: ADD_ALERT, payload: alert });
                     setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
@@ -138,6 +139,35 @@ export function updateClient(uid, payload) {
                 dispatch({ type: ADD_ALERT, payload: alert });
             });
     }
+}
+
+export function deactivateClient(uid) {
+    return async function(dispatch) {
+        dispatch({ type: LOADING_CLIENTS, payload: {} });
+        try {
+            const openProjectsSnap = await getDocs(
+                query(collection(db, PROJECTS), where("projectClient", "==", uid), where("isOpen", "==", true))
+            );
+
+            const batch = writeBatch(db);
+            openProjectsSnap.docs.forEach(d => {
+                batch.update(d.ref, { isOpen: false, updatedAt: serverTimestamp() });
+            });
+            const clientRef = doc(db, CLIENTS, uid);
+            batch.update(clientRef, { isActive: false, updatedAt: serverTimestamp() });
+            await batch.commit();
+
+            const clientSnap = await getDoc(clientRef);
+            dispatch({ type: UPDATED_CLIENT, payload: { ...clientSnap.data(), uid: clientRef.id } });
+            const alert = { type: AlertType.Success, message: "Client deactivated and open projects closed." };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        } catch (error) {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            dispatch({ type: LOADING_CLIENTS, payload: {} });
+        }
+    };
 }
 
 export function updateProject(uid, payload) {
