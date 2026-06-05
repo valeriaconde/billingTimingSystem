@@ -685,6 +685,17 @@ class detailedProject extends Component {
                                     </div>
                                 </>
                             )}
+                            {this.props.project?.createdAt && (
+                                <>
+                                    <div className="dp-divider" />
+                                    <div className="dp-info-item">
+                                        <span className="dp-info-label">Created</span>
+                                        <span className="dp-info-value">
+                                            {toDate(this.props.project.createdAt)?.toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="dp-content">
