@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import * as ROLES from '../constants/roles';
 import { AlertType } from '../stores/AlertStore';
 import { connect } from "react-redux";
-import { addAlert, clearAlert, addClient, updateClient, deleteClient, addProject, subscribeToAllProjectsByClient } from "../redux/actions/index";
+import { addAlert, clearAlert, addClient, updateClient, deactivateClient, deleteClient, addProject, subscribeToAllProjectsByClient } from "../redux/actions/index";
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { trimFields, trimString } from '../utils/inputUtils';
@@ -49,6 +49,8 @@ const INITIAL_STATE = {
     activeIdx: -1,
     searchQuery: '',
     showConcluded: false,
+    showInactive: false,
+    currIsActive: true,
     // new project modal
     showProjectModal: false,
     newProjectTitle: '',
@@ -72,6 +74,7 @@ class Clientes extends Component {
         this.onChange = this.onChange.bind(this);
         this.onSave = this.onSave.bind(this);
         this.onDelete = this.onDelete.bind(this);
+        this.onToggleActive = this.onToggleActive.bind(this);
     }
 
     componentWillUnmount() {
@@ -87,6 +90,17 @@ class Clientes extends Component {
             this.props.deleteClient(this.props.clients[this.state.activeIdx].uid);
             this.setState({ activeIdx: -1, edit: false });
         }
+    }
+
+    onToggleActive() {
+        const { currUid, currIsActive } = this.state;
+        if (currIsActive) {
+            if (!window.confirm('Deactivating this client will close all their open projects. Are you sure?')) return;
+            this.props.deactivateClient(currUid);
+        } else {
+            this.props.updateClient(currUid, { isActive: true });
+        }
+        this.setState({ currIsActive: !currIsActive });
     }
 
     onSave() {
@@ -209,6 +223,7 @@ class Clientes extends Component {
             currWebsite: client.website || '',
             currYearSince: client.yearSince || '',
             currIva: client.iva !== undefined ? client.iva : true,
+            currIsActive: client.isActive !== false,
         });
     };
 
@@ -561,12 +576,14 @@ class Clientes extends Component {
     render() {
         const { edit, currDenomination, currAddress, currAddress2, currRfc, currContact,
             currEmail, currPhone, currWebsite, currYearSince, currIva, currCity, currState,
-            currCountry, currZipCode, searchQuery, activeIdx } = this.state;
+            currCountry, currZipCode, searchQuery, activeIdx, showInactive, currIsActive } = this.state;
 
         const allClients = this.props.clients || [];
         const filteredClients = allClients.filter(c =>
             (c.denomination || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
+        const activeClients = filteredClients.filter(c => c.isActive !== false);
+        const inactiveClients = filteredClients.filter(c => c.isActive === false);
 
         return (
             <AuthUserContext.Consumer>
@@ -593,7 +610,7 @@ class Clientes extends Component {
                                         </Button>
                                     </div>
                                     <div className="client-list-scroll">
-                                        {filteredClients.map(client => {
+                                        {activeClients.map(client => {
                                             const originalIdx = allClients.findIndex(c => c.uid === client.uid);
                                             return (
                                                 <div
@@ -614,6 +631,39 @@ class Clientes extends Component {
                                                 </div>
                                             );
                                         })}
+                                        {inactiveClients.length > 0 && (
+                                            <div className="client-list-inactive-section">
+                                                <div
+                                                    className="client-list-section-header"
+                                                    onClick={() => this.setState({ showInactive: !showInactive })}
+                                                >
+                                                    Former clients
+                                                    <span className="client-projects-count">{inactiveClients.length}</span>
+                                                    <span className="client-projects-chevron">{showInactive ? '▲' : '▼'}</span>
+                                                </div>
+                                                {showInactive && inactiveClients.map(client => {
+                                                    const originalIdx = allClients.findIndex(c => c.uid === client.uid);
+                                                    return (
+                                                        <div
+                                                            key={client.uid}
+                                                            className={`client-list-item inactive${activeIdx === originalIdx ? ' active' : ''}`}
+                                                            onClick={() => this.handleSelectClient(client, originalIdx)}
+                                                        >
+                                                            <div className="client-list-avatar inactive-avatar">
+                                                                {(client.denomination || '?')[0].toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <div className="client-list-name">{client.denomination}</div>
+                                                                {client.city
+                                                                    ? <div className="client-list-secondary">{client.city}</div>
+                                                                    : null
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -640,7 +690,10 @@ class Clientes extends Component {
                                                                 size="lg"
                                                                 placeholder="Business name"
                                                               />
-                                                            : <h2>{currDenomination}</h2>
+                                                            : <>
+                                                                <h2>{currDenomination}</h2>
+                                                                {!currIsActive && <span className="client-inactive-badge">Former client</span>}
+                                                              </>
                                                         }
                                                     </div>
                                                 </div>
@@ -713,7 +766,15 @@ class Clientes extends Component {
                                                                 <button className="client-projects-add-btn client-btn-secondary" onClick={() => this.onCancelEdit()}>Cancel</button>
                                                                 <button className="client-projects-add-btn" onClick={this.onSave}>Save</button>
                                                               </>
-                                                            : <button className="client-projects-add-btn" onClick={this.onEdit}>Edit</button>
+                                                            : <>
+                                                                <button
+                                                                    className="client-projects-add-btn client-btn-secondary"
+                                                                    onClick={this.onToggleActive}
+                                                                >
+                                                                    {currIsActive ? 'Deactivate' : 'Reactivate'}
+                                                                </button>
+                                                                <button className="client-projects-add-btn" onClick={this.onEdit}>Edit</button>
+                                                              </>
                                                         }
                                                     </div>
                                                 </div>
@@ -745,6 +806,7 @@ Clientes.propTypes = {
     clearAlert: PropTypes.func,
     addClient: PropTypes.func,
     updateClient: PropTypes.func,
+    deactivateClient: PropTypes.func,
     deleteClient: PropTypes.func,
     addProject: PropTypes.func,
     subscribeToAllProjectsByClient: PropTypes.func
@@ -756,6 +818,7 @@ export default connect(mapStateToProps, {
     addAlert,
     addClient,
     updateClient,
+    deactivateClient,
     deleteClient,
     addProject,
     subscribeToAllProjectsByClient
