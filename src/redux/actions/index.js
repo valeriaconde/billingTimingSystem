@@ -491,6 +491,24 @@ export function subscribeToExpenses(uid, byAttorney) {
     }
 }
 
+export function subscribeToAllExpenses() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        const unsubscribe = onSnapshot(
+            collection(db, EXPENSES),
+            (snapshot) => {
+                const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
 export function subscribeToTimes(uid, byAttorney) {
     return function(dispatch) {
         dispatch({ type: LOADING_TIMES, payload: {} });
