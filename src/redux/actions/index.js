@@ -22,10 +22,14 @@ import {
     deleteField,
     query,
     where,
+    orderBy,
+    startAt,
+    endAt,
     increment,
     onSnapshot,
     serverTimestamp,
     writeBatch,
+    Timestamp,
 } from 'firebase/firestore';
 
 const withCreateTimestamps = (payload) => ({
@@ -496,6 +500,30 @@ export function subscribeToAllExpenses() {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
         const unsubscribe = onSnapshot(
             collection(db, EXPENSES),
+            (snapshot) => {
+                const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: EXPENSES_LOADED, payload: expensesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToExpensesByDateRange(startDate, endDate) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_EXPENSES, payload: {} });
+        const q = query(
+            collection(db, EXPENSES),
+            orderBy('expenseDate', 'desc'),
+            startAt(Timestamp.fromDate(endDate)),
+            endAt(Timestamp.fromDate(startDate))
+        );
+        const unsubscribe = onSnapshot(
+            q,
             (snapshot) => {
                 const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
                 dispatch({ type: EXPENSES_LOADED, payload: expensesList });

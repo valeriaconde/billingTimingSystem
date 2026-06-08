@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Alert } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { updateExpense, deleteExpense, getProjectsMapping, getUsers, addProject, getProjectByClient, addExpense, subscribeToExpenses, subscribeToAllExpenses } from "../redux/actions/index";
+import { updateExpense, deleteExpense, getProjectsMapping, getUsers, addProject, getProjectByClient, addExpense, subscribeToExpenses, subscribeToAllExpenses, subscribeToExpensesByDateRange } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -96,11 +96,26 @@ class gastos extends Component {
         const authUser = this.context;
         if (authUser) {
             if (authUser.roles?.[ROLES.ADMIN]) {
-                this.unsubscribeExpenses = this.props.subscribeToAllExpenses();
+                const [startDate, endDate] = this.dateRange();
+                this.unsubscribeExpenses = this.props.subscribeToExpensesByDateRange(startDate, endDate);
                 if (!this.props.users) this.props.getUsers();
             } else {
                 this.unsubscribeExpenses = this.props.subscribeToExpenses(authUser.uid, true);
             }
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        const authUser = this.context;
+        if (!authUser?.roles?.[ROLES.ADMIN]) return;
+
+        const { filterFromMonth, filterFromYear, filterToMonth, filterToYear } = this.state;
+        const { filterFromMonth: pFM, filterFromYear: pFY, filterToMonth: pTM, filterToYear: pTY } = prevState;
+
+        if (filterFromMonth !== pFM || filterFromYear !== pFY || filterToMonth !== pTM || filterToYear !== pTY) {
+            if (this.unsubscribeExpenses) this.unsubscribeExpenses();
+            const [startDate, endDate] = this.dateRange();
+            this.unsubscribeExpenses = this.props.subscribeToExpensesByDateRange(startDate, endDate);
         }
     }
 
@@ -623,6 +638,7 @@ gastos.propTypes = {
     addExpense: PropTypes.func,
     subscribeToExpenses: PropTypes.func,
     subscribeToAllExpenses: PropTypes.func,
+    subscribeToExpensesByDateRange: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     updateExpense: PropTypes.func,
     deleteExpense: PropTypes.func
@@ -636,6 +652,7 @@ export default connect(mapStateToProps, {
     addExpense,
     subscribeToExpenses,
     subscribeToAllExpenses,
+    subscribeToExpensesByDateRange,
     getProjectsMapping,
     updateExpense,
     deleteExpense
