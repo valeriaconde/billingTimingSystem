@@ -268,9 +268,11 @@ class gastos extends Component {
     // Returns [startDate, endDate] normalised so start <= end regardless of user input
     dateRange() {
         const { filterFromMonth, filterFromYear, filterToMonth, filterToYear } = this.state;
-        const a = new Date(filterFromYear, filterFromMonth, 1);
-        const b = new Date(filterToYear, filterToMonth + 1, 0);
-        return a <= b ? [a, b] : [new Date(filterToYear, filterToMonth, 1), new Date(filterFromYear, filterFromMonth + 1, 0)];
+        const a = new Date(filterFromYear, filterFromMonth, 1, 0, 0, 0, 0);
+        const b = new Date(filterToYear, filterToMonth + 1, 0, 23, 59, 59, 999);
+        return a <= b
+            ? [a, b]
+            : [new Date(filterToYear, filterToMonth, 1, 0, 0, 0, 0), new Date(filterFromYear, filterFromMonth + 1, 0, 23, 59, 59, 999)];
     }
 
     filteredExpenses() {
