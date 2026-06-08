@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { Button, Modal, Form, Row, Col, Alert } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
-import { updateExpense, deleteExpense, getProjectsMapping, getUsers, addProject, getProjectByClient, addExpense, subscribeToExpenses, subscribeToAllExpenses, subscribeToExpensesByDateRange } from "../redux/actions/index";
+import { updateExpense, deleteExpense, getProjectsMapping, getUsers, addProject, getProjectByClient, addExpense, subscribeToExpenses, subscribeToAllExpenses, subscribeToExpensesByDateRange, subscribeToExpensesByAttorneyAndDateRange } from "../redux/actions/index";
 import BarLoader from "react-spinners/BarLoader";
 import { connect } from "react-redux";
 import DateFnsUtils from '@date-io/date-fns';
@@ -95,19 +95,19 @@ class gastos extends Component {
     componentDidMount() {
         const authUser = this.context;
         if (authUser) {
+            const [startDate, endDate] = this.dateRange();
             if (authUser.roles?.[ROLES.ADMIN]) {
-                const [startDate, endDate] = this.dateRange();
                 this.unsubscribeExpenses = this.props.subscribeToExpensesByDateRange(startDate, endDate);
                 if (!this.props.users) this.props.getUsers();
             } else {
-                this.unsubscribeExpenses = this.props.subscribeToExpenses(authUser.uid, true);
+                this.unsubscribeExpenses = this.props.subscribeToExpensesByAttorneyAndDateRange(authUser.uid, startDate, endDate);
             }
         }
     }
 
     componentDidUpdate(prevProps, prevState) {
         const authUser = this.context;
-        if (!authUser?.roles?.[ROLES.ADMIN]) return;
+        if (!authUser) return;
 
         const { filterFromMonth, filterFromYear, filterToMonth, filterToYear } = this.state;
         const { filterFromMonth: pFM, filterFromYear: pFY, filterToMonth: pTM, filterToYear: pTY } = prevState;
@@ -115,7 +115,11 @@ class gastos extends Component {
         if (filterFromMonth !== pFM || filterFromYear !== pFY || filterToMonth !== pTM || filterToYear !== pTY) {
             if (this.unsubscribeExpenses) this.unsubscribeExpenses();
             const [startDate, endDate] = this.dateRange();
-            this.unsubscribeExpenses = this.props.subscribeToExpensesByDateRange(startDate, endDate);
+            if (authUser.roles?.[ROLES.ADMIN]) {
+                this.unsubscribeExpenses = this.props.subscribeToExpensesByDateRange(startDate, endDate);
+            } else {
+                this.unsubscribeExpenses = this.props.subscribeToExpensesByAttorneyAndDateRange(authUser.uid, startDate, endDate);
+            }
         }
     }
 
@@ -639,6 +643,7 @@ gastos.propTypes = {
     subscribeToExpenses: PropTypes.func,
     subscribeToAllExpenses: PropTypes.func,
     subscribeToExpensesByDateRange: PropTypes.func,
+    subscribeToExpensesByAttorneyAndDateRange: PropTypes.func,
     getProjectsMapping: PropTypes.func,
     updateExpense: PropTypes.func,
     deleteExpense: PropTypes.func
@@ -653,6 +658,7 @@ export default connect(mapStateToProps, {
     subscribeToExpenses,
     subscribeToAllExpenses,
     subscribeToExpensesByDateRange,
+    subscribeToExpensesByAttorneyAndDateRange,
     getProjectsMapping,
     updateExpense,
     deleteExpense
