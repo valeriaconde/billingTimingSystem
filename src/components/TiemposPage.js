@@ -78,6 +78,12 @@ const formatDate = date =>
 const formatTime = (hours, minutes) =>
     `${hours}:${String(minutes).padStart(2, '0')} hrs`;
 
+const formatTotalHours = totalHours => {
+    const h = Math.floor(totalHours);
+    const m = Math.round((totalHours - h) * 60);
+    return m === 0 ? `${h}h` : `${h}h ${m}min`;
+};
+
 const selectStyle = { width: 'auto', display: 'inline-block', fontSize: 14 };
 
 class tiemposPage extends Component {
@@ -542,17 +548,19 @@ class tiemposPage extends Component {
                             {this.renderModal(authUser, !isAdmin)}
 
                             <div className="d-flex justify-content-between align-items-center topMargin" style={{ marginBottom: 20 }}>
-                                <h5 className="blueLetters mb-0">{isAdmin ? 'Timing' : 'My Timing'}</h5>
+                                <h5 className="blueLetters mb-0">{isAdmin ? 'Hours' : 'My Hours'}</h5>
                                 <Button className="legem-primary" onClick={this.handleShow}>+ Register time</Button>
                             </div>
 
                             {this.renderFilterBar(isAdmin)}
 
-                            {isAdmin && filtered.length > 0 && (
+                            {filtered.length > 0 && (
                                 <div style={{ marginBottom: 10, fontSize: 14, color: '#555' }}>
-                                    Total: <strong style={{ color: 'rgb(25, 57, 145)' }}>{totalHours.toFixed(2)} hrs</strong>
-                                    &nbsp;&middot;&nbsp;
-                                    <strong style={{ color: 'rgb(25, 57, 145)' }}>${totalAmount.toFixed(2)}</strong>
+                                    Total: <strong style={{ color: 'rgb(25, 57, 145)' }}>{formatTotalHours(totalHours)}</strong>
+                                    {isAdmin && <>
+                                        &nbsp;&middot;&nbsp;
+                                        <strong style={{ color: 'rgb(25, 57, 145)' }}>${totalAmount.toFixed(2)}</strong>
+                                    </>}
                                 </div>
                             )}
 

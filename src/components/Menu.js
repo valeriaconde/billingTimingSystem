@@ -20,7 +20,7 @@ class Menu extends Component {
                             <Nav.Link href="/clients" hidden={!authUser?.roles[ROLES.ADMIN]}>Clients</Nav.Link>
                             <Nav.Link href="/projects" hidden={!authUser?.roles[ROLES.ADMIN]}>Projects</Nav.Link>
                             <Nav.Link href="/expenses">Expenses</Nav.Link>
-                            <Nav.Link href="/timing">Timing</Nav.Link>
+                            <Nav.Link href="/timing">Hours</Nav.Link>
                             <Nav.Link href="/billing" hidden={!authUser?.roles[ROLES.ADMIN]}>Billing</Nav.Link>
                             {/* <Nav.Link href="/reports" hidden={!authUser?.roles[ROLES.ADMIN]}>Reports</Nav.Link> */}
                         </Nav>
