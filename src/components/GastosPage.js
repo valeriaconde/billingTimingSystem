@@ -189,6 +189,8 @@ class gastos extends Component {
         if (!this.isFloat(expenseTotal)) return;
         if (selectedDate == null || trimmedExpenseTitle === '' || selectedClientModal == null || selectedProjectModal == null || selectedExpenseModal == null) return;
 
+        if (selectedDate > new Date() && !window.confirm('The selected date is in the future. Are you sure you want to register an expense for a future date?')) return;
+
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
 
         const payload = {
