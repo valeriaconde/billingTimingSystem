@@ -240,6 +240,10 @@ class gastos extends Component {
     }
 
     editExpense = expense => {
+        const attorney = (this.props.users || []).find(u => u.uid === expense.expenseAttorney);
+        const selectedAttorneyModal = expense.expenseAttorney
+            ? { value: expense.expenseAttorney, label: attorney?.name || expense.expenseAttorney }
+            : null;
         this.setState({
             selectedClientModal: { value: expense.expenseClient, label: this.props.clientsNames[expense.expenseClient], uid: expense.expenseClient },
             selectedProjectModal: { value: expense.expenseProject, label: this.props.projectsNames[expense.expenseProject], uid: expense.expenseProject },
@@ -247,6 +251,7 @@ class gastos extends Component {
             expenseTotal: expense.expenseTotal,
             selectedDate: toDate(expense.expenseDate),
             selectedExpenseModal: expenseClasses.find(obj => obj.value === expense.expenseClass),
+            selectedAttorneyModal,
             showModal: true,
             isModalAdd: false,
             selectedExpenseUid: expense.uid
