@@ -530,7 +530,7 @@ export function subscribeToExpensesByAttorneyAndDateRange(uid, startDate, endDat
                 dispatch({ type: EXPENSES_LOADED, payload: expensesList });
             },
             (error) => {
-                const alert = { type: AlertType.Error, message: error };
+                const alert = { type: AlertType.Error, message: error.message || String(error) };
                 dispatch({ type: ADD_ALERT, payload: alert });
             }
         );
@@ -554,7 +554,56 @@ export function subscribeToExpensesByDateRange(startDate, endDate) {
                 dispatch({ type: EXPENSES_LOADED, payload: expensesList });
             },
             (error) => {
-                const alert = { type: AlertType.Error, message: error };
+                const alert = { type: AlertType.Error, message: error.message || String(error) };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToTimesByDateRange(startDate, endDate) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        const q = query(
+            collection(db, TIMES),
+            orderBy('timeDate', 'desc'),
+            startAt(Timestamp.fromDate(endDate)),
+            endAt(Timestamp.fromDate(startDate))
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error.message || String(error) };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToTimesByAttorneyAndDateRange(uid, startDate, endDate) {
+    return function(dispatch) {
+        dispatch({ type: LOADING_TIMES, payload: {} });
+        const q = query(
+            collection(db, TIMES),
+            where('timeAttorney', '==', uid),
+            orderBy('timeDate', 'desc'),
+            startAt(Timestamp.fromDate(endDate)),
+            endAt(Timestamp.fromDate(startDate))
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: TIMES_LOADED, payload: timesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error.message || String(error) };
                 dispatch({ type: ADD_ALERT, payload: alert });
             }
         );
