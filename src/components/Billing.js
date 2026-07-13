@@ -246,9 +246,11 @@ class billing extends Component {
             this.setState({ ...INITIAL_STATE });
         } catch(error) {
             if (error.code === 'ENTRY_MARK_FAILED') {
-                // The invoice was already created — reusing this stale selection
-                // would risk re-marking entries under a second invoice. Force a
-                // fresh report so only genuinely unbilled entries are picked up.
+                // The invoice was already created but some entries failed to mark.
+                // The action's error alert already tells the admin to use "Resume
+                // Marking" on the Invoices page for this exact invoice — generating
+                // a new invoice from this stale selection would bill the same
+                // entries twice, so just clear this form rather than retrying here.
                 this.props.resetReport();
                 this.setState({ ...INITIAL_STATE });
             } else {

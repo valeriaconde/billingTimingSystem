@@ -816,12 +816,23 @@ function batchProcessing(collectionName, fieldPath, opStr, collection_arr) {
     });
 }
 
+let reportRequestCounter = 0;
+
+// Every getReportData/resetReport call mints or invalidates a token in
+// state.reportRequestToken. A request only applies its results if its own
+// token is still the current one by the time it resolves — otherwise the
+// selection changed (or was reset) while it was in flight, and its data no
+// longer corresponds to what's on screen, so it's silently dropped.
 export function getReportData(uids) {
-    return async dispatch => {
-        dispatch({ type: LOADING_REPORT, payload: {} });
+    return async (dispatch, getState) => {
+        const token = ++reportRequestCounter;
+        dispatch({ type: LOADING_REPORT, payload: { token } });
+
+        const isCurrent = () => getState().reportRequestToken === token;
 
         const invRef = doc(db, MISC, INVOICE);
         const invDoc = await getDoc(invRef);
+        if (!isCurrent()) return;
         if (!invDoc.exists()) {
             const alert = { type: AlertType.Error, message: "Invoice number not found" };
             dispatch({ type: ADD_ALERT, payload: alert });
@@ -835,11 +846,13 @@ export function getReportData(uids) {
                 batchProcessing(EXPENSES, "expenseProject", 'in', uids),
                 batchProcessing(TIMES, "timeProject", 'in', uids),
             ]);
+            if (!isCurrent()) return;
             dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
             dispatch({ type: EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true) });
             dispatch({ type: TIMES_LOADED, payload: timesList.filter(t => t.isBilled !== true) });
             dispatch({ type: REPORT_LOADED, payload: {} });
         } catch(error) {
+            if (!isCurrent()) return;
             const alert = { type: AlertType.Error, message: error };
             dispatch({ type: ADD_ALERT, payload: alert });
         }
@@ -907,6 +920,7 @@ export function finalizeInvoice(payload) {
                     timeUids,
                     expenseUids,
                     totalAmount,
+                    entriesComplete: false,
                     sentAt: null,
                     paidAt: null,
                     createdAt: serverTimestamp(),
@@ -922,29 +936,51 @@ export function finalizeInvoice(payload) {
 
         dispatch({ type: INVOICE_LOADED, payload: { current: invoiceNumber + 1 } });
 
-        // The invoice record now exists and the number is spent no matter what
-        // happens next, so entry-marking is retried in place rather than ever
-        // re-running the reservation above (which would mint a duplicate invoice).
+        // The invoice record now exists (entriesComplete: false) and the number is
+        // spent no matter what happens next. Entry-marking is delegated to the same
+        // resumable operation used for manual retries, so a failure here and a
+        // later manual "Resume Marking" click behave identically — never re-running
+        // the reservation above (which would mint a duplicate invoice) and never
+        // routing these entries into a second invoice.
         try {
-            await markEntriesBilled(invoiceRef.id, timeUids, expenseUids);
+            await dispatch(resumeInvoiceEntryMarking(invoiceRef.id, timeUids, expenseUids, invoiceNumber));
         } catch(error) {
-            const alert = {
-                type: AlertType.Error,
-                message: `Invoice #${invoiceNumber} was created, but some time/expense entries could not be marked as billed (${error.message}). Do not re-finalize — regenerate the report for this client so the remaining unbilled entries can be picked up on a new invoice.`,
-            };
-            dispatch({ type: ADD_ALERT, payload: alert });
-            const partialError = new Error(alert.message);
+            const partialError = new Error(error.message);
             partialError.code = 'ENTRY_MARK_FAILED';
             partialError.invoiceUid = invoiceRef.id;
             partialError.invoiceNumber = invoiceNumber;
             throw partialError;
         }
 
-        const alert = { type: AlertType.Success, message: `Invoice #${invoiceNumber} finalized.` };
-        dispatch({ type: ADD_ALERT, payload: alert });
-        setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
-
         return { invoiceUid: invoiceRef.id, invoiceNumber };
+    }
+}
+
+// Marks (or resumes marking) an existing invoice's entries as billed, and flips
+// the invoice to entriesComplete: true once all of them succeed. Safe to call
+// repeatedly against the same invoiceUid — never creates a new invoice, so it's
+// the only correct way to recover from a partial finalize. Generating a fresh
+// report/invoice for the same projects instead would re-bill the same entries
+// under a second invoiceUid while the original invoice's stored timeUids/
+// expenseUids still claim them, double-representing (and double-charging for)
+// the same work across two invoices.
+export function resumeInvoiceEntryMarking(invoiceUid, timeUids, expenseUids, invoiceNumber) {
+    return async function(dispatch) {
+        try {
+            await markEntriesBilled(invoiceUid, timeUids, expenseUids);
+            await updateDoc(doc(db, INVOICES, invoiceUid), { entriesComplete: true, updatedAt: serverTimestamp() });
+
+            const alert = { type: AlertType.Success, message: `Invoice #${invoiceNumber} entries fully marked as billed.` };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        } catch(error) {
+            const alert = {
+                type: AlertType.Error,
+                message: `Invoice #${invoiceNumber} is incomplete — some time/expense entries could not be marked as billed (${error.message}). Use "Resume Marking" on this invoice on the Invoices page; do not finalize a new invoice for these projects, or the same entries will be billed twice.`,
+            };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            throw error;
+        }
     }
 }
 

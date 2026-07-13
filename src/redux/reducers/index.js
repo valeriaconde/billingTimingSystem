@@ -39,6 +39,7 @@ const initialState = {
     loadingProjectsMapping: false,
     loadingReport: false,
     reportReady: false,
+    reportRequestToken: null,
     invoice: 0,
     invoiceRecords: [],
     loadingInvoices: false,
@@ -98,12 +99,16 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingReport: true,
             reportReady: false,
+            reportRequestToken: action.payload.token,
         });
     } else if(action.type === RESET_REPORT) {
         return Object.assign({}, state, {
             reportReady: false,
             times: [],
             expenses: [],
+            // Invalidate any in-flight getReportData call — its token can never
+            // equal null (tokens start at 1), so its late results get dropped.
+            reportRequestToken: null,
         });
     } else if(action.type === LOADING_PROJECTS_MAPPING) {
         return Object.assign({}, state, {

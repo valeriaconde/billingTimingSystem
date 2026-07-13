@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Button, Badge } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
-import { subscribeToInvoices, markInvoiceSent, markInvoicePaid } from '../redux/actions/index';
+import { subscribeToInvoices, markInvoiceSent, markInvoicePaid, resumeInvoiceEntryMarking } from '../redux/actions/index';
 import BarLoader from 'react-spinners/BarLoader';
 import TableContainer from '@material-ui/core/TableContainer';
 import Table from '@material-ui/core/Table';
@@ -24,6 +24,8 @@ const toDateString = (ts) => {
 };
 
 class InvoicesPage extends Component {
+    state = { resumingUid: null };
+
     componentDidMount() {
         this.unsubscribe = this.props.subscribeToInvoices();
     }
@@ -36,6 +38,17 @@ class InvoicesPage extends Component {
         if (record.paidAt) return { label: 'Paid', variant: 'success' };
         if (record.sentAt) return { label: 'Sent', variant: 'primary' };
         return { label: 'Pending', variant: 'secondary' };
+    }
+
+    handleResume = async (record) => {
+        this.setState({ resumingUid: record.uid });
+        try {
+            await this.props.resumeInvoiceEntryMarking(record.uid, record.timeUids || [], record.expenseUids || [], record.invoiceNumber);
+        } catch(error) {
+            // Alert already dispatched by the action; nothing else to do here.
+        } finally {
+            this.setState({ resumingUid: null });
+        }
     }
 
     render() {
@@ -66,6 +79,8 @@ class InvoicesPage extends Component {
                                     <TableBody>
                                         {this.props.invoiceRecords.map(record => {
                                             const status = this.getStatus(record);
+                                            const incomplete = record.entriesComplete === false;
+                                            const resuming = this.state.resumingUid === record.uid;
                                             return (
                                                 <TableRow key={record.uid}>
                                                     <TableCell>{record.invoiceNumber}</TableCell>
@@ -75,21 +90,33 @@ class InvoicesPage extends Component {
                                                     <TableCell>${record.totalAmount}</TableCell>
                                                     <TableCell>
                                                         <Badge variant={status.variant}>{status.label}</Badge>
+                                                        {incomplete && (
+                                                            <Badge variant="danger" style={{ marginLeft: '6px' }}>Incomplete</Badge>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell>{record.sentAt ? toDateString(record.sentAt) : '—'}</TableCell>
                                                     <TableCell>{record.paidAt ? toDateString(record.paidAt) : '—'}</TableCell>
                                                     <TableCell>
-                                                        {!record.sentAt && (
-                                                            <Button size="sm" variant="outline-primary" style={{ marginRight: '6px' }}
-                                                                onClick={() => this.props.markInvoiceSent(record.uid)}>
-                                                                Mark Sent
+                                                        {incomplete ? (
+                                                            <Button size="sm" variant="danger" disabled={resuming}
+                                                                onClick={() => this.handleResume(record)}>
+                                                                {resuming ? 'Resuming…' : 'Resume Marking'}
                                                             </Button>
-                                                        )}
-                                                        {!record.paidAt && (
-                                                            <Button size="sm" variant="outline-success"
-                                                                onClick={() => this.props.markInvoicePaid(record.uid)}>
-                                                                Mark Paid
-                                                            </Button>
+                                                        ) : (
+                                                            <>
+                                                                {!record.sentAt && (
+                                                                    <Button size="sm" variant="outline-primary" style={{ marginRight: '6px' }}
+                                                                        onClick={() => this.props.markInvoiceSent(record.uid)}>
+                                                                        Mark Sent
+                                                                    </Button>
+                                                                )}
+                                                                {!record.paidAt && (
+                                                                    <Button size="sm" variant="outline-success"
+                                                                        onClick={() => this.props.markInvoicePaid(record.uid)}>
+                                                                        Mark Paid
+                                                                    </Button>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </TableCell>
                                                 </TableRow>
@@ -112,6 +139,7 @@ InvoicesPage.propTypes = {
     subscribeToInvoices: PropTypes.func,
     markInvoiceSent: PropTypes.func,
     markInvoicePaid: PropTypes.func,
+    resumeInvoiceEntryMarking: PropTypes.func,
 };
 
 const condition = authUser => !!authUser;
@@ -119,4 +147,5 @@ export default connect(mapStateToProps, {
     subscribeToInvoices,
     markInvoiceSent,
     markInvoicePaid,
+    resumeInvoiceEntryMarking,
 })(withAuthorization(condition)(InvoicesPage));

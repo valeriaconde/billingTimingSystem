@@ -116,6 +116,11 @@ class UnbilledProjectsDashboard extends Component {
             (inv.projectUids || []).forEach(uid => invoicedProjectUids.add(uid));
         });
 
+        // Fixed-fee projects are billed once, then closed by the admin — once
+        // invoiced they drop out of subscribeToOpenFixedFeeProjects (isOpen filter)
+        // and won't reappear here. They also never carry additional expenses in
+        // practice, so the "Unbilled Expenses" stat on these cards is just a
+        // defensive fallback, not something expected to show a nonzero value.
         (this.props.fixedFeeProjects || []).forEach(p => {
             if (invoicedProjectUids.has(p.uid)) return;
             const group = ensureGroup(p.uid);
