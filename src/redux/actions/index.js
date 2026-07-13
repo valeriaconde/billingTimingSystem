@@ -6,7 +6,8 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,
     TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
     PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
     LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED, LOADING_INVOICES, INVOICES_LOADED,
-    LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED } from "../../constants/action-types";
+    LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED,
+    LOADING_FIXED_FEE_PROJECTS, FIXED_FEE_PROJECTS_LOADED } from "../../constants/action-types";
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX, INVOICES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -657,6 +658,29 @@ export function subscribeToUnbilledExpenses() {
             (snapshot) => {
                 const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
                 dispatch({ type: UNBILLED_EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToOpenFixedFeeProjects() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_FIXED_FEE_PROJECTS, payload: {} });
+        const q = query(
+            collection(db, PROJECTS),
+            where("isOpen", "==", true),
+            where("projectFixedFee", "==", true)
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: FIXED_FEE_PROJECTS_LOADED, payload: projectsList });
             },
             (error) => {
                 const alert = { type: AlertType.Error, message: error };

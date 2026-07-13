@@ -267,8 +267,6 @@ class billing extends Component {
                     <div>
                         <h4 className="blueLetters topMargin leftMargin"> New notice </h4>
 
-                        <UnbilledProjectsDashboard />
-
                         {/* CHOOSE CLIENT */}
                         <Form className="leftMargin topMargin">
                             <Form.Group as={Row}>
@@ -312,6 +310,8 @@ class billing extends Component {
                                 </div>
                             }
                         </Form>
+
+                        <UnbilledProjectsDashboard />
                     </div>
                 }
             </AuthUserContext.Consumer>

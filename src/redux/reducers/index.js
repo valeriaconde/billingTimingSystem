@@ -5,7 +5,8 @@ import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME,
     PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
     LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED, LOADING_INVOICES, INVOICES_LOADED,
-    LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED } from "../../constants/action-types";
+    LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED,
+    LOADING_FIXED_FEE_PROJECTS, FIXED_FEE_PROJECTS_LOADED } from "../../constants/action-types";
 
 const toMillis = (d) => {
     if (!d) return 0;
@@ -45,6 +46,8 @@ const initialState = {
     loadingUnbilledTimes: false,
     unbilledExpenses: [],
     loadingUnbilledExpenses: false,
+    fixedFeeProjects: [],
+    loadingFixedFeeProjects: false,
     lastFetchedClients: null,
     lastFetchedUsers: null,
     lastFetchedProjectsNames: null,
@@ -318,6 +321,15 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             unbilledExpenses: action.payload,
             loadingUnbilledExpenses: false,
+        });
+    } else if(action.type === LOADING_FIXED_FEE_PROJECTS) {
+        return Object.assign({}, state, {
+            loadingFixedFeeProjects: true,
+        });
+    } else if(action.type === FIXED_FEE_PROJECTS_LOADED) {
+        return Object.assign({}, state, {
+            fixedFeeProjects: action.payload,
+            loadingFixedFeeProjects: false,
         });
     }
 

@@ -3,19 +3,33 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Row, Col } from 'react-bootstrap';
 import { toDate } from '../utils/dateUtils';
+import { subscribeToUnbilledTimes, subscribeToUnbilledExpenses, subscribeToOpenFixedFeeProjects, subscribeToInvoices } from '../redux/actions/index';
 import '../styles/UnbilledProjects.css';
 
 const mapStateToProps = state => {
     return {
         unbilledTimes: state.unbilledTimes,
         unbilledExpenses: state.unbilledExpenses,
+        fixedFeeProjects: state.fixedFeeProjects,
+        invoiceRecords: state.invoiceRecords,
         projectsNames: state.projectsNames,
         projectsByClient: state.projectsByClient,
         clientsNames: state.clientsNames,
         loadingUnbilledTimes: state.loadingUnbilledTimes,
         loadingUnbilledExpenses: state.loadingUnbilledExpenses,
+        loadingFixedFeeProjects: state.loadingFixedFeeProjects,
+        loadingInvoices: state.loadingInvoices,
     };
 };
+
+function mapDispatchToProps(dispatch) {
+    return {
+        getUnbilledTimes: () => dispatch(subscribeToUnbilledTimes()),
+        getUnbilledExpenses: () => dispatch(subscribeToUnbilledExpenses()),
+        getFixedFeeProjects: () => dispatch(subscribeToOpenFixedFeeProjects()),
+        getInvoices: () => dispatch(subscribeToInvoices()),
+    };
+}
 
 const daysAgo = (date) => {
     if (!date) return 0;
@@ -32,6 +46,20 @@ const formatHours = (totalHours, totalMinutes) => {
 const formatCurrency = (amount) => `$${Number(amount).toFixed(2)}`;
 
 class UnbilledProjectsDashboard extends Component {
+    componentDidMount() {
+        this.unsubscribeUnbilledTimes = this.props.getUnbilledTimes();
+        this.unsubscribeUnbilledExpenses = this.props.getUnbilledExpenses();
+        this.unsubscribeFixedFeeProjects = this.props.getFixedFeeProjects();
+        this.unsubscribeInvoices = this.props.getInvoices();
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeUnbilledTimes) this.unsubscribeUnbilledTimes();
+        if (this.unsubscribeUnbilledExpenses) this.unsubscribeUnbilledExpenses();
+        if (this.unsubscribeFixedFeeProjects) this.unsubscribeFixedFeeProjects();
+        if (this.unsubscribeInvoices) this.unsubscribeInvoices();
+    }
+
     buildProjectClientMap() {
         const map = {};
         Object.entries(this.props.projectsByClient || {}).forEach(([clientUid, projects]) => {
@@ -57,6 +85,9 @@ class UnbilledProjectsDashboard extends Component {
                     expenseAmount: 0,
                     entryCount: 0,
                     oldestDate: null,
+                    isFixedFee: false,
+                    fixedFeeAmount: null,
+                    neverInvoiced: false,
                 };
             }
             return groups[projectUid];
@@ -80,15 +111,32 @@ class UnbilledProjectsDashboard extends Component {
             if (d && (!group.oldestDate || d < group.oldestDate)) group.oldestDate = d;
         });
 
+        const invoicedProjectUids = new Set();
+        (this.props.invoiceRecords || []).forEach(inv => {
+            (inv.projectUids || []).forEach(uid => invoicedProjectUids.add(uid));
+        });
+
+        (this.props.fixedFeeProjects || []).forEach(p => {
+            if (invoicedProjectUids.has(p.uid)) return;
+            const group = ensureGroup(p.uid);
+            group.projectTitle = p.projectTitle || group.projectTitle;
+            group.clientName = this.props.clientsNames?.[p.projectClient] || group.clientName;
+            group.isFixedFee = true;
+            group.fixedFeeAmount = Number(p.projectFee) || 0;
+            group.neverInvoiced = true;
+        });
+
         return Object.values(groups).sort((a, b) => {
             const aTime = a.oldestDate ? a.oldestDate.getTime() : 0;
             const bTime = b.oldestDate ? b.oldestDate.getTime() : 0;
-            return aTime - bTime;
+            if (aTime !== bTime) return aTime - bTime;
+            return a.projectTitle.localeCompare(b.projectTitle);
         });
     }
 
     render() {
-        if (this.props.loadingUnbilledTimes || this.props.loadingUnbilledExpenses) {
+        if (this.props.loadingUnbilledTimes || this.props.loadingUnbilledExpenses
+            || this.props.loadingFixedFeeProjects || this.props.loadingInvoices) {
             return null;
         }
 
@@ -102,7 +150,7 @@ class UnbilledProjectsDashboard extends Component {
                 </div>
 
                 {groups.length === 0 ? (
-                    <div className="ud-empty">All caught up — no pending hours or expenses.</div>
+                    <div className="ud-empty">All caught up — no pending hours, expenses, or fixed fees.</div>
                 ) : (
                     <Row>
                         {groups.map(group => (
@@ -111,25 +159,36 @@ class UnbilledProjectsDashboard extends Component {
                                     <div className="ud-card-client">{group.clientName}</div>
                                     <div className="ud-card-project">{group.projectTitle}</div>
                                     <div className="ud-card-stats">
-                                        <div className="ud-card-stat">
-                                            <div className="ud-card-stat-label">Hours</div>
-                                            <div className="ud-card-stat-value">{formatHours(group.totalHours, group.totalMinutes)}</div>
-                                        </div>
-                                        <div className="ud-card-stat">
-                                            <div className="ud-card-stat-label">Unbilled Fees</div>
-                                            <div className="ud-card-stat-value">{formatCurrency(group.timeAmount)}</div>
-                                        </div>
-                                        <div className="ud-card-stat">
-                                            <div className="ud-card-stat-label">Unbilled Expenses</div>
-                                            <div className="ud-card-stat-value">{formatCurrency(group.expenseAmount)}</div>
-                                        </div>
+                                        {group.isFixedFee ? (
+                                            <div className="ud-card-stat">
+                                                <div className="ud-card-stat-label">Fixed Fee</div>
+                                                <div className="ud-card-stat-value">{formatCurrency(group.fixedFeeAmount)}</div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="ud-card-stat">
+                                                    <div className="ud-card-stat-label">Hours</div>
+                                                    <div className="ud-card-stat-value">{formatHours(group.totalHours, group.totalMinutes)}</div>
+                                                </div>
+                                                <div className="ud-card-stat">
+                                                    <div className="ud-card-stat-label">Unbilled Fees</div>
+                                                    <div className="ud-card-stat-value">{formatCurrency(group.timeAmount)}</div>
+                                                </div>
+                                                <div className="ud-card-stat">
+                                                    <div className="ud-card-stat-label">Unbilled Expenses</div>
+                                                    <div className="ud-card-stat-value">{formatCurrency(group.expenseAmount)}</div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                     <div className="ud-card-footer">
-                                        <span>{group.entryCount} {group.entryCount === 1 ? 'entry' : 'entries'}</span>
-                                        {group.oldestDate && (
+                                        <span>{group.entryCount} {group.entryCount === 1 ? 'item' : 'items'}</span>
+                                        {group.oldestDate ? (
                                             <span className={`ud-pending-badge ${daysAgo(group.oldestDate) > 30 ? 'ud-pending-old' : ''}`}>
-                                                Pending {daysAgo(group.oldestDate)}d
+                                                Pending {daysAgo(group.oldestDate)} {daysAgo(group.oldestDate) === 1 ? 'day' : 'days'}
                                             </span>
+                                        ) : group.neverInvoiced && (
+                                            <span className="ud-pending-badge ud-pending-old">Never invoiced</span>
                                         )}
                                     </div>
                                 </div>
@@ -145,11 +204,19 @@ class UnbilledProjectsDashboard extends Component {
 UnbilledProjectsDashboard.propTypes = {
     unbilledTimes: PropTypes.array,
     unbilledExpenses: PropTypes.array,
+    fixedFeeProjects: PropTypes.array,
+    invoiceRecords: PropTypes.array,
     projectsNames: PropTypes.object,
     projectsByClient: PropTypes.object,
     clientsNames: PropTypes.object,
     loadingUnbilledTimes: PropTypes.bool,
     loadingUnbilledExpenses: PropTypes.bool,
+    loadingFixedFeeProjects: PropTypes.bool,
+    loadingInvoices: PropTypes.bool,
+    getUnbilledTimes: PropTypes.func,
+    getUnbilledExpenses: PropTypes.func,
+    getFixedFeeProjects: PropTypes.func,
+    getInvoices: PropTypes.func,
 };
 
-export default connect(mapStateToProps)(UnbilledProjectsDashboard);
+export default connect(mapStateToProps, mapDispatchToProps)(UnbilledProjectsDashboard);
