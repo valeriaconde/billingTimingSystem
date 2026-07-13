@@ -7,7 +7,7 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
 import { getProjectByClient, addTime, addExpense, updateTime, deleteTime,
     updateExpense, deleteExpense, getProjectById, getProjectsMapping,
-    getUsers, getTimes, getExpenses, getReportData, finalizeInvoice
+    getUsers, getTimes, getExpenses, getReportData, finalizeInvoice, resetReport
 } from "../redux/actions/index";
 import FileSaver from "file-saver";
 import Docxtemplater from 'docxtemplater';
@@ -56,6 +56,7 @@ const INITIAL_STATE = {
     hourlyRate: 0,
     isModalAdd: true,
     showFinalizeConfirm: false,
+    finalizing: false,
 };
 
 class billing extends Component {
@@ -192,19 +193,17 @@ class billing extends Component {
     }
 
     handleChangeClient = selectedClient => {
-        this.setState({ selectedClient });
+        this.setState({ selectedClient, selectedProjects: [], showFinalizeConfirm: false });
         this.props.getProjectByClient(selectedClient.value);
+        this.props.resetReport();
     }
 
     handleChangeProject = option => {
-        this.setState(() => {
-            return {
-                selectedProjects: option
-            };
-        });
+        this.setState({ selectedProjects: option, showFinalizeConfirm: false });
+        this.props.resetReport();
     }
 
-    handleFinalize = () => {
+    handleFinalize = async () => {
         const { selectedClient, selectedProjects } = this.state;
         const projectUids = selectedProjects.map(p => p.value);
 
@@ -228,18 +227,35 @@ class billing extends Component {
         const tax = selectedClient.iva ? amount * 0.16 : 0;
         const grandTotal = amount + tax + totalExpenses;
 
-        this.props.finalizeInvoice({
-            invoiceNumber: this.props.invoice.current,
-            clientUid: selectedClient.value,
-            clientName: selectedClient.denomination,
-            projectUids,
-            projectNames: selectedProjects.map(p => p.projectTitle),
-            timeUids,
-            expenseUids,
-            totalAmount: parseFloat(grandTotal).toFixed(2),
-        });
+        this.setState({ finalizing: true });
 
-        this.setState({ ...INITIAL_STATE });
+        try {
+            await this.props.finalizeInvoice({
+                invoiceNumber: this.props.invoice.current,
+                clientUid: selectedClient.value,
+                clientName: selectedClient.denomination,
+                projectUids,
+                projectNames: selectedProjects.map(p => p.projectTitle),
+                timeUids,
+                expenseUids,
+                totalAmount: parseFloat(grandTotal).toFixed(2),
+            });
+
+            // Success: the invoice is complete, safe to clear the form.
+            this.props.resetReport();
+            this.setState({ ...INITIAL_STATE });
+        } catch(error) {
+            if (error.code === 'ENTRY_MARK_FAILED') {
+                // The invoice was already created — reusing this stale selection
+                // would risk re-marking entries under a second invoice. Force a
+                // fresh report so only genuinely unbilled entries are picked up.
+                this.props.resetReport();
+                this.setState({ ...INITIAL_STATE });
+            } else {
+                // Nothing was written — safe to let the admin just retry.
+                this.setState({ finalizing: false, showFinalizeConfirm: false });
+            }
+        }
     }
 
     render() {
@@ -301,8 +317,8 @@ class billing extends Component {
                                             {this.state.showFinalizeConfirm && (
                                                 <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #28a745', borderRadius: '4px', background: '#f8fff9' }}>
                                                     <p style={{ marginBottom: '8px' }}>This will mark all included hours and expenses as billed and cannot be undone. Download the invoice first if you have not already.</p>
-                                                    <Button variant="success" style={{ marginRight: '10px' }} onClick={this.handleFinalize}>Confirm — Finalize Invoice #{this.props.invoice.current}</Button>
-                                                    <Button variant="outline-secondary" onClick={() => this.setState({ showFinalizeConfirm: false })}>Cancel</Button>
+                                                    <Button variant="success" style={{ marginRight: '10px' }} disabled={this.state.finalizing} onClick={this.handleFinalize}>{this.state.finalizing ? 'Finalizing…' : `Confirm — Finalize Invoice #${this.props.invoice.current}`}</Button>
+                                                    <Button variant="outline-secondary" disabled={this.state.finalizing} onClick={() => this.setState({ showFinalizeConfirm: false })}>Cancel</Button>
                                                 </div>
                                             )}
                                         </div>
@@ -337,6 +353,7 @@ billing.propTypes = {
     getProjectByClient: PropTypes.func,
     getReportData: PropTypes.func,
     finalizeInvoice: PropTypes.func,
+    resetReport: PropTypes.func,
 };
 
 const condition = authUser => !!authUser;
@@ -355,4 +372,5 @@ export default connect(mapStateToProps, {
     getProjectByClient,
     getReportData,
     finalizeInvoice,
+    resetReport,
 })(withAuthorization(condition)(billing));

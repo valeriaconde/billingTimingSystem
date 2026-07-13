@@ -160,10 +160,16 @@ class UnbilledProjectsDashboard extends Component {
                                     <div className="ud-card-project">{group.projectTitle}</div>
                                     <div className="ud-card-stats">
                                         {group.isFixedFee ? (
-                                            <div className="ud-card-stat">
-                                                <div className="ud-card-stat-label">Fixed Fee</div>
-                                                <div className="ud-card-stat-value">{formatCurrency(group.fixedFeeAmount)}</div>
-                                            </div>
+                                            <>
+                                                <div className="ud-card-stat">
+                                                    <div className="ud-card-stat-label">Fixed Fee</div>
+                                                    <div className="ud-card-stat-value">{formatCurrency(group.fixedFeeAmount)}</div>
+                                                </div>
+                                                <div className="ud-card-stat">
+                                                    <div className="ud-card-stat-label">Unbilled Expenses</div>
+                                                    <div className="ud-card-stat-value">{formatCurrency(group.expenseAmount)}</div>
+                                                </div>
+                                            </>
                                         ) : (
                                             <>
                                                 <div className="ud-card-stat">

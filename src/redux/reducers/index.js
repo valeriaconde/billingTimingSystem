@@ -6,7 +6,7 @@ import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
     LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED, LOADING_INVOICES, INVOICES_LOADED,
     LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED,
-    LOADING_FIXED_FEE_PROJECTS, FIXED_FEE_PROJECTS_LOADED } from "../../constants/action-types";
+    LOADING_FIXED_FEE_PROJECTS, FIXED_FEE_PROJECTS_LOADED, RESET_REPORT } from "../../constants/action-types";
 
 const toMillis = (d) => {
     if (!d) return 0;
@@ -97,6 +97,13 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === LOADING_REPORT) {
         return Object.assign({}, state, {
             loadingReport: true,
+            reportReady: false,
+        });
+    } else if(action.type === RESET_REPORT) {
+        return Object.assign({}, state, {
+            reportReady: false,
+            times: [],
+            expenses: [],
         });
     } else if(action.type === LOADING_PROJECTS_MAPPING) {
         return Object.assign({}, state, {

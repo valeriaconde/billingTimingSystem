@@ -7,7 +7,7 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,
     PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
     LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED, LOADING_INVOICES, INVOICES_LOADED,
     LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED,
-    LOADING_FIXED_FEE_PROJECTS, FIXED_FEE_PROJECTS_LOADED } from "../../constants/action-types";
+    LOADING_FIXED_FEE_PROJECTS, FIXED_FEE_PROJECTS_LOADED, RESET_REPORT } from "../../constants/action-types";
 import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX, INVOICES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
@@ -31,6 +31,7 @@ import {
     onSnapshot,
     serverTimestamp,
     writeBatch,
+    runTransaction,
     Timestamp,
 } from 'firebase/firestore';
 
@@ -845,47 +846,105 @@ export function getReportData(uids) {
     }
 }
 
+export function resetReport() {
+    return { type: RESET_REPORT };
+}
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Marks time/expense entries as billed under an already-created invoice.
+// Safe to retry: setting isBilled/invoiceUid to the same values is a no-op.
+async function markEntriesBilled(invoiceUid, timeUids, expenseUids) {
+    const allUpdates = [
+        ...timeUids.map(uid => ({ col: TIMES, uid })),
+        ...expenseUids.map(uid => ({ col: EXPENSES, uid })),
+    ];
+
+    for (let i = 0; i < allUpdates.length; i += 400) {
+        const chunk = allUpdates.slice(i, i + 400);
+        let lastError = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const batch = writeBatch(db);
+                chunk.forEach(({ col, uid }) => {
+                    batch.update(doc(db, col, uid), { isBilled: true, invoiceUid, updatedAt: serverTimestamp() });
+                });
+                await batch.commit();
+                lastError = null;
+                break;
+            } catch(error) {
+                lastError = error;
+                if (attempt < 2) await delay(500 * (attempt + 1));
+            }
+        }
+        if (lastError) throw lastError;
+    }
+}
+
 export function finalizeInvoice(payload) {
     return async function(dispatch) {
         const { invoiceNumber, clientUid, clientName, projectUids, projectNames, timeUids, expenseUids, totalAmount } = payload;
+        const counterRef = doc(db, MISC, INVOICE);
+        const invoiceRef = doc(collection(db, INVOICES));
+
+        // Reserve the invoice number and create the invoice record atomically:
+        // either both happen, or neither does. This is what prevents a counter
+        // that advances without a matching invoice (or vice versa), and rejects
+        // the request outright if someone else already claimed this number.
         try {
-            const invoiceRef = await addDoc(collection(db, INVOICES), withCreateTimestamps({
-                invoiceNumber,
-                clientUid,
-                clientName,
-                projectUids,
-                projectNames,
-                timeUids,
-                expenseUids,
-                totalAmount,
-                sentAt: null,
-                paidAt: null,
-            }));
-
-            const allUpdates = [
-                ...timeUids.map(uid => ({ col: TIMES, uid })),
-                ...expenseUids.map(uid => ({ col: EXPENSES, uid })),
-            ];
-
-            for (let i = 0; i < allUpdates.length; i += 400) {
-                const chunk = allUpdates.slice(i, i + 400);
-                const batch = writeBatch(db);
-                chunk.forEach(({ col, uid }) => {
-                    batch.update(doc(db, col, uid), { isBilled: true, invoiceUid: invoiceRef.id, updatedAt: serverTimestamp() });
+            await runTransaction(db, async (transaction) => {
+                const counterSnap = await transaction.get(counterRef);
+                const currentNumber = counterSnap.exists() ? counterSnap.data().current : undefined;
+                if (currentNumber !== invoiceNumber) {
+                    throw new Error(`Invoice #${invoiceNumber} is out of date (counter is at #${currentNumber}) — someone may have just finalized another invoice. Please regenerate the report and try again.`);
+                }
+                transaction.set(invoiceRef, {
+                    invoiceNumber,
+                    clientUid,
+                    clientName,
+                    projectUids,
+                    projectNames,
+                    timeUids,
+                    expenseUids,
+                    totalAmount,
+                    sentAt: null,
+                    paidAt: null,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
                 });
-                await batch.commit();
-            }
-
-            await updateDoc(doc(db, MISC, INVOICE), { current: increment(1) });
-            dispatch({ type: INVOICE_LOADED, payload: { current: invoiceNumber + 1 } });
-
-            const alert = { type: AlertType.Success, message: `Invoice #${invoiceNumber} finalized.` };
-            dispatch({ type: ADD_ALERT, payload: alert });
-            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+                transaction.update(counterRef, { current: increment(1) });
+            });
         } catch(error) {
             const alert = { type: AlertType.Error, message: error.message };
             dispatch({ type: ADD_ALERT, payload: alert });
+            throw error;
         }
+
+        dispatch({ type: INVOICE_LOADED, payload: { current: invoiceNumber + 1 } });
+
+        // The invoice record now exists and the number is spent no matter what
+        // happens next, so entry-marking is retried in place rather than ever
+        // re-running the reservation above (which would mint a duplicate invoice).
+        try {
+            await markEntriesBilled(invoiceRef.id, timeUids, expenseUids);
+        } catch(error) {
+            const alert = {
+                type: AlertType.Error,
+                message: `Invoice #${invoiceNumber} was created, but some time/expense entries could not be marked as billed (${error.message}). Do not re-finalize — regenerate the report for this client so the remaining unbilled entries can be picked up on a new invoice.`,
+            };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            const partialError = new Error(alert.message);
+            partialError.code = 'ENTRY_MARK_FAILED';
+            partialError.invoiceUid = invoiceRef.id;
+            partialError.invoiceNumber = invoiceNumber;
+            throw partialError;
+        }
+
+        const alert = { type: AlertType.Success, message: `Invoice #${invoiceNumber} finalized.` };
+        dispatch({ type: ADD_ALERT, payload: alert });
+        setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+
+        return { invoiceUid: invoiceRef.id, invoiceNumber };
     }
 }
 
