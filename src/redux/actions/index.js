@@ -5,8 +5,9 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES,
     TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
     PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
-    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED } from "../../constants/action-types";
-import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX } from '../../constants/collections';
+    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED, LOADING_INVOICES, INVOICES_LOADED,
+    LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED } from "../../constants/action-types";
+import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX, INVOICES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 import { db } from "../../components/firestone";
@@ -473,13 +474,10 @@ export function subscribeToAllProjectsByClient(clientUid) {
 export function subscribeToExpenses(uid, byAttorney) {
     return function(dispatch) {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, EXPENSES),
             where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
         const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
@@ -614,18 +612,51 @@ export function subscribeToTimesByAttorneyAndDateRange(uid, startDate, endDate) 
 export function subscribeToTimes(uid, byAttorney) {
     return function(dispatch) {
         dispatch({ type: LOADING_TIMES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, TIMES),
             where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
         const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
                 const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
                 dispatch({ type: TIMES_LOADED, payload: timesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToUnbilledTimes() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_UNBILLED_TIMES, payload: {} });
+        const unsubscribe = onSnapshot(
+            collection(db, TIMES),
+            (snapshot) => {
+                const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: UNBILLED_TIMES_LOADED, payload: timesList.filter(t => t.isBilled !== true) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToUnbilledExpenses() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_UNBILLED_EXPENSES, payload: {} });
+        const unsubscribe = onSnapshot(
+            collection(db, EXPENSES),
+            (snapshot) => {
+                const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: UNBILLED_EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true) });
             },
             (error) => {
                 const alert = { type: AlertType.Error, message: error };
@@ -780,8 +811,8 @@ export function getReportData(uids) {
                 batchProcessing(TIMES, "timeProject", 'in', uids),
             ]);
             dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
-            dispatch({ type: EXPENSES_LOADED, payload: expensesList });
-            dispatch({ type: TIMES_LOADED, payload: timesList });
+            dispatch({ type: EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true) });
+            dispatch({ type: TIMES_LOADED, payload: timesList.filter(t => t.isBilled !== true) });
             dispatch({ type: REPORT_LOADED, payload: {} });
         } catch(error) {
             const alert = { type: AlertType.Error, message: error };
@@ -790,16 +821,131 @@ export function getReportData(uids) {
     }
 }
 
+export function finalizeInvoice(payload) {
+    return async function(dispatch) {
+        const { invoiceNumber, clientUid, clientName, projectUids, projectNames, timeUids, expenseUids, totalAmount } = payload;
+        try {
+            const invoiceRef = await addDoc(collection(db, INVOICES), withCreateTimestamps({
+                invoiceNumber,
+                clientUid,
+                clientName,
+                projectUids,
+                projectNames,
+                timeUids,
+                expenseUids,
+                totalAmount,
+                sentAt: null,
+                paidAt: null,
+            }));
+
+            const allUpdates = [
+                ...timeUids.map(uid => ({ col: TIMES, uid })),
+                ...expenseUids.map(uid => ({ col: EXPENSES, uid })),
+            ];
+
+            for (let i = 0; i < allUpdates.length; i += 400) {
+                const chunk = allUpdates.slice(i, i + 400);
+                const batch = writeBatch(db);
+                chunk.forEach(({ col, uid }) => {
+                    batch.update(doc(db, col, uid), { isBilled: true, invoiceUid: invoiceRef.id, updatedAt: serverTimestamp() });
+                });
+                await batch.commit();
+            }
+
+            await updateDoc(doc(db, MISC, INVOICE), { current: increment(1) });
+            dispatch({ type: INVOICE_LOADED, payload: { current: invoiceNumber + 1 } });
+
+            const alert = { type: AlertType.Success, message: `Invoice #${invoiceNumber} finalized.` };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        } catch(error) {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+        }
+    }
+}
+
+export function subscribeToInvoices() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_INVOICES });
+        const q = query(collection(db, INVOICES), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const list = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: INVOICES_LOADED, payload: list });
+            },
+            (error) => {
+                dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error.message } });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function markInvoiceSent(uid) {
+    return async function(dispatch) {
+        try {
+            const invRef = doc(db, INVOICES, uid);
+            const invSnap = await getDoc(invRef);
+            if (!invSnap.exists()) return;
+            const { timeUids = [], expenseUids = [] } = invSnap.data();
+
+            const allUpdates = [
+                ...timeUids.map(itemId => ({ col: TIMES, itemId })),
+                ...expenseUids.map(itemId => ({ col: EXPENSES, itemId })),
+            ];
+            for (let i = 0; i < allUpdates.length; i += 400) {
+                const chunk = allUpdates.slice(i, i + 400);
+                const batch = writeBatch(db);
+                chunk.forEach(({ col, itemId }) => {
+                    batch.update(doc(db, col, itemId), { isSent: true, updatedAt: serverTimestamp() });
+                });
+                await batch.commit();
+            }
+
+            await updateDoc(invRef, { sentAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        } catch(error) {
+            dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error.message } });
+        }
+    }
+}
+
+export function markInvoicePaid(uid) {
+    return async function(dispatch) {
+        try {
+            const invRef = doc(db, INVOICES, uid);
+            const invSnap = await getDoc(invRef);
+            if (!invSnap.exists()) return;
+            const { timeUids = [], expenseUids = [] } = invSnap.data();
+
+            const allUpdates = [
+                ...timeUids.map(itemId => ({ col: TIMES, itemId })),
+                ...expenseUids.map(itemId => ({ col: EXPENSES, itemId })),
+            ];
+            for (let i = 0; i < allUpdates.length; i += 400) {
+                const chunk = allUpdates.slice(i, i + 400);
+                const batch = writeBatch(db);
+                chunk.forEach(({ col, itemId }) => {
+                    batch.update(doc(db, col, itemId), { isPaid: true, updatedAt: serverTimestamp() });
+                });
+                await batch.commit();
+            }
+
+            await updateDoc(invRef, { paidAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        } catch(error) {
+            dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error.message } });
+        }
+    }
+}
+
 export function getExpenses(uid, byAttorney) {
     return dispatch => {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, EXPENSES),
             where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
 
         getDocs(q)
             .then(querySnapshot => {
@@ -819,13 +965,10 @@ export function getExpenses(uid, byAttorney) {
 export function getTimes(uid, byAttorney) {
     return dispatch => {
         dispatch({ type: LOADING_TIMES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, TIMES),
             where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
 
         getDocs(q)
             .then(querySnapshot => {

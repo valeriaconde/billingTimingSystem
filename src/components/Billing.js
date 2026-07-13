@@ -7,13 +7,14 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
 import { getProjectByClient, addTime, addExpense, updateTime, deleteTime,
     updateExpense, deleteExpense, getProjectById, getProjectsMapping,
-    getUsers, getTimes, getExpenses, getReportData, updateInvoice
+    getUsers, getTimes, getExpenses, getReportData, finalizeInvoice
 } from "../redux/actions/index";
 import FileSaver from "file-saver";
 import Docxtemplater from 'docxtemplater';
 import JSZipUtils from 'jszip-utils';
 import PizZip from 'pizzip';
 import BarLoader from "react-spinners/BarLoader";
+import UnbilledProjectsDashboard from './UnbilledProjectsDashboard';
 
 const mapStateToProps = state => {
     return {
@@ -32,7 +33,7 @@ const mapStateToProps = state => {
         loadingProjectsMapping: state.loadingProjectsMapping,
         reportReady: state.reportReady,
         loadingReport: state.loadingReport,
-        invoice: state.invoice
+        invoice: state.invoice,
      };
 };
 
@@ -53,7 +54,8 @@ const INITIAL_STATE = {
     timeTitle: '',
     timeHours: 0,
     hourlyRate: 0,
-    isModalAdd: true
+    isModalAdd: true,
+    showFinalizeConfirm: false,
 };
 
 class billing extends Component {
@@ -70,7 +72,7 @@ class billing extends Component {
 
     generateData = (event) => {
         event.preventDefault();
-        
+
         var projects = this.state.selectedProjects.map(p => { return p.value });
         this.props.getReportData(projects);
     }
@@ -186,8 +188,6 @@ class billing extends Component {
                                                 mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                             });
             FileSaver.saveAs(blob, `#${this.props.invoice.current} ${this.state.selectedClient.denomination}.docx`);
-            this.props.updateInvoice();
-            this.setState({ ...INITIAL_STATE });
         });
     }
 
@@ -202,6 +202,44 @@ class billing extends Component {
                 selectedProjects: option
             };
         });
+    }
+
+    handleFinalize = () => {
+        const { selectedClient, selectedProjects } = this.state;
+        const projectUids = selectedProjects.map(p => p.value);
+
+        const timeUids = this.props.times
+            .filter(t => projectUids.includes(t.timeProject))
+            .map(t => t.uid);
+        const expenseUids = this.props.expenses
+            .filter(e => projectUids.includes(e.expenseProject))
+            .map(e => e.uid);
+
+        let amount = 0;
+        let totalExpenses = 0;
+        this.props.expenses.forEach(e => { totalExpenses += Number(e.expenseTotal); });
+        selectedProjects.forEach(project => {
+            let totalProjectTaxable = Number(project.projectFee) || 0;
+            this.props.times
+                .filter(t => t.timeProject === project.uid)
+                .forEach(t => { totalProjectTaxable += Number(t.timeTotal); });
+            amount += totalProjectTaxable;
+        });
+        const tax = selectedClient.iva ? amount * 0.16 : 0;
+        const grandTotal = amount + tax + totalExpenses;
+
+        this.props.finalizeInvoice({
+            invoiceNumber: this.props.invoice.current,
+            clientUid: selectedClient.value,
+            clientName: selectedClient.denomination,
+            projectUids,
+            projectNames: selectedProjects.map(p => p.projectTitle),
+            timeUids,
+            expenseUids,
+            totalAmount: parseFloat(grandTotal).toFixed(2),
+        });
+
+        this.setState({ ...INITIAL_STATE });
     }
 
     render() {
@@ -229,6 +267,8 @@ class billing extends Component {
                     <div>
                         <h4 className="blueLetters topMargin leftMargin"> New notice </h4>
 
+                        <UnbilledProjectsDashboard />
+
                         {/* CHOOSE CLIENT */}
                         <Form className="leftMargin topMargin">
                             <Form.Group as={Row}>
@@ -254,7 +294,19 @@ class billing extends Component {
                                         this.props.loadingReport ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                                         <div>
                                             <Button className="legem-primary" type="submit" onClick={this.generateData} hidden={selectedProjects == null || selectedProjects.length === 0 || this.props.reportReady}> Generate charge notice </Button>
-                                            <Button className="legem-primary" type="submit" onClick={this.generateDoc} hidden={!this.props.reportReady}> {`Download Invoice #${this.props.invoice.current}`} </Button>
+                                            {this.props.reportReady && !this.state.showFinalizeConfirm && (
+                                                <div>
+                                                    <Button className="legem-primary" style={{ marginRight: '10px' }} onClick={this.generateDoc}>{`Download Invoice #${this.props.invoice.current}`}</Button>
+                                                    <Button variant="success" onClick={() => this.setState({ showFinalizeConfirm: true })}>Finalize Invoice</Button>
+                                                </div>
+                                            )}
+                                            {this.state.showFinalizeConfirm && (
+                                                <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #28a745', borderRadius: '4px', background: '#f8fff9' }}>
+                                                    <p style={{ marginBottom: '8px' }}>This will mark all included hours and expenses as billed and cannot be undone. Download the invoice first if you have not already.</p>
+                                                    <Button variant="success" style={{ marginRight: '10px' }} onClick={this.handleFinalize}>Confirm — Finalize Invoice #{this.props.invoice.current}</Button>
+                                                    <Button variant="outline-secondary" onClick={() => this.setState({ showFinalizeConfirm: false })}>Cancel</Button>
+                                                </div>
+                                            )}
                                         </div>
                                     }
                                 </div>
@@ -284,7 +336,7 @@ billing.propTypes = {
     getProjectsMapping: PropTypes.func,
     getProjectByClient: PropTypes.func,
     getReportData: PropTypes.func,
-    updateInvoice: PropTypes.func
+    finalizeInvoice: PropTypes.func,
 };
 
 const condition = authUser => !!authUser;
@@ -302,5 +354,5 @@ export default connect(mapStateToProps, {
     addExpense,
     getProjectByClient,
     getReportData,
-    updateInvoice
+    finalizeInvoice,
 })(withAuthorization(condition)(billing));

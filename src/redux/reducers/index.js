@@ -4,7 +4,8 @@ import { ADD_USER, ADD_ALERT, CLEAR_ALERT, LOADING_USERS, LOADING_CLIENTS,
     LOADING_EXPENSES, ADD_EXPENSE, EXPENSES_LOADED, LOADING_PROJECTS_MAPPING, PROJECTS_MAPPING_LOADED,
     UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES, ADD_TIME, TIMES_LOADED, REMOVED_TIME, UPDATED_TIME,
     PROJECT_LOADED, LOADING_PAYMENT, ADD_PAYMENT, PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, UPDATED_PROJECT, LOADING_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
-    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED } from "../../constants/action-types";
+    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED, LOADING_INVOICES, INVOICES_LOADED,
+    LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED } from "../../constants/action-types";
 
 const toMillis = (d) => {
     if (!d) return 0;
@@ -38,6 +39,12 @@ const initialState = {
     loadingReport: false,
     reportReady: false,
     invoice: 0,
+    invoiceRecords: [],
+    loadingInvoices: false,
+    unbilledTimes: [],
+    loadingUnbilledTimes: false,
+    unbilledExpenses: [],
+    loadingUnbilledExpenses: false,
     lastFetchedClients: null,
     lastFetchedUsers: null,
     lastFetchedProjectsNames: null,
@@ -284,6 +291,33 @@ function rootReducer(state = initialState, action) {
             loadingClients: false,
             clientsNames: action.payload,
             lastFetchedClients: Date.now(),
+        });
+    } else if(action.type === LOADING_INVOICES) {
+        return Object.assign({}, state, {
+            loadingInvoices: true,
+        });
+    } else if(action.type === INVOICES_LOADED) {
+        return Object.assign({}, state, {
+            invoiceRecords: action.payload,
+            loadingInvoices: false,
+        });
+    } else if(action.type === LOADING_UNBILLED_TIMES) {
+        return Object.assign({}, state, {
+            loadingUnbilledTimes: true,
+        });
+    } else if(action.type === UNBILLED_TIMES_LOADED) {
+        return Object.assign({}, state, {
+            unbilledTimes: action.payload,
+            loadingUnbilledTimes: false,
+        });
+    } else if(action.type === LOADING_UNBILLED_EXPENSES) {
+        return Object.assign({}, state, {
+            loadingUnbilledExpenses: true,
+        });
+    } else if(action.type === UNBILLED_EXPENSES_LOADED) {
+        return Object.assign({}, state, {
+            unbilledExpenses: action.payload,
+            loadingUnbilledExpenses: false,
         });
     }
 

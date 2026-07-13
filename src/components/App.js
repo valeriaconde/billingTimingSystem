@@ -19,11 +19,12 @@ import Passrec from './PasswordRecovery';
 import PassChange from './PasswordChange';
 import detailedProject from './DetailedProject';
 import Billing from './Billing';
+import InvoicesPage from './InvoicesPage';
 import { withAuthentication } from './Auth';
 import { AlertType } from '../stores/AlertStore';
 import { Alert } from 'react-bootstrap';
 import { connect } from "react-redux";
-import { clearAlert, subscribeToClients, getUsers, subscribeToProjectsMapping } from "../redux/actions/index";
+import { clearAlert, subscribeToClients, getUsers, subscribeToProjectsMapping, subscribeToUnbilledTimes, subscribeToUnbilledExpenses } from "../redux/actions/index";
 
 // REACT VERSION: 16.13.0
 
@@ -47,7 +48,9 @@ function mapDispatchToProps(dispatch) {
         clearAlert: alert => dispatch(clearAlert(alert)),
         getClients: () => dispatch(subscribeToClients()),
         getUsers: () => dispatch(getUsers()),
-        getProjectsMapping: () => dispatch(subscribeToProjectsMapping())
+        getProjectsMapping: () => dispatch(subscribeToProjectsMapping()),
+        getUnbilledTimes: () => dispatch(subscribeToUnbilledTimes()),
+        getUnbilledExpenses: () => dispatch(subscribeToUnbilledExpenses())
     };
 }
 
@@ -56,6 +59,8 @@ class App extends Component {
         if (!prevProps.authUser && this.props.authUser) {
             this.unsubscribeClients = this.props.getClients();
             this.unsubscribeProjectsMapping = this.props.getProjectsMapping();
+            this.unsubscribeUnbilledTimes = this.props.getUnbilledTimes();
+            this.unsubscribeUnbilledExpenses = this.props.getUnbilledExpenses();
             if (isStale(this.props.lastFetchedUsers)) {
                 this.props.getUsers();
             }
@@ -69,12 +74,22 @@ class App extends Component {
                 this.unsubscribeProjectsMapping();
                 this.unsubscribeProjectsMapping = null;
             }
+            if (this.unsubscribeUnbilledTimes) {
+                this.unsubscribeUnbilledTimes();
+                this.unsubscribeUnbilledTimes = null;
+            }
+            if (this.unsubscribeUnbilledExpenses) {
+                this.unsubscribeUnbilledExpenses();
+                this.unsubscribeUnbilledExpenses = null;
+            }
         }
     }
 
     componentWillUnmount() {
         if (this.unsubscribeClients) this.unsubscribeClients();
         if (this.unsubscribeProjectsMapping) this.unsubscribeProjectsMapping();
+        if (this.unsubscribeUnbilledTimes) this.unsubscribeUnbilledTimes();
+        if (this.unsubscribeUnbilledExpenses) this.unsubscribeUnbilledExpenses();
     }
 
     getAlertColor(type) {
@@ -120,6 +135,8 @@ class App extends Component {
 
                         <Route path="/billing" exact component={Billing} />
 
+                        <Route path="/invoices" exact component={InvoicesPage} />
+
                         <Route path="/expenses" exact component={gastos} />
 
                         <Route path="/timing" exact component={tiemposPage}/>
@@ -153,7 +170,9 @@ App.propTypes = {
     clearAlert: PropTypes.func,
     getClients: PropTypes.func,
     getUsers: PropTypes.func,
-    getProjectsMapping: PropTypes.func
+    getProjectsMapping: PropTypes.func,
+    getUnbilledTimes: PropTypes.func,
+    getUnbilledExpenses: PropTypes.func
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withAuthentication(App));
