@@ -93,7 +93,22 @@ class UnbilledProjectsDashboard extends Component {
             return groups[projectUid];
         };
 
+        // Entries listed on an invoice that hasn't finished marking yet are already
+        // reserved for that invoice even though isBilled is still false on the
+        // entry itself — showing them here as "pending" would invite generating a
+        // second invoice for the same work. Skip anything an incomplete invoice
+        // already claims.
+        const reservedTimeUids = new Set();
+        const reservedExpenseUids = new Set();
+        (this.props.invoiceRecords || []).forEach(inv => {
+            if (inv.entriesComplete === false) {
+                (inv.timeUids || []).forEach(uid => reservedTimeUids.add(uid));
+                (inv.expenseUids || []).forEach(uid => reservedExpenseUids.add(uid));
+            }
+        });
+
         (this.props.unbilledTimes || []).forEach(t => {
+            if (reservedTimeUids.has(t.uid)) return;
             const group = ensureGroup(t.timeProject);
             group.totalHours += Number(t.timeHours) || 0;
             group.totalMinutes += Number(t.timeMinutes) || 0;
@@ -104,6 +119,7 @@ class UnbilledProjectsDashboard extends Component {
         });
 
         (this.props.unbilledExpenses || []).forEach(e => {
+            if (reservedExpenseUids.has(e.uid)) return;
             const group = ensureGroup(e.expenseProject);
             group.expenseAmount += Number(e.expenseTotal) || 0;
             group.entryCount += 1;

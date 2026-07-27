@@ -104,6 +104,10 @@ function rootReducer(state = initialState, action) {
     } else if(action.type === RESET_REPORT) {
         return Object.assign({}, state, {
             reportReady: false,
+            // A request in flight when this fires will bail out on its own token
+            // check and never dispatch REPORT_LOADED, so loadingReport must be
+            // cleared here or the loader spinner would be stuck on permanently.
+            loadingReport: false,
             times: [],
             expenses: [],
             // Invalidate any in-flight getReportData call — its token can never

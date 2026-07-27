@@ -7,7 +7,8 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
 import { getProjectByClient, addTime, addExpense, updateTime, deleteTime,
     updateExpense, deleteExpense, getProjectById, getProjectsMapping,
-    getUsers, getTimes, getExpenses, getReportData, finalizeInvoice, resetReport
+    getUsers, getTimes, getExpenses, getReportData, finalizeInvoice, resetReport,
+    subscribeToInvoices
 } from "../redux/actions/index";
 import FileSaver from "file-saver";
 import Docxtemplater from 'docxtemplater';
@@ -34,6 +35,7 @@ const mapStateToProps = state => {
         reportReady: state.reportReady,
         loadingReport: state.loadingReport,
         invoice: state.invoice,
+        invoiceRecords: state.invoiceRecords,
      };
 };
 
@@ -67,6 +69,21 @@ class billing extends Component {
         this.hour = React.createRef();
     }
 
+    componentDidMount() {
+        this.unsubscribeInvoices = this.props.subscribeToInvoices();
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeInvoices) this.unsubscribeInvoices();
+    }
+
+    // A fixed-fee project is meant to be billed once, then closed — this checks
+    // invoice history so a project someone forgot to close doesn't get charged
+    // its flat fee a second time if it's selected again.
+    isFixedFeeAlreadyInvoiced = (projectUid) => {
+        return (this.props.invoiceRecords || []).some(inv => (inv.projectUids || []).includes(projectUid));
+    }
+
     loadFile = (url, callback) => {
         JSZipUtils.getBinaryContent(url, callback);
     }
@@ -94,7 +111,8 @@ class billing extends Component {
         var times = [];
         var expenses = [];
         for(let project of this.state.selectedProjects) {
-            var totalProjectTaxable = Number(project.projectFee) || 0;
+            const feeAlreadyInvoiced = project.projectFixedFee && this.isFixedFeeAlreadyInvoiced(project.uid);
+            var totalProjectTaxable = feeAlreadyInvoiced ? 0 : (Number(project.projectFee) || 0);
 
             /* Expenses */
             let currExpenses = this.props.expenses.filter(e => e.expenseProject === project.uid);
@@ -218,7 +236,8 @@ class billing extends Component {
         let totalExpenses = 0;
         this.props.expenses.forEach(e => { totalExpenses += Number(e.expenseTotal); });
         selectedProjects.forEach(project => {
-            let totalProjectTaxable = Number(project.projectFee) || 0;
+            const feeAlreadyInvoiced = project.projectFixedFee && this.isFixedFeeAlreadyInvoiced(project.uid);
+            let totalProjectTaxable = feeAlreadyInvoiced ? 0 : (Number(project.projectFee) || 0);
             this.props.times
                 .filter(t => t.timeProject === project.uid)
                 .forEach(t => { totalProjectTaxable += Number(t.timeTotal); });
@@ -277,6 +296,7 @@ class billing extends Component {
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const { selectedClient, selectedProjects } = this.state;
+        const alreadyInvoicedFixedFeeProjects = selectedProjects.filter(p => p.projectFixedFee && this.isFixedFeeAlreadyInvoiced(p.uid));
 
         return (
             <AuthUserContext.Consumer>
@@ -305,6 +325,12 @@ class billing extends Component {
                                             <Select isMulti={true} isClearable={true} placeholder="Select projects to bill..." options={projectSelect} value={selectedProjects} onChange={this.handleChangeProject} />
                                         </Col>
                                     </Form.Group>
+
+                                    {alreadyInvoicedFixedFeeProjects.length > 0 && (
+                                        <p className="leftMargin" style={{ color: '#c0392b' }}>
+                                            {alreadyInvoicedFixedFeeProjects.map(p => p.projectTitle).join(', ')} {alreadyInvoicedFixedFeeProjects.length === 1 ? 'was' : 'were'} already invoiced — its fixed fee will not be charged again on this invoice (any unbilled hours or expenses still will be).
+                                        </p>
+                                    )}
 
                                     {
                                         this.props.loadingReport ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
@@ -356,6 +382,8 @@ billing.propTypes = {
     getReportData: PropTypes.func,
     finalizeInvoice: PropTypes.func,
     resetReport: PropTypes.func,
+    subscribeToInvoices: PropTypes.func,
+    invoiceRecords: PropTypes.array,
 };
 
 const condition = authUser => !!authUser;
@@ -375,4 +403,5 @@ export default connect(mapStateToProps, {
     getReportData,
     finalizeInvoice,
     resetReport,
+    subscribeToInvoices,
 })(withAuthorization(condition)(billing));

@@ -816,6 +816,22 @@ function batchProcessing(collectionName, fieldPath, opStr, collection_arr) {
     });
 }
 
+// Entries listed on an invoice that hasn't finished marking yet (entriesComplete:
+// false) are reserved for that invoice even though their own isBilled field is
+// still false — they must not be offered up to another report/invoice, or the
+// same work ends up represented (and billed) on two invoices at once.
+async function getReservedEntryUids() {
+    const snapshot = await getDocs(query(collection(db, INVOICES), where('entriesComplete', '==', false)));
+    const timeUids = new Set();
+    const expenseUids = new Set();
+    snapshot.forEach(d => {
+        const data = d.data();
+        (data.timeUids || []).forEach(uid => timeUids.add(uid));
+        (data.expenseUids || []).forEach(uid => expenseUids.add(uid));
+    });
+    return { timeUids, expenseUids };
+}
+
 let reportRequestCounter = 0;
 
 // Every getReportData/resetReport call mints or invalidates a token in
@@ -841,15 +857,16 @@ export function getReportData(uids) {
         }
 
         try {
-            const [paymentsList, expensesList, timesList] = await Promise.all([
+            const [paymentsList, expensesList, timesList, reserved] = await Promise.all([
                 batchProcessing(PAYMENTS, "paymentProject", 'in', uids),
                 batchProcessing(EXPENSES, "expenseProject", 'in', uids),
                 batchProcessing(TIMES, "timeProject", 'in', uids),
+                getReservedEntryUids(),
             ]);
             if (!isCurrent()) return;
             dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
-            dispatch({ type: EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true) });
-            dispatch({ type: TIMES_LOADED, payload: timesList.filter(t => t.isBilled !== true) });
+            dispatch({ type: EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true && !reserved.expenseUids.has(e.uid)) });
+            dispatch({ type: TIMES_LOADED, payload: timesList.filter(t => t.isBilled !== true && !reserved.timeUids.has(t.uid)) });
             dispatch({ type: REPORT_LOADED, payload: {} });
         } catch(error) {
             if (!isCurrent()) return;
@@ -899,6 +916,22 @@ export function finalizeInvoice(payload) {
         const { invoiceNumber, clientUid, clientName, projectUids, projectNames, timeUids, expenseUids, totalAmount } = payload;
         const counterRef = doc(db, MISC, INVOICE);
         const invoiceRef = doc(collection(db, INVOICES));
+
+        // Defense-in-depth: getReportData already excludes entries reserved by an
+        // incomplete invoice at report-generation time, but that report may have
+        // been sitting on screen for a while (or another admin acted concurrently)
+        // — re-check right before committing so a newly-created incomplete invoice
+        // can't be double-claimed here.
+        const reserved = await getReservedEntryUids();
+        const hasClash = timeUids.some(uid => reserved.timeUids.has(uid)) || expenseUids.some(uid => reserved.expenseUids.has(uid));
+        if (hasClash) {
+            const alert = {
+                type: AlertType.Error,
+                message: "Some of these entries are already claimed by another invoice that hasn't finished processing. Regenerate the report to pick up current data, or check the Invoices page for an incomplete invoice to resume.",
+            };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            throw new Error(alert.message);
+        }
 
         // Reserve the invoice number and create the invoice record atomically:
         // either both happen, or neither does. This is what prevents a counter
