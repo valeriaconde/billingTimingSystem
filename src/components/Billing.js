@@ -7,13 +7,15 @@ import { AuthUserContext, withAuthorization } from './Auth';
 import { connect } from 'react-redux';
 import { getProjectByClient, addTime, addExpense, updateTime, deleteTime,
     updateExpense, deleteExpense, getProjectById, getProjectsMapping,
-    getUsers, getTimes, getExpenses, getReportData, updateInvoice
+    getUsers, getTimes, getExpenses, getReportData, finalizeInvoice, resetReport,
+    subscribeToInvoices
 } from "../redux/actions/index";
 import FileSaver from "file-saver";
 import Docxtemplater from 'docxtemplater';
 import JSZipUtils from 'jszip-utils';
 import PizZip from 'pizzip';
 import BarLoader from "react-spinners/BarLoader";
+import UnbilledProjectsDashboard from './UnbilledProjectsDashboard';
 
 const mapStateToProps = state => {
     return {
@@ -32,7 +34,8 @@ const mapStateToProps = state => {
         loadingProjectsMapping: state.loadingProjectsMapping,
         reportReady: state.reportReady,
         loadingReport: state.loadingReport,
-        invoice: state.invoice
+        invoice: state.invoice,
+        invoiceRecords: state.invoiceRecords,
      };
 };
 
@@ -53,7 +56,9 @@ const INITIAL_STATE = {
     timeTitle: '',
     timeHours: 0,
     hourlyRate: 0,
-    isModalAdd: true
+    isModalAdd: true,
+    showFinalizeConfirm: false,
+    finalizing: false,
 };
 
 class billing extends Component {
@@ -64,13 +69,28 @@ class billing extends Component {
         this.hour = React.createRef();
     }
 
+    componentDidMount() {
+        this.unsubscribeInvoices = this.props.subscribeToInvoices();
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeInvoices) this.unsubscribeInvoices();
+    }
+
+    // A fixed-fee project is meant to be billed once, then closed — this checks
+    // invoice history so a project someone forgot to close doesn't get charged
+    // its flat fee a second time if it's selected again.
+    isFixedFeeAlreadyInvoiced = (projectUid) => {
+        return (this.props.invoiceRecords || []).some(inv => (inv.projectUids || []).includes(projectUid));
+    }
+
     loadFile = (url, callback) => {
         JSZipUtils.getBinaryContent(url, callback);
     }
 
     generateData = (event) => {
         event.preventDefault();
-        
+
         var projects = this.state.selectedProjects.map(p => { return p.value });
         this.props.getReportData(projects);
     }
@@ -91,7 +111,8 @@ class billing extends Component {
         var times = [];
         var expenses = [];
         for(let project of this.state.selectedProjects) {
-            var totalProjectTaxable = Number(project.projectFee) || 0;
+            const feeAlreadyInvoiced = project.projectFixedFee && this.isFixedFeeAlreadyInvoiced(project.uid);
+            var totalProjectTaxable = feeAlreadyInvoiced ? 0 : (Number(project.projectFee) || 0);
 
             /* Expenses */
             let currExpenses = this.props.expenses.filter(e => e.expenseProject === project.uid);
@@ -186,22 +207,76 @@ class billing extends Component {
                                                 mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                             });
             FileSaver.saveAs(blob, `#${this.props.invoice.current} ${this.state.selectedClient.denomination}.docx`);
-            this.props.updateInvoice();
-            this.setState({ ...INITIAL_STATE });
         });
     }
 
     handleChangeClient = selectedClient => {
-        this.setState({ selectedClient });
+        this.setState({ selectedClient, selectedProjects: [], showFinalizeConfirm: false });
         this.props.getProjectByClient(selectedClient.value);
+        this.props.resetReport();
     }
 
     handleChangeProject = option => {
-        this.setState(() => {
-            return {
-                selectedProjects: option
-            };
+        this.setState({ selectedProjects: option, showFinalizeConfirm: false });
+        this.props.resetReport();
+    }
+
+    handleFinalize = async () => {
+        const { selectedClient, selectedProjects } = this.state;
+        const projectUids = selectedProjects.map(p => p.value);
+
+        const timeUids = this.props.times
+            .filter(t => projectUids.includes(t.timeProject))
+            .map(t => t.uid);
+        const expenseUids = this.props.expenses
+            .filter(e => projectUids.includes(e.expenseProject))
+            .map(e => e.uid);
+
+        let amount = 0;
+        let totalExpenses = 0;
+        this.props.expenses.forEach(e => { totalExpenses += Number(e.expenseTotal); });
+        selectedProjects.forEach(project => {
+            const feeAlreadyInvoiced = project.projectFixedFee && this.isFixedFeeAlreadyInvoiced(project.uid);
+            let totalProjectTaxable = feeAlreadyInvoiced ? 0 : (Number(project.projectFee) || 0);
+            this.props.times
+                .filter(t => t.timeProject === project.uid)
+                .forEach(t => { totalProjectTaxable += Number(t.timeTotal); });
+            amount += totalProjectTaxable;
         });
+        const tax = selectedClient.iva ? amount * 0.16 : 0;
+        const grandTotal = amount + tax + totalExpenses;
+
+        this.setState({ finalizing: true });
+
+        try {
+            await this.props.finalizeInvoice({
+                invoiceNumber: this.props.invoice.current,
+                clientUid: selectedClient.value,
+                clientName: selectedClient.denomination,
+                projectUids,
+                projectNames: selectedProjects.map(p => p.projectTitle),
+                timeUids,
+                expenseUids,
+                totalAmount: parseFloat(grandTotal).toFixed(2),
+            });
+
+            // Success: the invoice is complete, safe to clear the form.
+            this.props.resetReport();
+            this.setState({ ...INITIAL_STATE });
+        } catch(error) {
+            if (error.code === 'ENTRY_MARK_FAILED') {
+                // The invoice was already created but some entries failed to mark.
+                // The action's error alert already tells the admin to use "Resume
+                // Marking" on the Invoices page for this exact invoice — generating
+                // a new invoice from this stale selection would bill the same
+                // entries twice, so just clear this form rather than retrying here.
+                this.props.resetReport();
+                this.setState({ ...INITIAL_STATE });
+            } else {
+                // Nothing was written — safe to let the admin just retry.
+                this.setState({ finalizing: false, showFinalizeConfirm: false });
+            }
+        }
     }
 
     render() {
@@ -221,6 +296,7 @@ class billing extends Component {
             })).sort((a, b) => a.label?.localeCompare(b.label)) : [];
 
         const { selectedClient, selectedProjects } = this.state;
+        const alreadyInvoicedFixedFeeProjects = selectedProjects.filter(p => p.projectFixedFee && this.isFixedFeeAlreadyInvoiced(p.uid));
 
         return (
             <AuthUserContext.Consumer>
@@ -250,16 +326,36 @@ class billing extends Component {
                                         </Col>
                                     </Form.Group>
 
+                                    {alreadyInvoicedFixedFeeProjects.length > 0 && (
+                                        <p className="leftMargin" style={{ color: '#c0392b' }}>
+                                            {alreadyInvoicedFixedFeeProjects.map(p => p.projectTitle).join(', ')} {alreadyInvoicedFixedFeeProjects.length === 1 ? 'was' : 'were'} already invoiced — its fixed fee will not be charged again on this invoice (any unbilled hours or expenses still will be).
+                                        </p>
+                                    )}
+
                                     {
                                         this.props.loadingReport ? <BarLoader css={{width: "100%"}} loading={this.props.loadingUsers}></BarLoader> :
                                         <div>
                                             <Button className="legem-primary" type="submit" onClick={this.generateData} hidden={selectedProjects == null || selectedProjects.length === 0 || this.props.reportReady}> Generate charge notice </Button>
-                                            <Button className="legem-primary" type="submit" onClick={this.generateDoc} hidden={!this.props.reportReady}> {`Download Invoice #${this.props.invoice.current}`} </Button>
+                                            {this.props.reportReady && !this.state.showFinalizeConfirm && (
+                                                <div>
+                                                    <Button className="legem-primary" style={{ marginRight: '10px' }} onClick={this.generateDoc}>{`Download Invoice #${this.props.invoice.current}`}</Button>
+                                                    <Button variant="success" onClick={() => this.setState({ showFinalizeConfirm: true })}>Finalize Invoice</Button>
+                                                </div>
+                                            )}
+                                            {this.state.showFinalizeConfirm && (
+                                                <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #28a745', borderRadius: '4px', background: '#f8fff9' }}>
+                                                    <p style={{ marginBottom: '8px' }}>This will mark all included hours and expenses as billed and cannot be undone. Download the invoice first if you have not already.</p>
+                                                    <Button variant="success" style={{ marginRight: '10px' }} disabled={this.state.finalizing} onClick={this.handleFinalize}>{this.state.finalizing ? 'Finalizing…' : `Confirm — Finalize Invoice #${this.props.invoice.current}`}</Button>
+                                                    <Button variant="outline-secondary" disabled={this.state.finalizing} onClick={() => this.setState({ showFinalizeConfirm: false })}>Cancel</Button>
+                                                </div>
+                                            )}
                                         </div>
                                     }
                                 </div>
                             }
                         </Form>
+
+                        <UnbilledProjectsDashboard />
                     </div>
                 }
             </AuthUserContext.Consumer>
@@ -284,7 +380,10 @@ billing.propTypes = {
     getProjectsMapping: PropTypes.func,
     getProjectByClient: PropTypes.func,
     getReportData: PropTypes.func,
-    updateInvoice: PropTypes.func
+    finalizeInvoice: PropTypes.func,
+    resetReport: PropTypes.func,
+    subscribeToInvoices: PropTypes.func,
+    invoiceRecords: PropTypes.array,
 };
 
 const condition = authUser => !!authUser;
@@ -302,5 +401,7 @@ export default connect(mapStateToProps, {
     addExpense,
     getProjectByClient,
     getReportData,
-    updateInvoice
+    finalizeInvoice,
+    resetReport,
+    subscribeToInvoices,
 })(withAuthorization(condition)(billing));

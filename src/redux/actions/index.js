@@ -5,8 +5,10 @@ import { ADD_ALERT, CLEAR_ALERT, USERS_LOADED, CLIENTS_LOADED,
     LOADING_PROJECTS_MAPPING, UPDATED_EXPENSE, REMOVED_EXPENSE, LOADING_TIMES,
     TIMES_LOADED, REMOVED_TIME, UPDATED_TIME, PROJECT_LOADED, LOADING_PAYMENT,
     PAYMENTS_LOADED, REMOVED_PAYMENT, LOADING_REPORT, REPORT_LOADED, INVOICE_LOADED, LOADING_PROJECT, UPDATED_PROJECT, REMOVED_PROJECT, CLIENTS_MAPPING_LOADED,
-    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED } from "../../constants/action-types";
-import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX } from '../../constants/collections';
+    LOADING_CLIENT_PROJECTS, CLIENT_PROJECTS_LOADED, LOADING_INVOICES, INVOICES_LOADED,
+    LOADING_UNBILLED_TIMES, UNBILLED_TIMES_LOADED, LOADING_UNBILLED_EXPENSES, UNBILLED_EXPENSES_LOADED,
+    LOADING_FIXED_FEE_PROJECTS, FIXED_FEE_PROJECTS_LOADED, RESET_REPORT } from "../../constants/action-types";
+import { CLIENTS, PROJECTS, EXPENSES, TIMES, PAYMENTS, MISC, INVOICE, PROJECTS_INDEX, CLIENTS_INDEX, INVOICES } from '../../constants/collections';
 import axios from 'axios';
 import { AlertType } from '../../stores/AlertStore';
 import { db } from "../../components/firestone";
@@ -29,6 +31,7 @@ import {
     onSnapshot,
     serverTimestamp,
     writeBatch,
+    runTransaction,
     Timestamp,
 } from 'firebase/firestore';
 
@@ -473,13 +476,10 @@ export function subscribeToAllProjectsByClient(clientUid) {
 export function subscribeToExpenses(uid, byAttorney) {
     return function(dispatch) {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, EXPENSES),
             where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
         const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
@@ -614,18 +614,74 @@ export function subscribeToTimesByAttorneyAndDateRange(uid, startDate, endDate) 
 export function subscribeToTimes(uid, byAttorney) {
     return function(dispatch) {
         dispatch({ type: LOADING_TIMES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, TIMES),
             where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
         const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
                 const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
                 dispatch({ type: TIMES_LOADED, payload: timesList });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToUnbilledTimes() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_UNBILLED_TIMES, payload: {} });
+        const unsubscribe = onSnapshot(
+            collection(db, TIMES),
+            (snapshot) => {
+                const timesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: UNBILLED_TIMES_LOADED, payload: timesList.filter(t => t.isBilled !== true) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToUnbilledExpenses() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_UNBILLED_EXPENSES, payload: {} });
+        const unsubscribe = onSnapshot(
+            collection(db, EXPENSES),
+            (snapshot) => {
+                const expensesList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: UNBILLED_EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true) });
+            },
+            (error) => {
+                const alert = { type: AlertType.Error, message: error };
+                dispatch({ type: ADD_ALERT, payload: alert });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function subscribeToOpenFixedFeeProjects() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_FIXED_FEE_PROJECTS, payload: {} });
+        const q = query(
+            collection(db, PROJECTS),
+            where("isOpen", "==", true),
+            where("projectFixedFee", "==", true)
+        );
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const projectsList = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: FIXED_FEE_PROJECTS_LOADED, payload: projectsList });
             },
             (error) => {
                 const alert = { type: AlertType.Error, message: error };
@@ -760,12 +816,39 @@ function batchProcessing(collectionName, fieldPath, opStr, collection_arr) {
     });
 }
 
+// Entries listed on an invoice that hasn't finished marking yet (entriesComplete:
+// false) are reserved for that invoice even though their own isBilled field is
+// still false — they must not be offered up to another report/invoice, or the
+// same work ends up represented (and billed) on two invoices at once.
+async function getReservedEntryUids() {
+    const snapshot = await getDocs(query(collection(db, INVOICES), where('entriesComplete', '==', false)));
+    const timeUids = new Set();
+    const expenseUids = new Set();
+    snapshot.forEach(d => {
+        const data = d.data();
+        (data.timeUids || []).forEach(uid => timeUids.add(uid));
+        (data.expenseUids || []).forEach(uid => expenseUids.add(uid));
+    });
+    return { timeUids, expenseUids };
+}
+
+let reportRequestCounter = 0;
+
+// Every getReportData/resetReport call mints or invalidates a token in
+// state.reportRequestToken. A request only applies its results if its own
+// token is still the current one by the time it resolves — otherwise the
+// selection changed (or was reset) while it was in flight, and its data no
+// longer corresponds to what's on screen, so it's silently dropped.
 export function getReportData(uids) {
-    return async dispatch => {
-        dispatch({ type: LOADING_REPORT, payload: {} });
+    return async (dispatch, getState) => {
+        const token = ++reportRequestCounter;
+        dispatch({ type: LOADING_REPORT, payload: { token } });
+
+        const isCurrent = () => getState().reportRequestToken === token;
 
         const invRef = doc(db, MISC, INVOICE);
         const invDoc = await getDoc(invRef);
+        if (!isCurrent()) return;
         if (!invDoc.exists()) {
             const alert = { type: AlertType.Error, message: "Invoice number not found" };
             dispatch({ type: ADD_ALERT, payload: alert });
@@ -774,18 +857,236 @@ export function getReportData(uids) {
         }
 
         try {
-            const [paymentsList, expensesList, timesList] = await Promise.all([
+            const [paymentsList, expensesList, timesList, reserved] = await Promise.all([
                 batchProcessing(PAYMENTS, "paymentProject", 'in', uids),
                 batchProcessing(EXPENSES, "expenseProject", 'in', uids),
                 batchProcessing(TIMES, "timeProject", 'in', uids),
+                getReservedEntryUids(),
             ]);
+            if (!isCurrent()) return;
             dispatch({ type: PAYMENTS_LOADED, payload: paymentsList });
-            dispatch({ type: EXPENSES_LOADED, payload: expensesList });
-            dispatch({ type: TIMES_LOADED, payload: timesList });
+            dispatch({ type: EXPENSES_LOADED, payload: expensesList.filter(e => e.isBilled !== true && !reserved.expenseUids.has(e.uid)) });
+            dispatch({ type: TIMES_LOADED, payload: timesList.filter(t => t.isBilled !== true && !reserved.timeUids.has(t.uid)) });
             dispatch({ type: REPORT_LOADED, payload: {} });
         } catch(error) {
+            if (!isCurrent()) return;
             const alert = { type: AlertType.Error, message: error };
             dispatch({ type: ADD_ALERT, payload: alert });
+        }
+    }
+}
+
+export function resetReport() {
+    return { type: RESET_REPORT };
+}
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Marks time/expense entries as billed under an already-created invoice.
+// Safe to retry: setting isBilled/invoiceUid to the same values is a no-op.
+async function markEntriesBilled(invoiceUid, timeUids, expenseUids) {
+    const allUpdates = [
+        ...timeUids.map(uid => ({ col: TIMES, uid })),
+        ...expenseUids.map(uid => ({ col: EXPENSES, uid })),
+    ];
+
+    for (let i = 0; i < allUpdates.length; i += 400) {
+        const chunk = allUpdates.slice(i, i + 400);
+        let lastError = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const batch = writeBatch(db);
+                chunk.forEach(({ col, uid }) => {
+                    batch.update(doc(db, col, uid), { isBilled: true, invoiceUid, updatedAt: serverTimestamp() });
+                });
+                await batch.commit();
+                lastError = null;
+                break;
+            } catch(error) {
+                lastError = error;
+                if (attempt < 2) await delay(500 * (attempt + 1));
+            }
+        }
+        if (lastError) throw lastError;
+    }
+}
+
+export function finalizeInvoice(payload) {
+    return async function(dispatch) {
+        const { invoiceNumber, clientUid, clientName, projectUids, projectNames, timeUids, expenseUids, totalAmount } = payload;
+        const counterRef = doc(db, MISC, INVOICE);
+        const invoiceRef = doc(collection(db, INVOICES));
+
+        // Defense-in-depth: getReportData already excludes entries reserved by an
+        // incomplete invoice at report-generation time, but that report may have
+        // been sitting on screen for a while (or another admin acted concurrently)
+        // — re-check right before committing so a newly-created incomplete invoice
+        // can't be double-claimed here.
+        const reserved = await getReservedEntryUids();
+        const hasClash = timeUids.some(uid => reserved.timeUids.has(uid)) || expenseUids.some(uid => reserved.expenseUids.has(uid));
+        if (hasClash) {
+            const alert = {
+                type: AlertType.Error,
+                message: "Some of these entries are already claimed by another invoice that hasn't finished processing. Regenerate the report to pick up current data, or check the Invoices page for an incomplete invoice to resume.",
+            };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            throw new Error(alert.message);
+        }
+
+        // Reserve the invoice number and create the invoice record atomically:
+        // either both happen, or neither does. This is what prevents a counter
+        // that advances without a matching invoice (or vice versa), and rejects
+        // the request outright if someone else already claimed this number.
+        try {
+            await runTransaction(db, async (transaction) => {
+                const counterSnap = await transaction.get(counterRef);
+                const currentNumber = counterSnap.exists() ? counterSnap.data().current : undefined;
+                if (currentNumber !== invoiceNumber) {
+                    throw new Error(`Invoice #${invoiceNumber} is out of date (counter is at #${currentNumber}) — someone may have just finalized another invoice. Please regenerate the report and try again.`);
+                }
+                transaction.set(invoiceRef, {
+                    invoiceNumber,
+                    clientUid,
+                    clientName,
+                    projectUids,
+                    projectNames,
+                    timeUids,
+                    expenseUids,
+                    totalAmount,
+                    entriesComplete: false,
+                    sentAt: null,
+                    paidAt: null,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                });
+                transaction.update(counterRef, { current: increment(1) });
+            });
+        } catch(error) {
+            const alert = { type: AlertType.Error, message: error.message };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            throw error;
+        }
+
+        dispatch({ type: INVOICE_LOADED, payload: { current: invoiceNumber + 1 } });
+
+        // The invoice record now exists (entriesComplete: false) and the number is
+        // spent no matter what happens next. Entry-marking is delegated to the same
+        // resumable operation used for manual retries, so a failure here and a
+        // later manual "Resume Marking" click behave identically — never re-running
+        // the reservation above (which would mint a duplicate invoice) and never
+        // routing these entries into a second invoice.
+        try {
+            await dispatch(resumeInvoiceEntryMarking(invoiceRef.id, timeUids, expenseUids, invoiceNumber));
+        } catch(error) {
+            const partialError = new Error(error.message);
+            partialError.code = 'ENTRY_MARK_FAILED';
+            partialError.invoiceUid = invoiceRef.id;
+            partialError.invoiceNumber = invoiceNumber;
+            throw partialError;
+        }
+
+        return { invoiceUid: invoiceRef.id, invoiceNumber };
+    }
+}
+
+// Marks (or resumes marking) an existing invoice's entries as billed, and flips
+// the invoice to entriesComplete: true once all of them succeed. Safe to call
+// repeatedly against the same invoiceUid — never creates a new invoice, so it's
+// the only correct way to recover from a partial finalize. Generating a fresh
+// report/invoice for the same projects instead would re-bill the same entries
+// under a second invoiceUid while the original invoice's stored timeUids/
+// expenseUids still claim them, double-representing (and double-charging for)
+// the same work across two invoices.
+export function resumeInvoiceEntryMarking(invoiceUid, timeUids, expenseUids, invoiceNumber) {
+    return async function(dispatch) {
+        try {
+            await markEntriesBilled(invoiceUid, timeUids, expenseUids);
+            await updateDoc(doc(db, INVOICES, invoiceUid), { entriesComplete: true, updatedAt: serverTimestamp() });
+
+            const alert = { type: AlertType.Success, message: `Invoice #${invoiceNumber} entries fully marked as billed.` };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            setTimeout(() => dispatch({ type: CLEAR_ALERT, payload: alert }), 7000);
+        } catch(error) {
+            const alert = {
+                type: AlertType.Error,
+                message: `Invoice #${invoiceNumber} is incomplete — some time/expense entries could not be marked as billed (${error.message}). Use "Resume Marking" on this invoice on the Invoices page; do not finalize a new invoice for these projects, or the same entries will be billed twice.`,
+            };
+            dispatch({ type: ADD_ALERT, payload: alert });
+            throw error;
+        }
+    }
+}
+
+export function subscribeToInvoices() {
+    return function(dispatch) {
+        dispatch({ type: LOADING_INVOICES });
+        const q = query(collection(db, INVOICES), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const list = snapshot.docs.map(d => ({ ...d.data(), uid: d.id }));
+                dispatch({ type: INVOICES_LOADED, payload: list });
+            },
+            (error) => {
+                dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error.message } });
+            }
+        );
+        return unsubscribe;
+    }
+}
+
+export function markInvoiceSent(uid) {
+    return async function(dispatch) {
+        try {
+            const invRef = doc(db, INVOICES, uid);
+            const invSnap = await getDoc(invRef);
+            if (!invSnap.exists()) return;
+            const { timeUids = [], expenseUids = [] } = invSnap.data();
+
+            const allUpdates = [
+                ...timeUids.map(itemId => ({ col: TIMES, itemId })),
+                ...expenseUids.map(itemId => ({ col: EXPENSES, itemId })),
+            ];
+            for (let i = 0; i < allUpdates.length; i += 400) {
+                const chunk = allUpdates.slice(i, i + 400);
+                const batch = writeBatch(db);
+                chunk.forEach(({ col, itemId }) => {
+                    batch.update(doc(db, col, itemId), { isSent: true, updatedAt: serverTimestamp() });
+                });
+                await batch.commit();
+            }
+
+            await updateDoc(invRef, { sentAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        } catch(error) {
+            dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error.message } });
+        }
+    }
+}
+
+export function markInvoicePaid(uid) {
+    return async function(dispatch) {
+        try {
+            const invRef = doc(db, INVOICES, uid);
+            const invSnap = await getDoc(invRef);
+            if (!invSnap.exists()) return;
+            const { timeUids = [], expenseUids = [] } = invSnap.data();
+
+            const allUpdates = [
+                ...timeUids.map(itemId => ({ col: TIMES, itemId })),
+                ...expenseUids.map(itemId => ({ col: EXPENSES, itemId })),
+            ];
+            for (let i = 0; i < allUpdates.length; i += 400) {
+                const chunk = allUpdates.slice(i, i + 400);
+                const batch = writeBatch(db);
+                chunk.forEach(({ col, itemId }) => {
+                    batch.update(doc(db, col, itemId), { isPaid: true, updatedAt: serverTimestamp() });
+                });
+                await batch.commit();
+            }
+
+            await updateDoc(invRef, { paidAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        } catch(error) {
+            dispatch({ type: ADD_ALERT, payload: { type: AlertType.Error, message: error.message } });
         }
     }
 }
@@ -793,13 +1094,10 @@ export function getReportData(uids) {
 export function getExpenses(uid, byAttorney) {
     return dispatch => {
         dispatch({ type: LOADING_EXPENSES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, EXPENSES),
             where(byAttorney ? "expenseAttorney" : "expenseProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
 
         getDocs(q)
             .then(querySnapshot => {
@@ -819,13 +1117,10 @@ export function getExpenses(uid, byAttorney) {
 export function getTimes(uid, byAttorney) {
     return dispatch => {
         dispatch({ type: LOADING_TIMES, payload: {} });
-        let q = query(
+        const q = query(
             collection(db, TIMES),
             where(byAttorney ? "timeAttorney" : "timeProject", "==", uid)
         );
-        if (!byAttorney) {
-            q = query(q, where("isBilled", "==", false));
-        }
 
         getDocs(q)
             .then(querySnapshot => {

@@ -22,6 +22,7 @@ class Menu extends Component {
                             <Nav.Link href="/expenses">Expenses</Nav.Link>
                             <Nav.Link href="/timing">Hours</Nav.Link>
                             <Nav.Link href="/billing" hidden={!authUser?.roles[ROLES.ADMIN]}>Billing</Nav.Link>
+                            <Nav.Link href="/invoices" hidden={!authUser?.roles[ROLES.ADMIN]}>Invoices</Nav.Link>
                             {/* <Nav.Link href="/reports" hidden={!authUser?.roles[ROLES.ADMIN]}>Reports</Nav.Link> */}
                         </Nav>
                         <Nav className="justify-content-end">

@@ -12,7 +12,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import BarLoader from "react-spinners/BarLoader";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import * as ROLES from '../constants/roles';
 import DateFnsUtils from '@date-io/date-fns';
 import {
@@ -70,6 +70,24 @@ const INITIAL_STATE = {
 };
 
 const getUserName = (users, uid) => users.find(u => u.uid === uid)?.name || 'Unknown user';
+
+const billingBadge = (item) => {
+    if (item.isPaid) return { label: 'Paid', style: { background: '#d4edda', color: '#155724', border: '1px solid #c3e6cb' } };
+    if (item.isSent) return { label: 'Sent', style: { background: '#cce5ff', color: '#004085', border: '1px solid #b8daff' } };
+    if (item.isBilled) return { label: 'Invoiced', style: { background: '#e2e3e5', color: '#383d41', border: '1px solid #d6d8db' } };
+    return null;
+};
+
+const BillingBadge = ({ item }) => {
+    const badge = billingBadge(item);
+    if (!badge) return null;
+    return (
+        <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, fontWeight: 600, whiteSpace: 'nowrap', ...badge.style }}>
+            {badge.label}
+        </span>
+    );
+};
+BillingBadge.propTypes = { item: PropTypes.object };
 
 class detailedProject extends Component {
     constructor(props) {
@@ -718,7 +736,7 @@ class detailedProject extends Component {
                                                 <TableCell style={colHeaderStyle}>Type</TableCell>
                                                 <TableCell style={colHeaderStyle}>Date</TableCell>
                                                 <TableCell style={{ ...colHeaderStyle, textAlign: 'right' }}>Amount</TableCell>
-                                                <TableCell />
+                                                <TableCell style={colHeaderStyle}>Status</TableCell>
                                                 <TableCell />
                                             </TableRow>
                                         </TableHead>
@@ -732,11 +750,9 @@ class detailedProject extends Component {
                                                     <TableCell style={{ color: '#555' }}>{expenseClasses.find(obj => obj.value === row.expenseClass)?.label}</TableCell>
                                                     <TableCell style={{ whiteSpace: 'nowrap', color: '#555' }}>{toDate(row.expenseDate)?.toLocaleDateString()}</TableCell>
                                                     <TableCell style={{ textAlign: 'right' }}>${Number(row.expenseTotal).toFixed(2)}</TableCell>
+                                                    <TableCell><BillingBadge item={row} /></TableCell>
                                                     <TableCell>
-                                                        {row.isBilled ? <FontAwesomeIcon icon={faCheckCircle} color="green" title="Billed" /> : null}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <FontAwesomeIcon onClick={() => this.editExpense(row)} icon={faEdit} className="legemblue" style={{ cursor: 'pointer' }} />
+                                                        {!row.isBilled && <FontAwesomeIcon onClick={() => this.editExpense(row)} icon={faEdit} className="legemblue" style={{ cursor: 'pointer' }} />}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -773,6 +789,7 @@ class detailedProject extends Component {
                                                 <TableCell style={colHeaderStyle}>Duration</TableCell>
                                                 <TableCell style={colHeaderStyle}>Date</TableCell>
                                                 <TableCell style={{ ...colHeaderStyle, textAlign: 'right' }}>Amount</TableCell>
+                                                <TableCell style={colHeaderStyle}>Status</TableCell>
                                                 <TableCell />
                                             </TableRow>
                                         </TableHead>
@@ -786,21 +803,22 @@ class detailedProject extends Component {
                                                     <TableCell style={{ color: '#555' }}>{`${row.timeHours}:${row.timeMinutes > 0 ? String(row.timeMinutes).padStart(2, '0') : '00'} hrs`}</TableCell>
                                                     <TableCell style={{ whiteSpace: 'nowrap', color: '#555' }}>{toDate(row.timeDate)?.toLocaleDateString()}</TableCell>
                                                     <TableCell style={{ textAlign: 'right' }}>${Number(row.timeTotal).toFixed(2)}</TableCell>
+                                                    <TableCell><BillingBadge item={row} /></TableCell>
                                                     <TableCell>
-                                                        <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" style={{ cursor: 'pointer' }} />
+                                                        {!row.isBilled && <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" style={{ cursor: 'pointer' }} />}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
                                             {times.length === 0 && (
                                                 <TableRow>
-                                                    <TableCell colSpan={5} className="dp-empty-cell">No time registered.</TableCell>
+                                                    <TableCell colSpan={6} className="dp-empty-cell">No time registered.</TableCell>
                                                 </TableRow>
                                             )}
                                             <TableRow className="dp-total-row">
                                                 <TableCell>Total</TableCell>
                                                 <TableCell /><TableCell />
                                                 <TableCell style={{ textAlign: 'right' }}>${totalTime.toFixed(2)}</TableCell>
-                                                <TableCell />
+                                                <TableCell /><TableCell />
                                             </TableRow>
                                         </TableBody>
                                     </Table>
