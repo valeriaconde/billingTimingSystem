@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Button, Modal, Form, Col, Row } from 'react-bootstrap';
 import { AuthUserContext, withAuthorization } from './Auth';
+import * as ROLES from '../constants/roles';
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
 import { addAlert, clearAlert, getUsers, addProject, subscribeToProjectsByClient, subscribeToAllOpenProjects, subscribeToAllProjects, subscribeToClientProjectsAll } from "../redux/actions/index";
@@ -486,7 +487,7 @@ Proyectos.propTypes = {
     history: PropTypes.object
 };
 
-const condition = authUser => !!authUser;
+const condition = authUser => authUser && !!authUser.roles[ROLES.ADMIN];
 export default connect(mapStateToProps, {
     clearAlert,
     addAlert,

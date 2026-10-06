@@ -97,8 +97,6 @@ class detailedProject extends Component {
         this.hour = React.createRef();
     }
 
-    static contextType = AuthUserContext;
-
     componentDidMount() {
         const { projectId } = this.props.match.params;
         this.props.getProjectById(projectId);
@@ -370,8 +368,7 @@ class detailedProject extends Component {
         if (!this.isFloat(timeHours)) return;
         if (selectedDate == null || trimmedTimeTitle === '' || selectedClientModal == null || selectedProjectModal == null || timeMinutes == null) return;
         var att = selectedAttorneyModal?.value || this.attorney?.current.props.value.value;
-        // Non-admins never see the hourly rate field, so fall back to their own stored rate.
-        var hr = hourlyRate || this.hour?.current?.value || this.context?.salary;
+        var hr = hourlyRate || this.hour.current.value;
         const timeTotal = +hr * (+timeHours + timeMinutes / 60.0);
         const payload = {
             timeTitle: trimmedTimeTitle,
@@ -436,10 +433,9 @@ class detailedProject extends Component {
             })).sort((a, b) => a.name?.localeCompare(b.name)) : [];
 
         const { timeHours, timeMinutes, selectedClientModal, selectedProjectModal, selectedDate, timeTitle, selectedAttorneyModal, isModalAdd, hourlyRate, validated } = this.state;
-        const isAdmin = !!authUser?.roles?.[ROLES.ADMIN];
         const defaultAttorney = userSelect.find(u => u.value === authUser.uid);
         const selectedAttorney = selectedAttorneyModal || defaultAttorney;
-        const selectedHourlyRate = hourlyRate || defaultAttorney?.salary || authUser?.salary;
+        const selectedHourlyRate = hourlyRate || defaultAttorney?.salary;
 
         return (
             <Modal show={this.state.showTimeModal} onHide={() => this.handleClose(3)}>
@@ -535,15 +531,13 @@ class detailedProject extends Component {
                                     </Col>
                                 </Form.Group>
 
-                                {isAdmin && (
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">Hourly Rate</Form.Label>
-                                        <Col sm="7">
-                                            <Form.Control ref={this.hour} isInvalid={validated && selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
-                                            <Form.Control.Feedback type="invalid">Hourly rate must be greater than zero.</Form.Control.Feedback>
-                                        </Col>
-                                    </Form.Group>
-                                )}
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">Hourly Rate</Form.Label>
+                                    <Col sm="7">
+                                        <Form.Control ref={this.hour} isInvalid={validated && selectedHourlyRate <= 0} value={selectedHourlyRate} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
+                                        <Form.Control.Feedback type="invalid">Hourly rate must be greater than zero.</Form.Control.Feedback>
+                                    </Col>
+                                </Form.Group>
                             </>
                             )
                         }
@@ -648,9 +642,8 @@ class detailedProject extends Component {
 
         return (
             <AuthUserContext.Consumer>
-                {authUser => {
-                    const isAdmin = !!authUser?.roles?.[ROLES.ADMIN];
-                    return this.props.loadingProject || this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ?
+                {authUser =>
+                    this.props.loadingProject || this.props.loadingProjects || this.props.loadingExpenses || this.props.loadingTimes || this.props.loadingUsers ?
                     <BarLoader css={{width: "100%"}} loading={this.props.loadingProjects} /> :
                     <div className="dp-page">
                         {this.renderExpenseModal(authUser, !authUser?.roles[ROLES.ADMIN])}
@@ -671,7 +664,7 @@ class detailedProject extends Component {
                                     <span className="dp-total-label">Expenses</span>
                                     <span className="dp-total-value">${totalExpenses.toFixed(2)}</span>
                                 </div>
-                                {isAdmin && !this.props.project?.projectFixedFee && (<>
+                                {!this.props.project?.projectFixedFee && (<>
                                     <div className="dp-divider" />
                                     <div className="dp-total-item">
                                         <span className="dp-total-label">Time</span>
@@ -795,7 +788,7 @@ class detailedProject extends Component {
                                                 <TableCell style={colHeaderStyle}>Description</TableCell>
                                                 <TableCell style={colHeaderStyle}>Duration</TableCell>
                                                 <TableCell style={colHeaderStyle}>Date</TableCell>
-                                                {isAdmin && <TableCell style={{ ...colHeaderStyle, textAlign: 'right' }}>Amount</TableCell>}
+                                                <TableCell style={{ ...colHeaderStyle, textAlign: 'right' }}>Amount</TableCell>
                                                 <TableCell style={colHeaderStyle}>Status</TableCell>
                                                 <TableCell />
                                             </TableRow>
@@ -809,7 +802,7 @@ class detailedProject extends Component {
                                                     </TableCell>
                                                     <TableCell style={{ color: '#555' }}>{`${row.timeHours}:${row.timeMinutes > 0 ? String(row.timeMinutes).padStart(2, '0') : '00'} hrs`}</TableCell>
                                                     <TableCell style={{ whiteSpace: 'nowrap', color: '#555' }}>{toDate(row.timeDate)?.toLocaleDateString()}</TableCell>
-                                                    {isAdmin && <TableCell style={{ textAlign: 'right' }}>${Number(row.timeTotal).toFixed(2)}</TableCell>}
+                                                    <TableCell style={{ textAlign: 'right' }}>${Number(row.timeTotal).toFixed(2)}</TableCell>
                                                     <TableCell><BillingBadge item={row} /></TableCell>
                                                     <TableCell>
                                                         {!row.isBilled && <FontAwesomeIcon onClick={() => this.editTime(row)} icon={faEdit} className="legemblue" style={{ cursor: 'pointer' }} />}
@@ -824,7 +817,7 @@ class detailedProject extends Component {
                                             <TableRow className="dp-total-row">
                                                 <TableCell>Total</TableCell>
                                                 <TableCell /><TableCell />
-                                                {isAdmin && <TableCell style={{ textAlign: 'right' }}>${totalTime.toFixed(2)}</TableCell>}
+                                                <TableCell style={{ textAlign: 'right' }}>${totalTime.toFixed(2)}</TableCell>
                                                 <TableCell /><TableCell />
                                             </TableRow>
                                         </TableBody>
@@ -847,8 +840,8 @@ class detailedProject extends Component {
 
                         </div>
 
-                    </div>;
-                }}
+                    </div>
+                }
             </AuthUserContext.Consumer>
         );
     }
@@ -887,7 +880,7 @@ detailedProject.propTypes = {
     addAlert: PropTypes.func
 };
 
-const condition = authUser => !!authUser;
+const condition = authUser => authUser && !!authUser.roles[ROLES.ADMIN];
 export default connect(mapStateToProps, {
     getProjectById,
     getProjectsMapping,
