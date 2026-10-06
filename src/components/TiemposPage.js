@@ -219,8 +219,13 @@ class tiemposPage extends Component {
         if (selectedDate > new Date() && !window.confirm('The selected date is in the future. Are you sure you want to register time for a future date?')) return;
 
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
-        // Non-admins never see the hourly rate field, so fall back to their own stored rate.
-        var hr = hourlyRate ?? this.hour.current?.value ?? this.context?.salary;
+        // Non-admins never see the hourly rate field. When editing, `hourlyRate` state is
+        // already seeded with the entry's original rate (see editTime), so it takes priority
+        // here and the entry's historical rate is preserved. When adding, resolve the attorney's
+        // current rate from props.users — this.context.salary is only captured at login and can
+        // go stale if an admin updates the rate later in the same session.
+        const currentAttorneyRate = (this.props.users || []).find(u => u.uid === att)?.salary ?? this.context?.salary;
+        var hr = hourlyRate ?? this.hour.current?.value ?? currentAttorneyRate;
         const timeTotal = +hr * (+timeHours + timeMinutes / 60.0);
 
         const payload = {
