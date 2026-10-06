@@ -219,7 +219,13 @@ class tiemposPage extends Component {
         if (selectedDate > new Date() && !window.confirm('The selected date is in the future. Are you sure you want to register time for a future date?')) return;
 
         var att = selectedAttorneyModal?.value || this.attorney.current.props.value.value;
-        var hr = hourlyRate ?? this.hour.current.value;
+        // Non-admins never see the hourly rate field. When editing, `hourlyRate` state is
+        // already seeded with the entry's original rate (see editTime), so it takes priority
+        // here and the entry's historical rate is preserved. When adding, resolve the attorney's
+        // current rate from props.users — this.context.salary is only captured at login and can
+        // go stale if an admin updates the rate later in the same session.
+        const currentAttorneyRate = (this.props.users || []).find(u => u.uid === att)?.salary ?? this.context?.salary;
+        var hr = hourlyRate ?? this.hour.current?.value ?? currentAttorneyRate;
         const timeTotal = +hr * (+timeHours + timeMinutes / 60.0);
 
         const payload = {
@@ -414,9 +420,10 @@ class tiemposPage extends Component {
             })).sort((a, b) => a.name?.localeCompare(b.name))
             : [];
 
+        const isAdmin = !!authUser?.roles?.[ROLES.ADMIN];
         const defaultAttorney = userSelect.find(u => u.value === authUser.uid);
         const selectedAttorney = selectedAttorneyModal || defaultAttorney;
-        const selectedHourlyRate = hourlyRate ?? defaultAttorney?.salary;
+        const selectedHourlyRate = hourlyRate ?? defaultAttorney?.salary ?? authUser?.salary;
 
         return (
             <Modal show={this.state.showModal} onHide={this.handleClose}>
@@ -501,13 +508,15 @@ class tiemposPage extends Component {
                                 </Col>
                             </Form.Group>
 
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="3">Hourly Rate</Form.Label>
-                                <Col sm="7">
-                                    <Form.Control ref={this.hour} isInvalid={validated && selectedHourlyRate <= 0} value={selectedHourlyRate ?? ''} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
-                                    <Form.Control.Feedback type="invalid">Hourly rate must be greater than zero.</Form.Control.Feedback>
-                                </Col>
-                            </Form.Group>
+                            {isAdmin && (
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">Hourly Rate</Form.Label>
+                                    <Col sm="7">
+                                        <Form.Control ref={this.hour} isInvalid={validated && selectedHourlyRate <= 0} value={selectedHourlyRate ?? ''} name="hourlyRate" onChange={this.onChange} type="number" min="0" required />
+                                        <Form.Control.Feedback type="invalid">Hourly rate must be greater than zero.</Form.Control.Feedback>
+                                    </Col>
+                                </Form.Group>
+                            )}
                         </>}
                     </Form>
                 </Modal.Body>
@@ -578,7 +587,7 @@ class tiemposPage extends Component {
                                                     <TableCell style={{ width: '12%' }}><b>Date</b></TableCell>
                                                     {isAdmin && <TableCell style={{ width: '15%' }}><b>Attorney</b></TableCell>}
                                                     <TableCell style={{ width: '12%' }} className="rightAlign"><b>Time</b></TableCell>
-                                                    <TableCell style={{ width: '13%' }} className="rightAlign"><b>Amount</b></TableCell>
+                                                    {isAdmin && <TableCell style={{ width: '13%' }} className="rightAlign"><b>Amount</b></TableCell>}
                                                     <TableCell style={{ width: '5%' }}></TableCell>
                                                 </TableRow>
                                             </TableHead>
@@ -605,9 +614,11 @@ class tiemposPage extends Component {
                                                             <TableCell className="rightAlign">
                                                                 {formatTime(row.timeHours, row.timeMinutes)}
                                                             </TableCell>
-                                                            <TableCell className="rightAlign">
-                                                                ${row.timeTotal.toFixed(2)}
-                                                            </TableCell>
+                                                            {isAdmin && (
+                                                                <TableCell className="rightAlign">
+                                                                    ${row.timeTotal.toFixed(2)}
+                                                                </TableCell>
+                                                            )}
                                                             <TableCell>
                                                                 <FontAwesomeIcon
                                                                     onClick={() => this.editTime(row)}

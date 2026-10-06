@@ -880,7 +880,7 @@ detailedProject.propTypes = {
     addAlert: PropTypes.func
 };
 
-const condition = authUser => !!authUser;
+const condition = authUser => authUser && !!authUser.roles[ROLES.ADMIN];
 export default connect(mapStateToProps, {
     getProjectById,
     getProjectsMapping,
